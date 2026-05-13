@@ -1,0 +1,32 @@
+name: smart_expense
+description: Smart Ledger — quản lý tài chính cá nhân, offline (Web & Android).
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  audioplayers: ^6.5.0
+  flutter:
+    sdk: flutter
+  fl_chart: ^1.1.1
+  image_picker: ^1.2.0
+  intl: ^0.20.2
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  record: ^6.1.2
+  sembast: ^3.8.5
+  sembast_web: ^2.4.2
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/demo/audio_demo.mp3
+    - assets/demo/bill_demo.jpg
