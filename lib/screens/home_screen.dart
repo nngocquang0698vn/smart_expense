@@ -7,6 +7,7 @@ import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
 import "../utils/tx_grouping.dart";
+import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "../widgets/date_filter_sheet.dart";
 import "../widgets/empty_state.dart";
 import "../widgets/money.dart";
@@ -150,9 +151,19 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openEditor(TransactionModel t) =>
       showTransactionEditor(context, widget.repo, existing: t);
 
+  Future<void> _confirmPending(TransactionModel t) async {
+    final ok = await AppConfirmBottomSheet.show(
+      context,
+      title: AppStrings.confirmPendingTitle,
+      message: AppStrings.confirmPendingMessage,
+    );
+    if (!ok || !mounted) return;
+    await widget.repo.confirmPending(t.id);
+  }
+
   Widget _pendingTrailing(TransactionModel t) => buildPendingActions(
         transaction: t,
-        onConfirm: () => widget.repo.confirmPending(t.id),
+        onConfirm: () => _confirmPending(t),
         onEdit: () => _openEditor(t),
       );
 
@@ -608,4 +619,3 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
-

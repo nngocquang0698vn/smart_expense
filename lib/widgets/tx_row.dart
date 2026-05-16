@@ -3,15 +3,12 @@ import "package:intl/intl.dart";
 
 import "../core/constants.dart";
 import "../core/strings.dart";
-import "../theme/app_finance_colors.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
+import "../shared/widgets/app_transaction_tile.dart";
+import "../theme/app_finance_colors.dart";
 import "money.dart";
 
-/// A single transaction card used in the home, pending, and any future list.
-///
-/// Handles disabled-category display ("Khác"), shows media attachment icons,
-/// and renders an optional [trailing] widget (e.g. confirm/edit buttons).
 class TxRow extends StatelessWidget {
   const TxRow({
     super.key,
@@ -23,11 +20,7 @@ class TxRow extends StatelessWidget {
 
   final TransactionModel transaction;
   final CategoryModel? category;
-
-  /// Optional widget rendered below the amount on the right side.
-  /// Typically action buttons for pending transactions.
   final Widget? trailing;
-
   final VoidCallback? onTap;
 
   @override
@@ -36,139 +29,84 @@ class TxRow extends StatelessWidget {
     final finance = context.financeColors;
     final t = transaction;
     final cat = category;
-
-    // A disabled category falls back to a neutral "Khác" appearance.
     final disabled = cat != null && !cat.enabled;
     final icon = disabled
         ? Icons.category_outlined
         : (cat?.icon ?? Icons.category_outlined);
     final color =
         disabled ? cs.onSurfaceVariant : (cat?.color ?? cs.onSurfaceVariant);
-
     final hasAudio = (t.audioBase64 ?? "").isNotEmpty;
     final hasImages = t.imageBase64List.isNotEmpty;
 
-    return Card(
-      margin: AppInsets.cardMargin,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: AppInsets.cardPadding,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Category icon
-              CircleAvatar(
-                backgroundColor: color.withValues(alpha: 0.2),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(width: 12),
-
-              // Title + subtitle (category name · date + media icons)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    Row(
-                      children: [
-                        if (disabled)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: Text(
-                              AppStrings.otherCategory,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: finance.textMuted,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                            ),
-                          )
-                        else if (cat != null)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: Text(
-                              cat.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: Color.lerp(
-                                      finance.textMuted,
-                                      color,
-                                      0.5,
-                                    ),
-                                  ),
-                            ),
-                          ),
-                        Text(
-                          DateFormat.MMMd("vi").format(t.occurredAt),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: finance.textMuted,
-                              ),
-                        ),
-                      ],
-                    ),
-                    if (hasAudio || hasImages) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          if (hasAudio)
-                            Icon(
-                              Icons.audiotrack,
-                              size: 14,
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                          if (hasAudio && hasImages) const SizedBox(width: 4),
-                          if (hasImages)
-                            Icon(
-                              Icons.image_outlined,
-                              size: 14,
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Amount + optional action buttons
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  MoneyText(
-                    t.amountVnd,
-                    isIncome: t.isIncome,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  if (trailing != null) ...[
-                    const SizedBox(height: 6),
-                    trailing!,
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
+    return AppTransactionTile(
+      onTap: onTap,
+      leading: CircleAvatar(
+        backgroundColor: color.withValues(alpha: 0.16),
+        child: Icon(icon, color: color, size: 22),
       ),
+      title: t.title,
+      subtitle: Row(
+        children: [
+          if (disabled)
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.xxs),
+              child: Text(
+                AppStrings.otherCategory,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: finance.textMuted,
+                      fontStyle: FontStyle.italic,
+                    ),
+              ),
+            )
+          else if (cat != null)
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.xxs),
+              child: Text(
+                cat.name,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Color.lerp(finance.textMuted, color, 0.5),
+                    ),
+              ),
+            ),
+          Text(
+            DateFormat.MMMd("vi").format(t.occurredAt),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: finance.textMuted,
+                ),
+          ),
+        ],
+      ),
+      supporting: hasAudio || hasImages
+          ? Row(
+              children: [
+                if (hasAudio)
+                  Icon(
+                    Icons.audiotrack,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                if (hasAudio && hasImages) const SizedBox(width: AppSpacing.xxs),
+                if (hasImages)
+                  Icon(
+                    Icons.image_outlined,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+              ],
+            )
+          : null,
+      amount: MoneyText(
+        t.amountVnd,
+        isIncome: t.isIncome,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: AppTypography.bold,
+            ),
+      ),
+      trailing: trailing,
     );
   }
 }
 
-/// Returns the compact action buttons for a pending transaction row.
-///
-/// Shows both "Xác nhận" + "Cập nhật" when the transaction is complete
-/// (amount > 0 and category set); otherwise shows only "Cập nhật".
 Widget buildPendingActions({
   required TransactionModel transaction,
   required VoidCallback onConfirm,
@@ -199,13 +137,12 @@ Widget buildPendingActions({
         onPressed: onConfirm,
         child: const Text(AppStrings.confirm),
       ),
-      const SizedBox(width: 6),
+      const SizedBox(width: AppSpacing.xs),
       editBtn,
     ],
   );
 }
 
-/// Day-group header displayed above a cluster of same-day transactions.
 class TxDayHeader extends StatelessWidget {
   const TxDayHeader({
     super.key,
@@ -227,10 +164,12 @@ class TxDayHeader extends StatelessWidget {
         children: [
           Text(
             DateFormat.yMMMEd("vi").format(day),
-            style: Theme.of(context).textTheme.titleSmall,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: AppTypography.bold,
+                ),
           ),
           Text(
-            "${formatMoneyVi(totalVnd)} · $count giao dịch",
+            "${formatMoneyVi(totalVnd)} · $count ${AppStrings.transactionNoun}",
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -239,7 +178,6 @@ class TxDayHeader extends StatelessWidget {
   }
 }
 
-/// Red superscript pill badge — used beside "Chờ đối soát".
 class PendingCountBadge extends StatelessWidget {
   const PendingCountBadge({super.key, required this.count});
 
@@ -256,7 +194,6 @@ class PendingCountBadge extends StatelessWidget {
   }
 }
 
-/// Green superscript pill badge — used beside "Lịch sử giao dịch".
 class HistoryCountBadge extends StatelessWidget {
   const HistoryCountBadge({super.key, required this.label});
 
@@ -272,7 +209,6 @@ class HistoryCountBadge extends StatelessWidget {
   }
 }
 
-/// Internal pill badge. Floats 2 px upward to act as a superscript.
 class _Badge extends StatelessWidget {
   const _Badge({
     required this.label,
@@ -289,16 +225,19 @@ class _Badge extends StatelessWidget {
     return Transform.translate(
       offset: const Offset(0, -2),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs,
+          vertical: 2,
+        ),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(99),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: foreground,
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTypography.bold,
                 fontSize: 11,
               ),
         ),

@@ -5,13 +5,12 @@ import "../theme/app_finance_colors.dart";
 
 final _vndFormatter = NumberFormat.currency(
   locale: "vi_VN",
-  symbol: "₫",
+  symbol: "đ",
   decimalDigits: 0,
 );
 
 String formatMoneyVi(int amountVnd) => _vndFormatter.format(amountVnd);
 
-/// Monetary amount with Cashew-style fixed income/expense colours.
 class MoneyText extends StatelessWidget {
   const MoneyText(
     this.amountVnd, {

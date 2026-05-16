@@ -10,6 +10,23 @@
 /// needed in the future, replace this file with Flutter gen_l10n ARB files and
 /// run `flutter gen-l10n`.
 abstract final class AppStrings {
+  static const String appName = "Smart Ledger";
+  static const String genericError =
+      "Đã có lỗi xảy ra. Vui lòng thử lại.";
+  static const String loading = "Đang tải dữ liệu...";
+  static const String delete = "Xoá";
+  static const String discard = "Huỷ thay đổi";
+  static const String continueEditing = "Tiếp tục chỉnh sửa";
+  static const String confirmPendingTitle = "Xác nhận giao dịch?";
+  static const String confirmPendingMessage =
+      "Giao dịch này sẽ được chuyển khỏi danh sách chờ đối soát.";
+  static const String deleteTransactionTitle = "Xoá giao dịch?";
+  static const String deleteTransactionMessage =
+      "Hành động này không thể hoàn tác.";
+  static const String deleteCategoryTitle = "Xoá hạng mục?";
+  static const String demoDataTitle = "Nạp dữ liệu demo?";
+  static const String demoDataMessage =
+      "Thao tác này sẽ xoá toàn bộ giao dịch hiện tại và thay bằng dữ liệu demo.";
   // ── Navigation labels (main_shell + pill_nav_bar) ─────────────────────────
 
   static const String navHome      = "Trang chủ";

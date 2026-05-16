@@ -7,6 +7,7 @@ import "../core/theme_notifier.dart";
 import "../core/theme_presets.dart";
 import "../data/demo_seed.dart";
 import "../data/ledger_repository.dart";
+import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "../widgets/add_options_sheet.dart";
 import "../widgets/page_header_sliver.dart";
 import "categories_screen.dart";
@@ -64,29 +65,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _populateJohny() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Nạp dữ liệu Johny Nguyễn?"),
-        content: const Text(
-          "Thao tác này sẽ XOÁ toàn bộ giao dịch hiện tại và thay bằng "
-          "dữ liệu demo của Johny Nguyễn (Software Engineer TP.HCM, "
-          "2/2026 – 5/2026). Tên tài khoản cũng sẽ đổi thành "
-          "\"Johny Nguyễn\".\n\nBạn có chắc chắn không?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(AppStrings.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Nạp dữ liệu"),
-          ),
-        ],
-      ),
+    final confirmed = await AppConfirmBottomSheet.show(
+      context,
+      title: AppStrings.demoDataTitle,
+      message: AppStrings.demoDataMessage,
+      confirmLabel: "Nạp dữ liệu",
+      isDestructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     if (!mounted) return;
     // Show loading overlay
@@ -444,4 +430,3 @@ class _ColorDot extends StatelessWidget {
     );
   }
 }
-

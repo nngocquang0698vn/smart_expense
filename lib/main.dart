@@ -2,12 +2,14 @@ import "package:flutter/material.dart";
 import "package:intl/date_symbol_data_local.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
+import "core/strings.dart";
 import "core/theme_notifier.dart";
 import "data/app_database.dart";
 import "data/ledger_repository.dart";
 import "repo_scope.dart";
 import "screens/main_shell.dart";
 import "screens/onboarding_screen.dart";
+import "shared/widgets/app_loading_state.dart";
 import "theme/app_theme.dart";
 
 Future<void> main() async {
@@ -67,7 +69,7 @@ class _SmartExpenseRootState extends State<SmartExpenseRoot> {
           builder: (context, _) {
             final s = widget.themeNotifier.settings;
             return MaterialApp(
-              title: "Smart Ledger",
+              title: AppStrings.appName,
               debugShowCheckedModeBanner: false,
               theme: AppTheme.build(s, brightness: Brightness.light),
               darkTheme: AppTheme.build(s, brightness: Brightness.dark),
@@ -76,7 +78,7 @@ class _SmartExpenseRootState extends State<SmartExpenseRoot> {
               themeAnimationCurve: Curves.easeInOut,
               home: _onboarded == null
                   ? const Scaffold(
-                      body: Center(child: CircularProgressIndicator()),
+                      body: AppLoadingState(message: AppStrings.loading),
                     )
                   : _onboarded!
                       ? const MainShell()

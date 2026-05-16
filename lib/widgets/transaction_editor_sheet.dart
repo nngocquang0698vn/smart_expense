@@ -8,6 +8,7 @@ import "package:intl/intl.dart";
 import "../core/constants.dart";
 import "../core/strings.dart";
 import "../theme/app_finance_colors.dart";
+import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "app_text_field.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
@@ -219,27 +220,14 @@ class _EditorBodyState extends State<_EditorBody> {
   }
 
   Future<void> _delete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Xoá giao dịch?"),
-        content: const Text("Hành động này không thể hoàn tác."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(AppStrings.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Xoá"),
-          ),
-        ],
-      ),
+    final confirmed = await AppConfirmBottomSheet.show(
+      context,
+      title: AppStrings.deleteTransactionTitle,
+      message: AppStrings.deleteTransactionMessage,
+      confirmLabel: AppStrings.delete,
+      isDestructive: true,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
     await widget.repo.deleteTransaction(widget.existing!.id);
     if (!mounted) return;
     Navigator.pop(context);

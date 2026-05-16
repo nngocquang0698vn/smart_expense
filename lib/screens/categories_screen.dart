@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
+import "../shared/widgets/app_confirm_bottom_sheet.dart";
 
 bool _isSystem(CategoryModel c) =>
     c.id == LedgerRepository.kOtherExpenseId ||
@@ -235,26 +236,14 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
       );
       return;
     }
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Xoá hạng mục?"),
-        content: Text(widget.existing!.name),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(AppStrings.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Xoá"),
-          ),
-        ],
-      ),
+    final ok = await AppConfirmBottomSheet.show(
+      context,
+      title: AppStrings.deleteCategoryTitle,
+      message: widget.existing!.name,
+      confirmLabel: AppStrings.delete,
+      isDestructive: true,
     );
-    if (ok == true && mounted) {
+    if (ok && mounted) {
       await widget.repo.deleteCategory(widget.existing!.id);
       if (mounted) Navigator.of(context).pop();
     }

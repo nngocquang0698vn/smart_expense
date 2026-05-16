@@ -24,44 +24,50 @@ abstract final class AppTheme {
     final seed = settings.effectiveSeedColor;
     final tinted = settings.effectiveColoredSurfaces;
 
-    final scheme = ColorScheme.fromSeed(
+    final seededScheme = ColorScheme.fromSeed(
       seedColor: seed,
       brightness: brightness,
       dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
+    );
+    final scheme = seededScheme.copyWith(
+      primary: seed,
+      secondary: AppColors.brandYellow,
+      error: AppColors.error,
     );
 
     final scaffoldBg = isDark
         ? (tinted
             ? Color.alphaBlend(
                 seed.withValues(alpha: 0.18),
-                Colors.black,
+                AppColors.darkBackground,
               )
-            : Colors.black)
+            : AppColors.darkBackground)
         : (tinted
             ? Color.alphaBlend(
-                seed.withValues(alpha: 0.11),
-                const Color(0xFFF3F4F6),
+                seed.withValues(alpha: 0.08),
+                AppColors.background,
               )
-            : const Color(0xFFF7F8FA));
+            : AppColors.background);
 
     final cardBg = isDark
         ? (tinted
             ? Color.alphaBlend(
                 seed.withValues(alpha: 0.08),
-                const Color(0xFF1C1C1C),
+                AppColors.darkSurface,
               )
-            : const Color(0xFF1C1C1C))
+            : AppColors.darkSurface)
         : (tinted
             ? Color.alphaBlend(
-                seed.withValues(alpha: 0.06),
-                Colors.white,
+                seed.withValues(alpha: 0.04),
+                AppColors.surface,
               )
-            : Colors.white);
+            : AppColors.surface);
 
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       brightness: brightness,
+      fontFamily: AppTypography.fontFamily,
     );
 
     final cardRadius = BorderRadius.circular(AppRadius.card);
@@ -82,17 +88,24 @@ abstract final class AppTheme {
       extensions: <ThemeExtension<dynamic>>[chrome, layout, finance],
 
       appBarTheme: AppBarTheme(
-        centerTitle: true,
+        centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
-        foregroundColor: isDark ? scheme.onSurface : scheme.primary,
+        backgroundColor: scaffoldBg,
+        foregroundColor:
+            isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        titleTextStyle: TextStyle(
+          color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+          fontSize: AppTypography.title,
+          fontWeight: AppTypography.bold,
+        ),
       ),
 
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: cardRadius),
         color: cardBg,
+        margin: EdgeInsets.zero,
       ),
 
       inputDecorationTheme: InputDecorationTheme(
@@ -122,7 +135,10 @@ abstract final class AppTheme {
           borderSide: BorderSide(color: scheme.error),
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
       ),
 
       listTileTheme: ListTileThemeData(
@@ -183,16 +199,18 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
-          minimumSize: const Size(64, 48),
+          minimumSize: const Size(64, 52),
           shape: RoundedRectangleBorder(borderRadius: inputRadius),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: scheme.primary,
           side: BorderSide(color: finance.fieldBorder),
-          minimumSize: const Size(64, 48),
+          minimumSize: const Size(64, 52),
           shape: RoundedRectangleBorder(borderRadius: inputRadius),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(

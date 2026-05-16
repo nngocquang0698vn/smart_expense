@@ -7,6 +7,7 @@ import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
 import "../utils/tx_grouping.dart";
+import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "../widgets/date_filter_sheet.dart";
 import "../widgets/page_header_sliver.dart";
 import "../widgets/transaction_editor_sheet.dart";
@@ -73,6 +74,16 @@ class _PendingScreenState extends State<PendingScreen> {
   void _openEditor(TransactionModel t) =>
       showTransactionEditor(context, widget.repo, existing: t);
 
+  Future<void> _confirmPending(TransactionModel t) async {
+    final ok = await AppConfirmBottomSheet.show(
+      context,
+      title: AppStrings.confirmPendingTitle,
+      message: AppStrings.confirmPendingMessage,
+    );
+    if (!ok || !mounted) return;
+    await widget.repo.confirmPending(t.id);
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -124,7 +135,7 @@ class _PendingScreenState extends State<PendingScreen> {
                   category: catMap[t.categoryId],
                   trailing: buildPendingActions(
                     transaction: t,
-                    onConfirm: () => widget.repo.confirmPending(t.id),
+                    onConfirm: () => _confirmPending(t),
                     onEdit: () => _openEditor(t),
                   ),
                   onTap: () => _openEditor(t),
