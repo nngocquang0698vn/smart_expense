@@ -8,6 +8,7 @@ import "../data/date_filter.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../widgets/money.dart";
+import "../widgets/page_header_sliver.dart";
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key, required this.repo});
@@ -109,7 +110,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
     return CustomScrollView(
       slivers: [
-        SliverAppBar.large(title: const Text("Báo cáo")),
+        const PageHeaderSliver(title: "Báo cáo"),
 
         // ── Period chips ──────────────────────────────────────────────────
         SliverToBoxAdapter(

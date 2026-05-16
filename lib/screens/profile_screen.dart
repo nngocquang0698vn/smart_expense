@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 
+import "../core/constants.dart";
 import "../core/theme_settings.dart";
 import "../core/strings.dart";
 import "../core/theme_notifier.dart";
@@ -7,6 +8,7 @@ import "../core/theme_presets.dart";
 import "../data/demo_seed.dart";
 import "../data/ledger_repository.dart";
 import "../widgets/add_options_sheet.dart";
+import "../widgets/page_header_sliver.dart";
 import "categories_screen.dart";
 
 class ProfileScreen extends StatefulWidget {
@@ -143,75 +145,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 12),
 
-          Text(
-            "Chế độ hiển thị",
-            style: Theme.of(context)
-                .textTheme
-                .labelMedium
-                ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 8),
-          SegmentedButton<AppThemePreference>(
-            showSelectedIcon: false,
-            segments: const [
-              ButtonSegment<AppThemePreference>(
-                value: AppThemePreference.system,
-                label: Text("Hệ thống"),
-              ),
-              ButtonSegment<AppThemePreference>(
-                value: AppThemePreference.light,
-                label: Text("Sáng"),
-              ),
-              ButtonSegment<AppThemePreference>(
-                value: AppThemePreference.dark,
-                label: Text("Tối"),
-              ),
-            ],
-            selected: {settings.themePreference},
-            onSelectionChanged: (next) {
-              if (next.isEmpty) return;
-              notifier.update(
-                settings.copyWith(themePreference: next.first),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // ── Colour label ──────────────────────────────────────────────
-          Text(
-            "Màu chủ đạo",
-            style: Theme.of(context)
-                .textTheme
-                .labelMedium
-                ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 10),
-
-          // ── Colour swatches ───────────────────────────────────────────
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (final preset in kThemePresets)
-                _ColorDot(
-                  preset: preset,
-                  selected: settings.seedColor == preset.color,
-                  onTap: () => notifier.update(
-                    settings.copyWith(seedColor: preset.color),
-                  ),
-                ),
-            ],
-          ),
-
-          // ── Coloured-surfaces toggle ──────────────────────────────────
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text("Nền màu sắc"),
-            subtitle: const Text("Tông màu nhẹ theo màu chủ đạo"),
-            value: settings.useColoredSurfaces,
-            onChanged: (v) =>
-                notifier.update(settings.copyWith(useColoredSurfaces: v)),
+            title: const Text("Chế độ tối"),
+            subtitle: const Text("Giao diện tối, dễ nhìn ban đêm"),
+            value: settings.themePreference.isDark,
+            onChanged: (v) => notifier.update(
+              settings.copyWith(
+                themePreference: v
+                    ? AppThemePreference.dark
+                    : AppThemePreference.light,
+              ),
+            ),
           ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: const Text("Màu sắc khác"),
+            subtitle: const Text(
+              "Chọn thêm màu chủ đạo thay cho ngọc lục bảo mặc định",
+            ),
+            value: settings.enableAccentColors,
+            onChanged: (v) => notifier.update(
+              settings.copyWith(
+                enableAccentColors: v,
+                seedColor: v ? settings.seedColor : AppColors.brand,
+                useColoredSurfaces: true,
+              ),
+            ),
+          ),
+          if (!settings.enableAccentColors) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: AppColors.brand,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  "Ngọc lục bảo (mặc định)",
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+          ],
+          if (settings.enableAccentColors) ...[
+            const SizedBox(height: 16),
+            Text(
+              "Màu chủ đạo",
+              style: Theme.of(context)
+                  .textTheme
+                  .labelMedium
+                  ?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final preset in kThemePresets)
+                  _ColorDot(
+                    preset: preset,
+                    selected: settings.seedColor == preset.color,
+                    onTap: () => notifier.update(
+                      settings.copyWith(seedColor: preset.color),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -354,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_loading) {
       return const CustomScrollView(
         slivers: [
-          SliverAppBar.large(title: Text("Cá nhân")),
+          PageHeaderSliver(title: "Cá nhân"),
           SliverFillRemaining(
             child: Center(child: CircularProgressIndicator()),
           ),
@@ -364,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return CustomScrollView(
       slivers: [
-        SliverAppBar.large(title: const Text("Cá nhân")),
+        const PageHeaderSliver(title: "Cá nhân"),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.only(top: 8),

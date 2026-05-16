@@ -21,36 +21,39 @@ abstract final class AppTheme {
     final isDark = brightness == Brightness.dark;
     final finance = AppFinanceColors.forBrightness(brightness);
 
+    final seed = settings.effectiveSeedColor;
+    final tinted = settings.effectiveColoredSurfaces;
+
     final scheme = ColorScheme.fromSeed(
-      seedColor: settings.seedColor,
+      seedColor: seed,
       brightness: brightness,
       dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
     );
 
     final scaffoldBg = isDark
-        ? (settings.useColoredSurfaces
+        ? (tinted
             ? Color.alphaBlend(
-                settings.seedColor.withValues(alpha: 0.18),
+                seed.withValues(alpha: 0.18),
                 Colors.black,
               )
             : Colors.black)
-        : (settings.useColoredSurfaces
+        : (tinted
             ? Color.alphaBlend(
-                settings.seedColor.withValues(alpha: 0.11),
+                seed.withValues(alpha: 0.11),
                 const Color(0xFFF3F4F6),
               )
             : const Color(0xFFF7F8FA));
 
     final cardBg = isDark
-        ? (settings.useColoredSurfaces
+        ? (tinted
             ? Color.alphaBlend(
-                settings.seedColor.withValues(alpha: 0.08),
+                seed.withValues(alpha: 0.08),
                 const Color(0xFF1C1C1C),
               )
             : const Color(0xFF1C1C1C))
-        : (settings.useColoredSurfaces
+        : (tinted
             ? Color.alphaBlend(
-                settings.seedColor.withValues(alpha: 0.06),
+                seed.withValues(alpha: 0.06),
                 Colors.white,
               )
             : Colors.white);
@@ -65,7 +68,7 @@ abstract final class AppTheme {
     final inputRadius = BorderRadius.circular(AppRadius.input);
     final sheetRadius = BorderRadius.circular(AppRadius.sheet);
 
-    final chrome = AppChromeTheme.fromSeed(settings.seedColor, brightness);
+    final chrome = AppChromeTheme.fromSeed(seed, brightness);
     final layout = AppLayoutTheme.compute(settings, scheme, brightness);
 
     final textTheme = base.textTheme.apply(

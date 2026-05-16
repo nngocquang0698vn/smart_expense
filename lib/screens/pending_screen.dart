@@ -8,6 +8,7 @@ import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
 import "../utils/tx_grouping.dart";
 import "../widgets/date_filter_sheet.dart";
+import "../widgets/page_header_sliver.dart";
 import "../widgets/transaction_editor_sheet.dart";
 import "../widgets/tx_row.dart";
 
@@ -79,7 +80,7 @@ class _PendingScreenState extends State<PendingScreen> {
     if (_loading) {
       return const CustomScrollView(
         slivers: [
-          SliverAppBar.large(title: Text("Đối soát")),
+          PageHeaderSliver(title: "Đối soát"),
           SliverFillRemaining(
             child: Center(child: CircularProgressIndicator()),
           ),
@@ -92,8 +93,8 @@ class _PendingScreenState extends State<PendingScreen> {
 
     return CustomScrollView(
       slivers: [
-        SliverAppBar.large(
-          title: const Text("Đối soát"),
+        PageHeaderSliver(
+          title: "Đối soát",
           actions: [
             TextButton.icon(
               onPressed: _pickFilter,

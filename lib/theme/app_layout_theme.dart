@@ -19,13 +19,13 @@ class AppLayoutTheme extends ThemeExtension<AppLayoutTheme> {
     ColorScheme scheme,
     Brightness brightness,
   ) {
-    if (!settings.useColoredSurfaces) {
+    if (!settings.effectiveColoredSurfaces) {
       return AppLayoutTheme(desktopContentColor: scheme.surface);
     }
     final a = brightness == Brightness.dark ? 0.14 : 0.10;
     return AppLayoutTheme(
       desktopContentColor: Color.alphaBlend(
-        settings.seedColor.withValues(alpha: a),
+        settings.effectiveSeedColor.withValues(alpha: a),
         scheme.surface,
       ),
     );
