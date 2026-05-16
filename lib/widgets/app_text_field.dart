@@ -44,7 +44,7 @@ class AppTextField extends StatelessWidget {
       textAlign: textAlign,
       style: style ??
           Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: cs.onSurface,
+                color: finance.fieldText,
                 fontWeight: FontWeight.w500,
               ),
       cursorColor: cs.primary,
@@ -55,14 +55,14 @@ class AppTextField extends StatelessWidget {
         suffix: suffix,
         filled: true,
         fillColor: finance.fieldFill,
-        labelStyle: TextStyle(color: finance.textMuted),
+        labelStyle: TextStyle(color: finance.textHint),
         floatingLabelStyle: TextStyle(
-          color: cs.onSurface,
+          color: finance.fieldText,
           fontWeight: FontWeight.w600,
         ),
-        hintStyle: TextStyle(color: finance.textMuted),
+        hintStyle: TextStyle(color: finance.textHint),
         prefixStyle: TextStyle(
-          color: cs.onSurface,
+          color: finance.fieldText,
           fontWeight: FontWeight.w600,
         ),
         enabledBorder: OutlineInputBorder(

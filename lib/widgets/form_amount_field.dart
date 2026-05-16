@@ -36,21 +36,21 @@ class FormAmountField extends StatelessWidget {
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         textAlign: TextAlign.center,
         cursorColor: cs.primary,
-        style: style ??
+        style: style?.copyWith(color: finance.fieldText) ??
             Theme.of(context).textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: cs.onSurface,
+                  color: finance.fieldText,
                 ),
         decoration: InputDecoration(
           prefixText: "₫ ",
           prefixStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: cs.onSurface,
+                color: finance.fieldText,
                 fontWeight: FontWeight.w700,
               ),
           hintText: "0",
           hintStyle: Theme.of(context).textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: finance.textMuted,
+                color: finance.textHint,
               ),
           filled: false,
           border: InputBorder.none,

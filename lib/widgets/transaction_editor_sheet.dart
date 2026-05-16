@@ -267,7 +267,6 @@ class _EditorBodyState extends State<_EditorBody> {
             (widget.existing?.audioBase64 ?? "").isNotEmpty;
         final hasImages =
             widget.existing?.imageBase64List.isNotEmpty ?? false;
-        final cs = Theme.of(context).colorScheme;
         final finance = context.financeColors;
 
         return SafeArea(
@@ -341,7 +340,7 @@ class _EditorBodyState extends State<_EditorBody> {
                 DropdownButtonFormField<String>(
                   dropdownColor: finance.sheetBackground,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: cs.onSurface,
+                        color: finance.fieldText,
                       ),
                   // ignore: deprecated_member_use
                   value: _categoryId,
@@ -354,7 +353,10 @@ class _EditorBodyState extends State<_EditorBody> {
                             children: [
                               Icon(c.icon, color: c.color, size: 20),
                               const SizedBox(width: 8),
-                              Text(c.name),
+                              Text(
+                                c.name,
+                                style: TextStyle(color: finance.fieldText),
+                              ),
                             ],
                           ),
                         ),
@@ -503,8 +505,8 @@ class _EditorBodyState extends State<_EditorBody> {
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: finance.expenseAmount,
-                      side: BorderSide(color: finance.expenseAmount, width: 1.5),
+                      foregroundColor: finance.dangerAction,
+                      side: BorderSide(color: finance.dangerAction, width: 1.5),
                     ),
                     onPressed: _delete,
                     icon: const Icon(Icons.delete_outline, size: 18),

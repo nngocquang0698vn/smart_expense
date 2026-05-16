@@ -95,14 +95,14 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: finance.fieldFill,
-        labelStyle: TextStyle(color: finance.textMuted),
+        labelStyle: TextStyle(color: finance.textHint),
         floatingLabelStyle: TextStyle(
-          color: scheme.onSurface,
+          color: finance.fieldText,
           fontWeight: FontWeight.w600,
         ),
-        hintStyle: TextStyle(color: finance.textMuted),
+        hintStyle: TextStyle(color: finance.textHint),
         prefixStyle: TextStyle(
-          color: scheme.onSurface,
+          color: finance.fieldText,
           fontWeight: FontWeight.w600,
         ),
         border: OutlineInputBorder(borderRadius: inputRadius),
