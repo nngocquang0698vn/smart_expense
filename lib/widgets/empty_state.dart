@@ -1,9 +1,11 @@
 import "package:flutter/material.dart";
 
+import "../theme/app_finance_colors.dart";
+
 /// Generic empty-state message displayed when a list has no items.
 ///
 /// Uses the theme's [bodyMedium] style tinted with [color] (defaults to
-/// [ColorScheme.outline] so it looks muted without extra imports).
+/// [ColorScheme.onSurfaceVariant] for readable muted body copy).
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -13,13 +15,12 @@ class EmptyState extends StatelessWidget {
 
   final String message;
 
-  /// Text colour. Defaults to [ColorScheme.outline] when `null`.
+  /// Text colour. Defaults to [ColorScheme.onSurfaceVariant] when `null`.
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor =
-        color ?? Theme.of(context).colorScheme.outline;
+    final effectiveColor = color ?? context.financeColors.textMuted;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Center(

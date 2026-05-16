@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 
 import "../core/strings.dart";
+import "../theme/app_finance_colors.dart";
 import "../data/date_filter.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
@@ -199,7 +200,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     label: AppStrings.expense,
                     icon: Icons.arrow_downward_rounded,
                     selected: !_incomeSide,
-                    color: cs.error,
+                    color: context.financeColors.expenseAmount,
                     onTap: () {
                       if (_incomeSide) {
                         _incomeSide = false;
@@ -214,7 +215,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     label: AppStrings.income,
                     icon: Icons.arrow_upward_rounded,
                     selected: _incomeSide,
-                    color: const Color(0xFF2E7D32),
+                    color: context.financeColors.incomeAmount,
                     onTap: () {
                       if (!_incomeSide) {
                         _incomeSide = true;
@@ -243,7 +244,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   Text(
                     "Chưa có dữ liệu cho kỳ này.",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: cs.outline,
+                          color: cs.onSurfaceVariant,
                         ),
                   ),
                 ],
@@ -323,7 +324,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               child: Text(
                 "Theo hạng mục · ${_incomeSide ? AppStrings.income : AppStrings.expense}",
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: cs.outline,
+                      color: cs.onSurfaceVariant,
                       letterSpacing: 0.3,
                     ),
               ),
@@ -560,7 +561,7 @@ class _DonutCenterIdle extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: cs.outline,
+                color: cs.onSurfaceVariant,
               ),
         ),
         const SizedBox(height: 2),
@@ -574,7 +575,7 @@ class _DonutCenterIdle extends StatelessWidget {
         Text(
           "$count hạng mục",
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: cs.outline,
+                color: cs.onSurfaceVariant,
               ),
         ),
       ],
@@ -704,7 +705,7 @@ class _CategoryRow extends StatelessWidget {
                         "${(pct * 100).toStringAsFixed(1)}%",
                         style:
                             Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: cs.outline,
+                                  color: cs.onSurfaceVariant,
                                 ),
                       ),
                     ],

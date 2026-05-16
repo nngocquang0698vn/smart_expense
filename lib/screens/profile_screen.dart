@@ -148,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: Theme.of(context)
                 .textTheme
                 .labelMedium
-                ?.copyWith(color: Theme.of(context).colorScheme.outline),
+                ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           SegmentedButton<AppThemePreference>(
@@ -183,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: Theme.of(context)
                 .textTheme
                 .labelMedium
-                ?.copyWith(color: Theme.of(context).colorScheme.outline),
+                ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 10),
 

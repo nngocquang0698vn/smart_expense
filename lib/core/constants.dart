@@ -71,11 +71,11 @@ abstract final class AppColors {
   /// Primary brand green used in the desktop sidebar and nav items.
   static const Color brand = Color(0xFF00544D);
 
-  /// Semantic colour for income amounts.
-  static const Color income = Color(0xFF059669);
+  /// Semantic colour for income (Cashew light; dark uses [AppFinanceColors]).
+  static const Color income = Color(0xFF59A849);
 
-  /// Semantic colour for expense amounts.
-  static const Color expense = Color(0xFFDC2626);
+  /// Semantic colour for expense (Cashew light; dark uses [AppFinanceColors]).
+  static const Color expense = Color(0xFFCA5A5A);
 
   /// Background fill for the green history-count badge.
   static const Color historyBadge = Color(0xFF2E7D32);

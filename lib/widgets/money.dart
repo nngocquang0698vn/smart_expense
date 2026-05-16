@@ -1,23 +1,17 @@
-import "package:flutter/widgets.dart";
+import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 
-import "../core/constants.dart";
+import "../theme/app_finance_colors.dart";
 
-// Cached formatter — creating NumberFormat is expensive; reuse across frames.
 final _vndFormatter = NumberFormat.currency(
   locale: "vi_VN",
   symbol: "₫",
   decimalDigits: 0,
 );
 
-/// Formats [amountVnd] as a Vietnamese-locale currency string, e.g. `50.000 ₫`.
 String formatMoneyVi(int amountVnd) => _vndFormatter.format(amountVnd);
 
-/// Displays a monetary amount with optional income/expense colouring.
-///
-/// When [isIncome] is `true` the amount is prefixed with "+" and rendered in
-/// [AppColors.income] green. `false` uses "−" and [AppColors.expense] red.
-/// `null` renders with no prefix or colour override.
+/// Monetary amount with Cashew-style fixed income/expense colours.
 class MoneyText extends StatelessWidget {
   const MoneyText(
     this.amountVnd, {
@@ -32,10 +26,11 @@ class MoneyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final finance = context.financeColors;
     final base = style ?? DefaultTextStyle.of(context).style;
     final Color? color = switch (isIncome) {
-      true => AppColors.income,
-      false => AppColors.expense,
+      true => finance.incomeAmount,
+      false => finance.expenseAmount,
       null => null,
     };
     final prefix = switch (isIncome) {

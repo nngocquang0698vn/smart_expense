@@ -14,6 +14,9 @@ import "../core/constants.dart";
 import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
+import "../theme/app_finance_colors.dart";
+import "app_text_field.dart";
+import "form_amount_field.dart";
 
 enum QuickEntryMode { tap, voice, receipt }
 
@@ -361,7 +364,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
-                color: cs.primary,
+                color: cs.onPrimaryContainer,
               ),
             ),
             Text(
@@ -370,7 +373,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                   : (_audioBase64 != null
                       ? "Ghi âm thành công"
                       : "Sẵn sàng ghi âm"),
-              style: TextStyle(fontSize: 12, color: cs.primary),
+              style: TextStyle(fontSize: 12, color: cs.onPrimaryContainer),
             ),
             const SizedBox(height: 8),
             Row(
@@ -471,11 +474,15 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 const SizedBox(height: 12),
 
                 // ── Income / Expense toggle ────────────────────────────────
-                Container(
+                Builder(
+                  builder: (context) {
+                    final finance = context.financeColors;
+                    return Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(AppRadius.container),
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    color: finance.fieldFill,
+                    border: Border.all(color: finance.fieldBorder),
                   ),
                   child: SegmentedButton<bool>(
                     showSelectedIcon: false,
@@ -489,32 +496,19 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                       _categoryId = null;
                     }),
                   ),
+                );
+                  },
                 ),
                 const SizedBox(height: 14),
 
                 // ── Amount — large & prominent ─────────────────────────────
-                TextField(
-                  controller: _amountCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                  decoration: const InputDecoration(
-                    prefixText: "₫ ",
-                    hintText: "0",
-                    border: InputBorder.none,
-                  ),
-                ),
+                FormAmountField(controller: _amountCtrl),
                 const SizedBox(height: 10),
 
                 // ── Title ─────────────────────────────────────────────────
-                TextField(
+                AppTextField(
                   controller: _titleCtrl,
-                  decoration:
-                      const InputDecoration(labelText: "Tiêu đề (tuỳ chọn)"),
+                  labelText: "Tiêu đề (tuỳ chọn)",
                 ),
                 const SizedBox(height: 14),
 
@@ -549,13 +543,14 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color:
-                                  active ? cs.primary : cs.surface,
+                              color: active
+                                  ? cs.primary
+                                  : context.financeColors.fieldFill,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: active
                                     ? cs.primary
-                                    : cs.outlineVariant,
+                                    : context.financeColors.fieldBorder,
                               ),
                             ),
                             child: Row(
@@ -681,13 +676,19 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                               onTap: () => setState(
                                   () => _imageBase64List.removeAt(i)),
                               child: Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.black54,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .scrim
+                                      .withValues(alpha: 0.62),
                                   shape: BoxShape.circle,
                                 ),
                                 padding: const EdgeInsets.all(2),
-                                child: const Icon(Icons.close,
-                                    size: 14, color: Colors.white),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -700,12 +701,10 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 const SizedBox(height: 12),
 
                 // ── Note ──────────────────────────────────────────────────
-                TextField(
+                AppTextField(
                   controller: _noteCtrl,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: "Ghi chú (tuỳ chọn)",
-                  ),
+                  labelText: "Ghi chú (tuỳ chọn)",
                 ),
                 const SizedBox(height: 10),
 

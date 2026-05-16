@@ -10,8 +10,12 @@ import "package:image_picker/image_picker.dart";
 import "package:intl/intl.dart";
 import "package:record/record.dart";
 
+import "../core/constants.dart";
 import "../data/ledger_repository.dart";
+import "../theme/app_finance_colors.dart";
+import "../widgets/app_text_field.dart";
 import "../data/models/category_model.dart";
+import "../widgets/form_amount_field.dart";
 
 enum QuickEntryStartMode { tap, voice, receipt }
 
@@ -298,12 +302,24 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   }
 
   Widget _row(String k, String v) {
+    final muted = context.financeColors.textMuted;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          SizedBox(width: 90, child: Text(k, style: const TextStyle(color: Colors.black54))),
-          Expanded(child: Text(v, style: const TextStyle(fontWeight: FontWeight.w600))),
+          SizedBox(
+            width: 90,
+            child: Text(
+              k,
+              style: TextStyle(color: muted),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              v,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
@@ -320,13 +336,19 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         key: const ValueKey("amount"),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text("Nhập nhanh", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+          Text(
+            "Nhập nhanh",
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(AppRadius.container),
+              color: context.financeColors.fieldFill,
+              border: Border.all(color: context.financeColors.fieldBorder),
             ),
             child: SegmentedButton<bool>(
               showSelectedIcon: false,
@@ -339,21 +361,16 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          TextField(
+          AppTextField(
             controller: _titleCtrl,
-            decoration: const InputDecoration(labelText: "Tiêu đề"),
+            labelText: "Tiêu đề",
           ),
           const SizedBox(height: 12),
-          TextField(
+          FormAmountField(
             controller: _amountCtrl,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: cs.primary,
                 ),
-            decoration: const InputDecoration(prefixText: "₫ ", hintText: "0"),
           ),
         ],
       );
@@ -362,7 +379,12 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         key: const ValueKey("details"),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text("Thông tin giao dịch", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+          Text(
+            "Thông tin giao dịch",
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
           const SizedBox(height: 10),
           Card(
             child: ListTile(
@@ -400,10 +422,14 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                 onTap: () => setState(() => _categoryId = cat.id),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: active ? cs.primary : cs.surface,
+                    color: active
+                        ? cs.primary
+                        : context.financeColors.fieldFill,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: active ? cs.primary : cs.outlineVariant,
+                      color: active
+                          ? cs.primary
+                          : context.financeColors.fieldBorder,
                     ),
                   ),
                   padding: const EdgeInsets.all(8),
@@ -435,17 +461,20 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         key: const ValueKey("media"),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text("Ghi chú và đính kèm", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+          Text(
+            "Ghi chú và đính kèm",
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
           const SizedBox(height: 10),
-          TextField(
+          AppTextField(
             controller: _noteCtrl,
             maxLines: 2,
-            decoration: InputDecoration(
-              labelText: "Ghi chú (tuỳ chọn)",
-              suffixIcon: IconButton(
-                onPressed: _recording ? _stopRecording : _startRecording,
-                icon: Icon(_recording ? Icons.stop_circle : Icons.mic),
-              ),
+            labelText: "Ghi chú (tuỳ chọn)",
+            suffix: IconButton(
+              onPressed: _recording ? _stopRecording : _startRecording,
+              icon: Icon(_recording ? Icons.stop_circle : Icons.mic),
             ),
           ),
           if (_audioBase64 != null || _recording) ...[
@@ -484,14 +513,17 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         key: const ValueKey("note_pending"),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text("Ghi chú và đối soát", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+          Text(
+            "Ghi chú và đối soát",
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
           const SizedBox(height: 10),
-          TextField(
+          AppTextField(
             controller: _noteCtrl,
             maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: "Ghi chú (tuỳ chọn)",
-            ),
+            labelText: "Ghi chú (tuỳ chọn)",
           ),
           const SizedBox(height: 12),
           _row("Loại", _income ? "Thu nhập" : "Chi tiêu"),

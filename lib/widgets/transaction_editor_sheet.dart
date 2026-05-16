@@ -5,7 +5,10 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:intl/intl.dart";
 
+import "../core/constants.dart";
 import "../core/strings.dart";
+import "../theme/app_finance_colors.dart";
+import "app_text_field.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
@@ -264,6 +267,8 @@ class _EditorBodyState extends State<_EditorBody> {
             (widget.existing?.audioBase64 ?? "").isNotEmpty;
         final hasImages =
             widget.existing?.imageBase64List.isNotEmpty ?? false;
+        final cs = Theme.of(context).colorScheme;
+        final finance = context.financeColors;
 
         return SafeArea(
           child: SingleChildScrollView(
@@ -291,28 +296,29 @@ class _EditorBodyState extends State<_EditorBody> {
                 ),
                 const SizedBox(height: 14),
 
-                // Title
-                TextField(
+                AppTextField(
                   controller: _titleCtrl,
-                  decoration:
-                      const InputDecoration(labelText: AppStrings.transactionTitle),
+                  labelText: AppStrings.transactionTitle,
                 ),
                 const SizedBox(height: 12),
 
-                // Amount
-                TextField(
+                AppTextField(
                   controller: _amountCtrl,
+                  labelText: AppStrings.amount,
+                  hintText: "0",
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.amount,
-                    hintText: "0",
-                  ),
                 ),
                 const SizedBox(height: 12),
 
-                // Income / Expense toggle
-                SegmentedButton<bool>(
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.container),
+                    color: finance.fieldFill,
+                    border: Border.all(color: finance.fieldBorder),
+                  ),
+                  child: SegmentedButton<bool>(
                   segments: const [
                     ButtonSegment(value: false, label: Text(AppStrings.expense)),
                     ButtonSegment(value: true, label: Text(AppStrings.income)),
@@ -328,10 +334,15 @@ class _EditorBodyState extends State<_EditorBody> {
                     });
                   },
                 ),
+                ),
                 const SizedBox(height: 12),
 
                 // Category dropdown
                 DropdownButtonFormField<String>(
+                  dropdownColor: finance.sheetBackground,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: cs.onSurface,
+                      ),
                   // ignore: deprecated_member_use
                   value: _categoryId,
                   items: cats
@@ -356,10 +367,18 @@ class _EditorBodyState extends State<_EditorBody> {
 
                 // Date picker
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    side: BorderSide(color: finance.fieldBorder),
+                  ),
+                  tileColor: finance.fieldFill,
                   title: const Text(AppStrings.transactionDate),
                   subtitle: Text(DateFormat.yMMMd("vi").format(_date)),
-                  trailing: const Icon(Icons.calendar_month),
+                  trailing: Icon(Icons.calendar_month, color: finance.textMuted),
                   onTap: () async {
                     final d = await showDatePicker(
                       context: context,
@@ -374,21 +393,20 @@ class _EditorBodyState extends State<_EditorBody> {
 
                 // Pending toggle — free to toggle for all transaction types
                 SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                   title: const Text(AppStrings.pending),
                   subtitle: const Text(
-                      "Bật nếu cần xem lại giao dịch này sau."),
+                    "Bật nếu cần xem lại giao dịch này sau.",
+                  ),
                   value: _pending,
                   onChanged: (v) => setState(() => _pending = v),
                 ),
 
-                // Note
                 const SizedBox(height: 4),
-                TextField(
+                AppTextField(
                   controller: _noteCtrl,
+                  labelText: AppStrings.note,
                   maxLines: 2,
-                  decoration:
-                      const InputDecoration(labelText: AppStrings.note),
                 ),
 
                 // Audio playback
@@ -397,15 +415,36 @@ class _EditorBodyState extends State<_EditorBody> {
                   Card(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     child: ListTile(
-                      leading: Icon(Icons.audiotrack,
-                          color: Theme.of(context).colorScheme.primary),
-                      title: const Text("Audio đính kèm"),
-                      subtitle: const Text("Nhấn ▶ để nghe lại ghi âm"),
+                      leading: Icon(
+                        Icons.audiotrack,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                      title: Text(
+                        "Audio đính kèm",
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "Nhấn ▶ để nghe lại ghi âm",
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer
+                              .withValues(alpha: 0.85),
+                        ),
+                      ),
                       trailing: IconButton(
                         onPressed: () =>
                             _playAudio(widget.existing!.audioBase64!),
-                        icon: Icon(Icons.play_arrow,
-                            color: Theme.of(context).colorScheme.primary),
+                        icon: Icon(
+                          Icons.play_arrow,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer,
+                        ),
                       ),
                     ),
                   ),
@@ -464,11 +503,8 @@ class _EditorBodyState extends State<_EditorBody> {
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          Theme.of(context).colorScheme.error,
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                      foregroundColor: finance.expenseAmount,
+                      side: BorderSide(color: finance.expenseAmount, width: 1.5),
                     ),
                     onPressed: _delete,
                     icon: const Icon(Icons.delete_outline, size: 18),

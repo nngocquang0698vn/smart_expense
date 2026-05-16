@@ -3,6 +3,7 @@ import "package:intl/intl.dart";
 
 import "../core/constants.dart";
 import "../core/strings.dart";
+import "../theme/app_finance_colors.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
 import "money.dart";
@@ -31,6 +32,8 @@ class TxRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final finance = context.financeColors;
     final t = transaction;
     final cat = category;
 
@@ -39,7 +42,8 @@ class TxRow extends StatelessWidget {
     final icon = disabled
         ? Icons.category_outlined
         : (cat?.icon ?? Icons.category_outlined);
-    final color = disabled ? Colors.grey : (cat?.color ?? Colors.grey);
+    final color =
+        disabled ? cs.onSurfaceVariant : (cat?.color ?? cs.onSurfaceVariant);
 
     final hasAudio = (t.audioBase64 ?? "").isNotEmpty;
     final hasImages = t.imageBase64List.isNotEmpty;
@@ -83,7 +87,7 @@ class TxRow extends StatelessWidget {
                                   .textTheme
                                   .bodySmall
                                   ?.copyWith(
-                                    color: Colors.grey,
+                                    color: finance.textMuted,
                                     fontStyle: FontStyle.italic,
                                   ),
                             ),
@@ -97,13 +101,19 @@ class TxRow extends StatelessWidget {
                                   .textTheme
                                   .bodySmall
                                   ?.copyWith(
-                                    color: color.withValues(alpha: 0.8),
+                                    color: Color.lerp(
+                                      finance.textMuted,
+                                      color,
+                                      0.5,
+                                    ),
                                   ),
                             ),
                           ),
                         Text(
                           DateFormat.MMMd("vi").format(t.occurredAt),
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: finance.textMuted,
+                              ),
                         ),
                       ],
                     ),

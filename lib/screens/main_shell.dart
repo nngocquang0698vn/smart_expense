@@ -5,6 +5,7 @@ import "../core/constants.dart";
 import "../core/strings.dart";
 import "../repo_scope.dart";
 import "../theme/app_chrome_theme.dart";
+import "../theme/app_layout_theme.dart";
 import "../widgets/add_options_sheet.dart";
 import "../widgets/fab_center.dart";
 import "../widgets/pill_nav_bar.dart";
@@ -135,6 +136,8 @@ class _DesktopShell extends StatelessWidget {
     final now = DateTime.now();
 
     final cs = Theme.of(context).colorScheme;
+    final contentColor = Theme.of(context).extension<AppLayoutTheme>()?.desktopContentColor ??
+        cs.surface;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -154,7 +157,7 @@ class _DesktopShell extends StatelessWidget {
                   child: Container(
                     margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
                     decoration: BoxDecoration(
-                      color: cs.surface,
+                      color: contentColor,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: IndexedStack(index: page, children: pages),
@@ -242,7 +245,7 @@ class _Sidebar extends StatelessWidget {
           Text(
             dateText,
             style: TextStyle(
-              color: chrome.sidebarNavInactive.withValues(alpha: 0.82),
+              color: chrome.sidebarNavInactive,
               fontWeight: FontWeight.w500,
             ),
           ),
