@@ -241,7 +241,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   // ── Save logic ────────────────────────────────────────────────────────────
 
-  Future<void> _save(List<CategoryModel> cats, {required bool confirm}) async {
+  Future<void> _save(List<CategoryModel> cats) async {
     final title = _titleCtrl.text.trim().isEmpty
         ? (_income ? "Thu nhập nhanh" : "Chi tiêu nhanh")
         : _titleCtrl.text.trim();
@@ -249,14 +249,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     final raw = _amountCtrl.text.replaceAll(RegExp(r"[^\d]"), "");
     final amount = int.tryParse(raw) ?? 0;
 
-    // "confirm" forces pending=false only for voice/receipt modes.
-    // In tap mode, always respect the user's pending toggle.
-    final effectivePending = (widget.mode != QuickEntryMode.tap && confirm)
-        ? false
-        : _pending;
-
-    // Require amount > 0 only when not pending (confirmed to history).
-    if (!effectivePending && amount <= 0) {
+    if (!_pending && amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Vui lòng nhập số tiền hợp lệ.")),
       );
@@ -266,7 +259,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     final matched = cats.where((c) => c.isIncome == _income).toList();
     final catId =
         _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
-    if (!effectivePending && catId == null) {
+    if (!_pending && catId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Vui lòng chọn danh mục.")),
       );
@@ -276,10 +269,8 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     if (_recording) await _stopRecording();
     if (!mounted) return;
 
-    // A pending transaction is "complete" (ready for one-tap confirm) when it
-    // already has both a valid amount and a category.
     final isInfoComplete = amount > 0 && catId != null;
-    final effectiveComplete = effectivePending ? isInfoComplete : true;
+    final effectiveComplete = _pending ? isInfoComplete : true;
 
     await widget.repo.addQuick(
       title: title,
@@ -287,7 +278,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       isIncome: _income,
       categoryId: catId ?? (matched.isNotEmpty ? matched.first.id : ""),
       at: _date,
-      pending: effectivePending,
+      pending: _pending,
       complete: effectiveComplete,
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
       audioBase64: _audioBase64,
@@ -299,9 +290,9 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          effectivePending
+          _pending
               ? "Đã lưu vào danh sách chờ đối soát."
-              : "Đã xác nhận và lưu giao dịch.",
+              : "Đã lưu giao dịch.",
         ),
       ),
     );
@@ -723,28 +714,14 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 const SizedBox(height: 12),
 
                 // ── Action buttons ────────────────────────────────────────
-                // Tap mode: single save button (always confirmed, no draft)
-                // Voice/Receipt: two buttons (confirm vs save as draft)
-                if (widget.mode == QuickEntryMode.tap)
-                  FilledButton(
-                    // confirm: !_pending — when pending toggle is ON, don't
-                    // force-confirm; let _save respect the toggle.
-                    onPressed: () => _save(cats, confirm: !_pending),
-                    child: const Text("Lưu giao dịch"),
-                  )
-                else ...[
-                  FilledButton.icon(
-                    onPressed: () => _save(cats, confirm: true),
-                    icon: const Icon(Icons.check_circle_outline, size: 18),
-                    label: const Text("Lưu & Xác nhận đủ thông tin"),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _save(cats),
+                    icon: const Icon(Icons.save_rounded, size: 20),
+                    label: const Text(AppStrings.saveTransaction),
                   ),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: () => _save(cats, confirm: false),
-                    icon: const Icon(Icons.save_outlined, size: 18),
-                    label: const Text("Lưu (chờ đối soát)"),
-                  ),
-                ],
+                ),
               ],
             ),
           ),

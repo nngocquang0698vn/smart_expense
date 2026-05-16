@@ -156,10 +156,7 @@ class _EditorBodyState extends State<_EditorBody> {
     if (discard == true && mounted) Navigator.pop(context);
   }
 
-  Future<void> _validateAndRun({
-    required List<CategoryModel> cats,
-    required bool confirm,
-  }) async {
+  Future<void> _saveTransaction(List<CategoryModel> cats) async {
     final title = _titleCtrl.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,9 +168,7 @@ class _EditorBodyState extends State<_EditorBody> {
     final raw = _amountCtrl.text.replaceAll(RegExp(r"[^\d]"), "");
     final amount = int.tryParse(raw) ?? 0;
 
-    // When confirming (not pending anymore), require a real amount
-    final effectivePending = confirm ? false : _pending;
-    if (!effectivePending && amount <= 0) {
+    if (!_pending && amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Vui lòng nhập số tiền hợp lệ.")),
       );
@@ -183,6 +178,9 @@ class _EditorBodyState extends State<_EditorBody> {
     final catId = _categoryId ??
         cats.firstWhere((c) => c.isIncome == _income, orElse: () => cats.first).id;
 
+    final isInfoComplete = amount > 0;
+    final effectiveComplete = _pending ? isInfoComplete : true;
+
     final e = widget.existing;
     if (e == null) {
       await widget.repo.addQuick(
@@ -191,8 +189,8 @@ class _EditorBodyState extends State<_EditorBody> {
         isIncome: _income,
         categoryId: catId,
         at: _date,
-        pending: effectivePending,
-        complete: !effectivePending,
+        pending: _pending,
+        complete: effectiveComplete,
         note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
       );
     } else {
@@ -203,8 +201,8 @@ class _EditorBodyState extends State<_EditorBody> {
           isIncome: _income,
           categoryId: catId,
           occurredAt: _date,
-          pending: effectivePending,
-          complete: !effectivePending,
+          pending: _pending,
+          complete: effectiveComplete,
           note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
         ),
       );
@@ -214,7 +212,11 @@ class _EditorBodyState extends State<_EditorBody> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(confirm ? "Đã xác nhận và lưu giao dịch." : "Đã lưu giao dịch."),
+        content: Text(
+          _pending
+              ? "Đã lưu vào danh sách chờ đối soát."
+              : "Đã lưu giao dịch.",
+        ),
       ),
     );
   }
@@ -471,24 +473,16 @@ class _EditorBodyState extends State<_EditorBody> {
                 const SizedBox(height: 20),
 
                 // ── Action buttons ───────────────────────────────────────
-                // 1. Save & Confirm (sets pending = false)
-                FilledButton.icon(
-                  onPressed: () =>
-                      _validateAndRun(cats: cats, confirm: true),
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: const Text(AppStrings.saveAndConfirm),
-                ),
-                const SizedBox(height: 8),
-
-                // 2. Save draft (keeps pending as-is)
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      _validateAndRun(cats: cats, confirm: false),
-                  icon: const Icon(Icons.save_outlined, size: 18),
-                  label: const Text(AppStrings.save),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _saveTransaction(cats),
+                    icon: const Icon(Icons.save_rounded, size: 20),
+                    label: const Text(AppStrings.save),
+                  ),
                 ),
 
-                // 3. Delete (only for existing transactions)
+                // Delete (only for existing transactions)
                 if (widget.existing != null) ...[
                   const SizedBox(height: 8),
                   OutlinedButton.icon(

@@ -71,8 +71,6 @@ abstract final class AppStrings {
   // ── Transaction-entry actions ─────────────────────────────────────────────
 
   static const String saveTransaction      = "Lưu giao dịch";
-  static const String saveAndConfirm       = "Lưu & Xác nhận đủ thông tin";
-  static const String savePending          = "Lưu (chờ đối soát)";
   static const String deleteTransaction    = "Xoá giao dịch";
   static const String addTransaction       = "Thêm giao dịch";
   static const String editTransaction      = "Sửa giao dịch";
