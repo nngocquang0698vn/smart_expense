@@ -10,6 +10,7 @@ import "package:image_picker/image_picker.dart";
 import "package:intl/intl.dart";
 import "package:record/record.dart";
 
+import "../core/amount_input.dart";
 import "../core/constants.dart";
 import "../core/strings.dart";
 import "../data/ledger_repository.dart";
@@ -51,7 +52,7 @@ class _QuickEntryBody extends StatefulWidget {
 
 class _QuickEntryBodyState extends State<_QuickEntryBody> {
   final _titleCtrl = TextEditingController();
-  final _amountCtrl = TextEditingController();
+  final _amount = AmountInputController();
   final _noteCtrl = TextEditingController();
 
   bool _income = false;
@@ -61,7 +62,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   // Snapshots for dirty detection
   late String _initTitle;
-  late String _initAmount;
+  late int _initAmount;
 
   // Audio
   final _recorder = AudioRecorder();
@@ -85,7 +86,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
-      _amountCtrl.text != _initAmount ||
+      _amount.value != _initAmount ||
       _noteCtrl.text.isNotEmpty ||
       _audioBase64 != null ||
       _imageBase64List.isNotEmpty ||
@@ -99,14 +100,14 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     if (widget.mode == QuickEntryMode.voice) {
       final ts = DateFormat("dd/MM HH:mm").format(DateTime.now());
       _titleCtrl.text = "Ghi âm giao dịch - $ts";
-      _amountCtrl.text = "0";
+      _amount.setValue(0);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (mounted) await _startRecording();
       });
     } else if (widget.mode == QuickEntryMode.receipt) {
       final ts = DateFormat("dd/MM HH:mm").format(DateTime.now());
       _titleCtrl.text = "Ảnh hoá đơn - $ts";
-      _amountCtrl.text = "0";
+      _amount.setValue(0);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         await _pickImage(
@@ -117,10 +118,10 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
     // Snapshot initial values so we can detect dirty state
     _initTitle = _titleCtrl.text;
-    _initAmount = _amountCtrl.text;
+    _initAmount = _amount.value;
 
     _titleCtrl.addListener(() => setState(() {}));
-    _amountCtrl.addListener(() => setState(() {}));
+    _amount.addListener(() => setState(() {}));
     _noteCtrl.addListener(() => setState(() {}));
   }
 
@@ -131,7 +132,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     _recorder.dispose();
     _audioPlayer.dispose();
     _titleCtrl.dispose();
-    _amountCtrl.dispose();
+    _amount.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -246,8 +247,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
         ? (_income ? "Thu nhập nhanh" : "Chi tiêu nhanh")
         : _titleCtrl.text.trim();
 
-    final raw = _amountCtrl.text.replaceAll(RegExp(r"[^\d]"), "");
-    final amount = int.tryParse(raw) ?? 0;
+    final amount = _amount.value;
 
     if (!_pending && amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -493,7 +493,11 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 const SizedBox(height: 14),
 
                 // ── Amount — large & prominent ─────────────────────────────
-                FormAmountField(controller: _amountCtrl),
+                FormAmountField(
+                  controller: _amount,
+                  alwaysShowKeypad: true,
+                  autofocus: true,
+                ),
                 const SizedBox(height: 10),
 
                 // ── Title ─────────────────────────────────────────────────

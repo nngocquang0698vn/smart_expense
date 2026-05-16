@@ -1,15 +1,9 @@
 import "package:flutter/material.dart";
-import "package:intl/intl.dart";
 
+import "../core/money_format.dart";
 import "../theme/app_finance_colors.dart";
 
-final _vndFormatter = NumberFormat.currency(
-  locale: "vi_VN",
-  symbol: "đ",
-  decimalDigits: 0,
-);
-
-String formatMoneyVi(int amountVnd) => _vndFormatter.format(amountVnd);
+export "../core/money_format.dart" show formatMoneyVi, formatMoneyDigits;
 
 class MoneyText extends StatelessWidget {
   const MoneyText(

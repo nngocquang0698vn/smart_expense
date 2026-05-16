@@ -10,6 +10,7 @@ import "package:image_picker/image_picker.dart";
 import "package:intl/intl.dart";
 import "package:record/record.dart";
 
+import "../core/amount_input.dart";
 import "../core/constants.dart";
 import "../data/ledger_repository.dart";
 import "../theme/app_finance_colors.dart";
@@ -37,7 +38,7 @@ class QuickEntryScreen extends StatefulWidget {
 
 class _QuickEntryScreenState extends State<QuickEntryScreen> {
   final _titleCtrl = TextEditingController();
-  final _amountCtrl = TextEditingController();
+  final _amount = AmountInputController();
   final _noteCtrl = TextEditingController();
   final _recorder = AudioRecorder();
   final _audioPlayer = AudioPlayer();
@@ -68,7 +69,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
 
   bool get _isDirty =>
       _titleCtrl.text.trim().isNotEmpty ||
-      _amountCtrl.text.trim().isNotEmpty ||
+      _amount.value > 0 ||
       _noteCtrl.text.trim().isNotEmpty ||
       _audioBase64 != null ||
       _imageBase64List.isNotEmpty ||
@@ -77,6 +78,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   @override
   void initState() {
     super.initState();
+    _amount.addListener(() => setState(() {}));
     _pending = widget.startMode != QuickEntryStartMode.tap;
     if (widget.startMode == QuickEntryStartMode.receipt) {
       _step = _EntryStep.media;
@@ -98,7 +100,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     _recorder.dispose();
     _audioPlayer.dispose();
     _titleCtrl.dispose();
-    _amountCtrl.dispose();
+    _amount.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -208,9 +210,8 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   bool _next(List<CategoryModel> all) {
     switch (_step) {
       case _EntryStep.amount:
-        final raw = _amountCtrl.text.replaceAll(RegExp(r"[^\d]"), "");
-        final amount = int.tryParse(raw);
-        if (amount == null || amount <= 0) {
+        final amount = _amount.value;
+        if (amount <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Vui lòng nhập số tiền hợp lệ.")),
           );
@@ -247,9 +248,8 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   }
 
   Future<void> _save(List<CategoryModel> all) async {
-    final raw = _amountCtrl.text.replaceAll(RegExp(r"[^\d]"), "");
-    final amount = int.tryParse(raw);
-    if (amount == null || amount <= 0) return;
+    final amount = _amount.value;
+    if (amount <= 0) return;
     final matched = all.where((c) => c.isIncome == _income).toList();
     final selected = _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
     if (selected == null) return;
@@ -367,7 +367,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
           ),
           const SizedBox(height: 12),
           FormAmountField(
-            controller: _amountCtrl,
+            controller: _amount,
+            alwaysShowKeypad: true,
+            autofocus: true,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -527,7 +529,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
           ),
           const SizedBox(height: 12),
           _row("Loại", _income ? "Thu nhập" : "Chi tiêu"),
-          _row("Số tiền", "₫ ${_amountCtrl.text}"),
+          _row("Số tiền", "₫ ${_amount.displayText}"),
           _row("Ngày", DateFormat("dd/MM/yyyy").format(_date)),
           _row("Audio", _audioBase64 != null ? "Có" : "Không"),
           _row("Ảnh", _imageBase64List.isEmpty ? "Không" : "${_imageBase64List.length} ảnh"),

@@ -2,14 +2,15 @@ import "dart:convert";
 
 import "package:audioplayers/audioplayers.dart";
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:intl/intl.dart";
 
+import "../core/amount_input.dart";
 import "../core/constants.dart";
 import "../core/strings.dart";
 import "../theme/app_finance_colors.dart";
 import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "app_text_field.dart";
+import "form_amount_field.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
@@ -55,7 +56,7 @@ class _EditorBody extends StatefulWidget {
 class _EditorBodyState extends State<_EditorBody> {
   final _audioPlayer = AudioPlayer();
   final _titleCtrl = TextEditingController();
-  final _amountCtrl = TextEditingController();
+  final _amount = AmountInputController();
   final _noteCtrl = TextEditingController();
   late bool _income;
   String? _categoryId;
@@ -64,7 +65,7 @@ class _EditorBodyState extends State<_EditorBody> {
 
   // Snapshots for dirty detection
   late String _initTitle;
-  late String _initAmount;
+  late int _initAmount;
   late String _initNote;
   late bool _initIncome;
   late String? _initCategoryId;
@@ -73,7 +74,7 @@ class _EditorBodyState extends State<_EditorBody> {
 
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
-      _amountCtrl.text != _initAmount ||
+      _amount.value != _initAmount ||
       _noteCtrl.text != _initNote ||
       _income != _initIncome ||
       _categoryId != _initCategoryId ||
@@ -86,7 +87,7 @@ class _EditorBodyState extends State<_EditorBody> {
     final e = widget.existing;
     if (e != null) {
       _titleCtrl.text = e.title;
-      _amountCtrl.text = e.amountVnd.toString();
+      _amount.setValue(e.amountVnd);
       _noteCtrl.text = e.note ?? "";
       _income = e.isIncome;
       _categoryId = e.categoryId;
@@ -99,7 +100,7 @@ class _EditorBodyState extends State<_EditorBody> {
     }
     // Snapshot initial values for dirty check
     _initTitle = _titleCtrl.text;
-    _initAmount = _amountCtrl.text;
+    _initAmount = _amount.value;
     _initNote = _noteCtrl.text;
     _initIncome = _income;
     _initCategoryId = _categoryId;
@@ -108,7 +109,7 @@ class _EditorBodyState extends State<_EditorBody> {
 
     // Rebuild on text changes so dirty flag updates
     _titleCtrl.addListener(() => setState(() {}));
-    _amountCtrl.addListener(() => setState(() {}));
+    _amount.addListener(() => setState(() {}));
     _noteCtrl.addListener(() => setState(() {}));
   }
 
@@ -116,7 +117,7 @@ class _EditorBodyState extends State<_EditorBody> {
   void dispose() {
     _audioPlayer.dispose();
     _titleCtrl.dispose();
-    _amountCtrl.dispose();
+    _amount.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -165,8 +166,7 @@ class _EditorBodyState extends State<_EditorBody> {
       return;
     }
 
-    final raw = _amountCtrl.text.replaceAll(RegExp(r"[^\d]"), "");
-    final amount = int.tryParse(raw) ?? 0;
+    final amount = _amount.value;
 
     if (!_pending && amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -291,13 +291,7 @@ class _EditorBodyState extends State<_EditorBody> {
                 ),
                 const SizedBox(height: 12),
 
-                AppTextField(
-                  controller: _amountCtrl,
-                  labelText: AppStrings.amount,
-                  hintText: "0",
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
+                FormAmountField(controller: _amount),
                 const SizedBox(height: 12),
 
                 Container(
