@@ -1,0 +1,30 @@
+---
+description: General product rules for the Flutter expense tracker project
+alwaysApply: true
+---
+
+# Project Overview
+
+This is a Flutter expense tracker application targeting:
+- Android
+- PWA web
+
+The app must be:
+- Vietnamese-first
+- User-centered
+- Mobile-first
+- Simple and easy to use daily
+- Modern, friendly, and highly rounded in design
+- Suitable for personal finance and daily expense tracking
+
+Core product goals:
+- Help users record expenses quickly.
+- Help users understand spending habits.
+- Reduce friction when entering transactions.
+- Make financial summaries easy to understand.
+- Support Vietnamese users naturally and completely.
+
+Important:
+- All user-facing text must be in Vietnamese by default.
+- Do not generate English UI text unless explicitly requested.
+- Prioritize clarity, simplicity, and usability over unnecessary complexity.

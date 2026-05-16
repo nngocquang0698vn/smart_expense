@@ -2,6 +2,7 @@ import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 
+import "../core/strings.dart";
 import "../data/date_filter.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
@@ -159,7 +160,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     children: [
                       Expanded(
                         child: _AnalysisSummaryCard(
-                          label: "Thu nhập",
+                          label: AppStrings.income,
                           amount: income,
                           isIncome: true,
                         ),
@@ -167,7 +168,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       const SizedBox(width: 10),
                       Expanded(
                         child: _AnalysisSummaryCard(
-                          label: "Chi tiêu",
+                          label: AppStrings.expense,
                           amount: expense,
                           isIncome: false,
                         ),
@@ -195,7 +196,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               children: [
                 Expanded(
                   child: _ToggleTab(
-                    label: "Chi tiêu",
+                    label: AppStrings.expense,
                     icon: Icons.arrow_downward_rounded,
                     selected: !_incomeSide,
                     color: cs.error,
@@ -210,7 +211,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 const SizedBox(width: 8),
                 Expanded(
                   child: _ToggleTab(
-                    label: "Thu nhập",
+                    label: AppStrings.income,
                     icon: Icons.arrow_upward_rounded,
                     selected: _incomeSide,
                     color: const Color(0xFF2E7D32),
@@ -280,7 +281,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         ),
                         sections: _buildSections(sumSlice),
                       ),
-                      swapAnimationDuration:
+                      duration:
                           const Duration(milliseconds: 400),
                     ),
                     // Center label
@@ -301,7 +302,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                             )
                           : _DonutCenterIdle(
                               key: const ValueKey("idle"),
-                              label: _incomeSide ? "Thu nhập" : "Chi tiêu",
+                              label: _incomeSide ? AppStrings.income : AppStrings.expense,
                               total: sumSlice,
                               count: _slices.length,
                               isIncome: _incomeSide,
@@ -320,7 +321,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                "Theo hạng mục · ${_incomeSide ? "Thu nhập" : "Chi tiêu"}",
+                "Theo hạng mục · ${_incomeSide ? AppStrings.income : AppStrings.expense}",
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: cs.outline,
                       letterSpacing: 0.3,

@@ -1,0 +1,40 @@
+---
+description: Visual style rules for the rounded Vietnamese fintech UI
+alwaysApply: true
+---
+
+# Visual Style Rules
+
+The visual style should feel like a modern Vietnamese personal finance app.
+
+Keywords:
+- Modern fintech
+- Soft rounded UI
+- Friendly
+- Clean
+- Calm
+- Trustworthy
+- Minimal friction
+- Vietnamese-first
+- Mobile-first
+
+Components:
+- Cards: rounded, soft, readable.
+- Buttons: rounded, clear, touch-friendly.
+- Inputs: rounded, large enough, easy to use.
+- Bottom sheets: rounded top corners, comfortable spacing.
+- Dialogs: rounded, short text, clear actions.
+- Chips: pill-shaped where appropriate.
+- Lists: easy to scan, not too dense.
+
+Financial UI:
+- Expenses should be visually distinct from income.
+- Important amounts should have strong hierarchy.
+- Do not overload users with too many numbers.
+- Use summaries before details.
+- Use charts only when helpful.
+
+Tone:
+- Friendly, not childish.
+- Professional, not corporate-heavy.
+- Simple, not boring.

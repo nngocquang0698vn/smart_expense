@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:intl/date_symbol_data_local.dart";
+import "package:shared_preferences/shared_preferences.dart";
 
+import "core/theme_notifier.dart";
 import "data/app_database.dart";
 import "data/ledger_repository.dart";
 import "repo_scope.dart";
@@ -11,16 +13,29 @@ import "theme/app_theme.dart";
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting("vi");
+
+  final prefs = await SharedPreferences.getInstance();
   final db = await AppDatabase.open();
   final repo = LedgerRepository(db);
   await repo.ensureDefaults();
-  runApp(SmartExpenseRoot(repo: repo));
+
+  runApp(
+    SmartExpenseRoot(
+      repo: repo,
+      themeNotifier: ThemeNotifier(prefs),
+    ),
+  );
 }
 
 class SmartExpenseRoot extends StatefulWidget {
-  const SmartExpenseRoot({super.key, required this.repo});
+  const SmartExpenseRoot({
+    super.key,
+    required this.repo,
+    required this.themeNotifier,
+  });
 
   final LedgerRepository repo;
+  final ThemeNotifier themeNotifier;
 
   @override
   State<SmartExpenseRoot> createState() => _SmartExpenseRootState();
@@ -43,22 +58,35 @@ class _SmartExpenseRootState extends State<SmartExpenseRoot> {
 
   @override
   Widget build(BuildContext context) {
-    return RepoScope(
-      notifier: widget.repo,
-      child: MaterialApp(
-        title: "Smart Ledger",
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        home: _onboarded == null
-            ? const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              )
-            : _onboarded!
-                ? const MainShell()
-                : OnboardingScreen(
-                    repo: widget.repo,
-                    onDone: _syncMeta,
-                  ),
+    return ThemeScope(
+      notifier: widget.themeNotifier,
+      child: RepoScope(
+        notifier: widget.repo,
+        child: ListenableBuilder(
+          listenable: widget.themeNotifier,
+          builder: (context, _) {
+            final s = widget.themeNotifier.settings;
+            return MaterialApp(
+              title: "Smart Ledger",
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.build(s, brightness: Brightness.light),
+              darkTheme: AppTheme.build(s, brightness: Brightness.dark),
+              themeMode: s.themePreference.materialThemeMode,
+              themeAnimationDuration: const Duration(milliseconds: 300),
+              themeAnimationCurve: Curves.easeInOut,
+              home: _onboarded == null
+                  ? const Scaffold(
+                      body: Center(child: CircularProgressIndicator()),
+                    )
+                  : _onboarded!
+                      ? const MainShell()
+                      : OnboardingScreen(
+                          repo: widget.repo,
+                          onDone: _syncMeta,
+                        ),
+            );
+          },
+        ),
       ),
     );
   }

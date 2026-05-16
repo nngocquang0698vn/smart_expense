@@ -1,0 +1,77 @@
+---
+description: Business domain rules for expense tracker features
+alwaysApply: true
+---
+
+# Expense Tracker Domain Rules
+
+Main entities:
+- Transaction
+- Category
+- Budget
+- Account
+- RecurringTransaction
+- MonthlySummary
+- SpendingReport
+
+Transaction should support:
+- id
+- amount
+- type: income or expense
+- categoryId
+- accountId, if accounts are supported
+- transactionDate
+- note
+- createdAt
+- updatedAt
+
+Category should support:
+- id
+- name
+- icon
+- color
+- type: income, expense, or both
+- sortOrder
+- isArchived
+
+Budget should support:
+- id
+- categoryId, optional
+- amount
+- period: weekly, monthly, yearly, custom
+- startDate
+- endDate
+- alertThreshold
+
+Money rules:
+- Avoid using floating-point calculations for money.
+- Prefer storing money as integer minor units.
+- For VND, store amount as integer VND.
+- Format money consistently for Vietnamese users.
+- Example display: `120.000 ₫`.
+
+Date rules:
+- Support today, this week, this month, this year, and custom range.
+- Monthly summaries must be calculated carefully.
+- Be careful with timezone and date boundaries.
+- Do not confuse transaction creation date with transaction date.
+
+Business logic rules:
+- Expense and income must always be clearly separated.
+- Net balance = total income - total expense.
+- Budget usage = expense in selected period / budget amount.
+- Reports should not double-count recurring transactions.
+- Deleted or archived categories should not break historical reports.
+
+Validation:
+- Amount must be greater than 0.
+- Category is required.
+- Transaction type is required.
+- Transaction date is required.
+- Notes are optional.
+- Very long notes should be limited.
+
+Do not:
+- Hardcode category names in business logic.
+- Mix display formatting with calculation logic.
+- Calculate reports directly in widgets.

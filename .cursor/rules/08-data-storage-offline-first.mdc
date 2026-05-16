@@ -1,0 +1,62 @@
+---
+description: Offline-first local data and repository rules
+alwaysApply: true
+---
+
+# Data Storage and Offline-First Rules
+
+The app should be designed with offline-first behavior.
+
+Data access:
+- UI must not access local database directly.
+- Use repository interfaces in the domain layer.
+- Use repository implementations in the data layer.
+- Keep storage implementation replaceable.
+
+Supported storage options may include:
+- SQLite / Drift
+- Isar
+- Hive
+- SharedPreferences only for simple settings
+- Firebase only if explicitly added to the project
+
+Offline-first rules:
+- Users should be able to add, edit, delete, and view transactions offline.
+- Local data should be the source of truth unless sync is introduced.
+- Avoid blocking core app usage on network calls.
+- Handle storage errors gracefully.
+
+Repository rules:
+- Repositories should expose clear methods.
+- Example:
+  - `getTransactions`
+  - `watchTransactions`
+  - `createTransaction`
+  - `updateTransaction`
+  - `deleteTransaction`
+  - `getMonthlySummary`
+  - `watchCategories`
+
+Data model rules:
+- Separate domain entities from database models if needed.
+- Use mappers between database models and domain entities.
+- Do not expose raw database models directly to UI.
+
+Migration:
+- Be careful when changing local schema.
+- Avoid destructive migrations unless explicitly requested.
+- Preserve user data.
+
+Settings:
+- Store user settings separately from transaction data.
+- Settings may include:
+  - theme mode
+  - currency
+  - language
+  - default transaction type
+  - first day of week
+
+Security and privacy:
+- Expense data is sensitive.
+- Do not log personal financial data unnecessarily.
+- Avoid exposing transaction details in debug logs.

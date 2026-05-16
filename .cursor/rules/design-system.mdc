@@ -1,0 +1,16 @@
+---
+alwaysApply: true
+---
+# .cursor/rules/design-system.mdc
+
+Design System Rules:
+- Use consistent spacing system.
+- Prefer rounded UI components.
+- Avoid sharp corners unless intentionally used for emphasis.
+- Buttons should feel touch-friendly.
+- Use modern mobile-first layouts.
+- Minimize cognitive load.
+- Avoid overcrowded screens.
+- Financial data should be visually scannable.
+- Charts should remain simple and understandable.
+- Empty states should guide users clearly.

@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 
+import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 
@@ -64,7 +65,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final income = _cats.where((c) => c.isIncome).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Hạng mục")),
+      appBar: AppBar(title: const Text(AppStrings.category)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openEditor(),
         child: const Icon(Icons.add),
@@ -76,7 +77,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 constraints: const BoxConstraints(maxWidth: 680),
                 child: ListView(
                   children: [
-                    _SectionHeader(label: "Chi tiêu"),
+                    _SectionHeader(label: AppStrings.expense),
                     ...expense.map(
                       (c) => _CategoryTile(
                         cat: c,
@@ -85,7 +86,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                     ),
                     const Divider(height: 1),
-                    _SectionHeader(label: "Thu nhập"),
+                    _SectionHeader(label: AppStrings.income),
                     ...income.map(
                       (c) => _CategoryTile(
                         cat: c,
@@ -156,7 +157,7 @@ class _CategoryTile extends StatelessWidget {
             : Switch.adaptive(
                 value: cat.enabled,
                 onChanged: (_) => onToggle(),
-                activeColor: cs.primary,
+                activeThumbColor: cs.primary,
               ),
         onTap: system ? null : onTap,
       ),
@@ -242,7 +243,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Huỷ"),
+            child: const Text(AppStrings.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -329,11 +330,11 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                   segments: const [
                     ButtonSegment(
                         value: false,
-                        label: Text("Chi tiêu"),
+                        label: Text(AppStrings.expense),
                         icon: Icon(Icons.arrow_downward_rounded)),
                     ButtonSegment(
                         value: true,
-                        label: Text("Thu nhập"),
+                        label: Text(AppStrings.income),
                         icon: Icon(Icons.arrow_upward_rounded)),
                   ],
                   selected: {_isIncome},
@@ -409,7 +410,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                         decoration: BoxDecoration(
                           color: selected
                               ? currentColor.withValues(alpha: 0.18)
-                              : cs.surfaceVariant
+                              : cs.surfaceContainerHighest
                                   .withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(10),
                           border: selected

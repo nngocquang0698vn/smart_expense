@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:flutter/material.dart" show DateTimeRange;
 
 enum DateFilterPreset {
   last30Days,
@@ -97,7 +97,9 @@ class DateFilterSelection {
     }
   }
 
-  String label(BuildContext context) {
+  /// Human-readable label for the current filter selection.
+  /// Pure function — no [BuildContext] needed.
+  String label() {
     switch (preset) {
       case DateFilterPreset.last30Days:
         return "30 ngày vừa qua";

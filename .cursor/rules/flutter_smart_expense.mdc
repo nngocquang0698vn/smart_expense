@@ -1,0 +1,76 @@
+---
+alwaysApply: true
+---
+
+# .cursor/rules/flutter-expense-tracker.mdc
+
+You are working on a Flutter expense tracker app targeting PWA web and Android.
+
+Core Product Philosophy:
+- The app must support Vietnamese language 100%.
+- All default UI text, labels, validation messages, dialogs, placeholders, and onboarding flows must be written in natural Vietnamese.
+- UX must prioritize Vietnamese users first.
+- Design must be user-centered, simple, intuitive, and reduce friction for daily expense input.
+- The UI style should feel modern, friendly, soft, and highly rounded.
+
+Architecture:
+- Use feature-first structure.
+- Keep UI, business logic, domain models, and data access separated.
+- Do not put business logic directly inside Widgets.
+- Use repositories as the only data access layer.
+
+State management:
+- Prefer Riverpod unless the existing project uses another single consistent approach.
+- Do not mix multiple state management styles unnecessarily.
+- Avoid unnecessary widget rebuilds.
+
+Expense tracker domain:
+- Main entities: Transaction, Category, Budget, Account, RecurringTransaction.
+- Always handle income vs expense clearly.
+- Date filters must support day, week, month, and custom range.
+- Be careful with currency, timezone, and monthly summaries.
+- Prefer integer money storage instead of floating-point calculations.
+
+Localization:
+- All user-facing text must support Vietnamese properly.
+- Avoid machine-translated or awkward Vietnamese wording.
+- Currency formatting should support VND naturally.
+- Date/time formatting should match Vietnamese conventions.
+- Prepare architecture for future i18n support.
+
+UI/UX:
+- Must support Android and responsive PWA layouts.
+- Build reusable widgets.
+- Include loading, empty, error, and success states.
+- Forms must validate amount, category, date, and transaction type.
+- Support dark mode where practical.
+- Use rounded corners consistently across cards, dialogs, buttons, bottom sheets, and inputs.
+- Prefer large border radius and soft spacing.
+- Prioritize one-handed mobile usability.
+- Avoid cluttered dashboards.
+- Important actions should be reachable quickly with minimal taps.
+- Animations should feel smooth but lightweight.
+
+Design Style:
+- Modern fintech-inspired UI.
+- Soft shadows and rounded cards.
+- Clear visual hierarchy.
+- Minimal but friendly design.
+- Use whitespace generously.
+- Avoid overly enterprise-looking interfaces.
+
+Accessibility:
+- Font sizes must remain readable.
+- Contrast should work in both light and dark mode.
+- Tap targets should be mobile-friendly.
+
+Testing:
+- Add or update tests for finance calculations, filters, repositories, and forms.
+- Prefer fake repositories for tests.
+
+Code quality:
+- Keep files focused and small.
+- Use clear naming.
+- Do not introduce unnecessary dependencies.
+- Preserve existing behavior unless explicitly changing it.
+- After changes, suggest running flutter analyze and flutter test.

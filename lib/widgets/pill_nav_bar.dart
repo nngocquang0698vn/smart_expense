@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 
+import "../core/strings.dart";
+
 class PillNavBar extends StatelessWidget {
   const PillNavBar({
     super.key,
@@ -40,27 +42,27 @@ class PillNavBar extends StatelessWidget {
               icon: Icons.home_rounded,
               selected: currentIndex == 0,
               onTap: () => onSelect(0),
-              tooltip: "Trang chủ",
-            ),
-            _NavIcon(
-              icon: Icons.fact_check_rounded,
-              selected: currentIndex == 1,
-              onTap: () => onSelect(1),
-              tooltip: "Đối soát",
-            ),
-            fab,
-            _NavIcon(
-              icon: Icons.pie_chart_outline_rounded,
-              selected: currentIndex == 2,
-              onTap: () => onSelect(2),
-              tooltip: "Báo cáo",
-            ),
-            _NavIcon(
-              icon: Icons.person_rounded,
-              selected: currentIndex == 3,
-              onTap: () => onSelect(3),
-              tooltip: "Cá nhân",
-            ),
+      tooltip: AppStrings.navHome,
+    ),
+    _NavIcon(
+      icon: Icons.fact_check_rounded,
+      selected: currentIndex == 1,
+      onTap: () => onSelect(1),
+      tooltip: AppStrings.navPending,
+    ),
+    fab,
+    _NavIcon(
+      icon: Icons.pie_chart_outline_rounded,
+      selected: currentIndex == 2,
+      onTap: () => onSelect(2),
+      tooltip: AppStrings.navAnalytics,
+    ),
+    _NavIcon(
+      icon: Icons.person_rounded,
+      selected: currentIndex == 3,
+      onTap: () => onSelect(3),
+      tooltip: AppStrings.navProfile,
+    ),
           ],
         ),
       ),

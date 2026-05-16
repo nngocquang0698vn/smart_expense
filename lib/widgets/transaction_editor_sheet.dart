@@ -5,6 +5,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:intl/intl.dart";
 
+import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
@@ -223,7 +224,7 @@ class _EditorBodyState extends State<_EditorBody> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Huỷ"),
+            child: const Text(AppStrings.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -276,15 +277,15 @@ class _EditorBodyState extends State<_EditorBody> {
                     Expanded(
                       child: Text(
                         widget.existing == null
-                            ? "Thêm giao dịch"
-                            : "Sửa giao dịch",
+                            ? AppStrings.addTransaction
+                            : AppStrings.editTransaction,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                     ),
                     IconButton(
                       onPressed: _handleClose,
                       icon: const Icon(Icons.close),
-                      tooltip: "Đóng",
+                      tooltip: AppStrings.close,
                     ),
                   ],
                 ),
@@ -294,7 +295,7 @@ class _EditorBodyState extends State<_EditorBody> {
                 TextField(
                   controller: _titleCtrl,
                   decoration:
-                      const InputDecoration(labelText: "Tên giao dịch"),
+                      const InputDecoration(labelText: AppStrings.transactionTitle),
                 ),
                 const SizedBox(height: 12),
 
@@ -304,7 +305,7 @@ class _EditorBodyState extends State<_EditorBody> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
-                    labelText: "Số tiền (VND)",
+                    labelText: AppStrings.amount,
                     hintText: "0",
                   ),
                 ),
@@ -313,8 +314,8 @@ class _EditorBodyState extends State<_EditorBody> {
                 // Income / Expense toggle
                 SegmentedButton<bool>(
                   segments: const [
-                    ButtonSegment(value: false, label: Text("Chi tiêu")),
-                    ButtonSegment(value: true, label: Text("Thu nhập")),
+                    ButtonSegment(value: false, label: Text(AppStrings.expense)),
+                    ButtonSegment(value: true, label: Text(AppStrings.income)),
                   ],
                   selected: {_income},
                   onSelectionChanged: (s) {
@@ -349,14 +350,14 @@ class _EditorBodyState extends State<_EditorBody> {
                       )
                       .toList(),
                   onChanged: (v) => setState(() => _categoryId = v),
-                  decoration: const InputDecoration(labelText: "Hạng mục"),
+                  decoration: const InputDecoration(labelText: AppStrings.category),
                 ),
                 const SizedBox(height: 12),
 
                 // Date picker
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text("Ngày giao dịch"),
+                  title: const Text(AppStrings.transactionDate),
                   subtitle: Text(DateFormat.yMMMd("vi").format(_date)),
                   trailing: const Icon(Icons.calendar_month),
                   onTap: () async {
@@ -374,7 +375,7 @@ class _EditorBodyState extends State<_EditorBody> {
                 // Pending toggle — free to toggle for all transaction types
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text("Chờ đối soát"),
+                  title: const Text(AppStrings.pending),
                   subtitle: const Text(
                       "Bật nếu cần xem lại giao dịch này sau."),
                   value: _pending,
@@ -387,24 +388,24 @@ class _EditorBodyState extends State<_EditorBody> {
                   controller: _noteCtrl,
                   maxLines: 2,
                   decoration:
-                      const InputDecoration(labelText: "Ghi chú"),
+                      const InputDecoration(labelText: AppStrings.note),
                 ),
 
                 // Audio playback
                 if (hasAudio) ...[
                   const SizedBox(height: 12),
                   Card(
-                    color: const Color(0xFFEAF7FF),
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     child: ListTile(
-                      leading: const Icon(Icons.audiotrack,
-                          color: Color(0xFF00544D)),
+                      leading: Icon(Icons.audiotrack,
+                          color: Theme.of(context).colorScheme.primary),
                       title: const Text("Audio đính kèm"),
                       subtitle: const Text("Nhấn ▶ để nghe lại ghi âm"),
                       trailing: IconButton(
                         onPressed: () =>
                             _playAudio(widget.existing!.audioBase64!),
-                        icon: const Icon(Icons.play_arrow,
-                            color: Color(0xFF00544D)),
+                        icon: Icon(Icons.play_arrow,
+                            color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
                   ),
@@ -446,7 +447,7 @@ class _EditorBodyState extends State<_EditorBody> {
                   onPressed: () =>
                       _validateAndRun(cats: cats, confirm: true),
                   icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: const Text("Lưu & Xác nhận đủ thông tin"),
+                  label: const Text(AppStrings.saveAndConfirm),
                 ),
                 const SizedBox(height: 8),
 
@@ -455,7 +456,7 @@ class _EditorBodyState extends State<_EditorBody> {
                   onPressed: () =>
                       _validateAndRun(cats: cats, confirm: false),
                   icon: const Icon(Icons.save_outlined, size: 18),
-                  label: const Text("Lưu"),
+                  label: const Text(AppStrings.save),
                 ),
 
                 // 3. Delete (only for existing transactions)
@@ -471,7 +472,7 @@ class _EditorBodyState extends State<_EditorBody> {
                     ),
                     onPressed: _delete,
                     icon: const Icon(Icons.delete_outline, size: 18),
-                    label: const Text("Xoá giao dịch"),
+                    label: const Text(AppStrings.deleteTransaction),
                   ),
                 ],
               ],

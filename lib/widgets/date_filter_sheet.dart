@@ -144,7 +144,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                     selected: sel.preset == DateFilterPreset.last30Days,
                     title: DateFilterSelection(
                       preset: DateFilterPreset.last30Days,
-                    ).label(context),
+                    ).label(),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.last30Days,
@@ -155,7 +155,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                     selected: sel.preset == DateFilterPreset.thisWeek,
                     title: DateFilterSelection(
                       preset: DateFilterPreset.thisWeek,
-                    ).label(context),
+                    ).label(),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.thisWeek,
@@ -166,7 +166,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                     selected: sel.preset == DateFilterPreset.thisMonth,
                     title: DateFilterSelection(
                       preset: DateFilterPreset.thisMonth,
-                    ).label(context),
+                    ).label(),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.thisMonth,
@@ -177,7 +177,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                     selected: sel.preset == DateFilterPreset.thisYear,
                     title: DateFilterSelection(
                       preset: DateFilterPreset.thisYear,
-                    ).label(context),
+                    ).label(),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.thisYear,
@@ -188,7 +188,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                     selected: sel.preset == DateFilterPreset.allTime,
                     title: DateFilterSelection(
                       preset: DateFilterPreset.allTime,
-                    ).label(context),
+                    ).label(),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.allTime,
@@ -199,7 +199,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                     selected: sel.preset == DateFilterPreset.pickMonth,
                     title: "Theo tháng…",
                     subtitle: sel.preset == DateFilterPreset.pickMonth
-                        ? sel.label(context)
+                        ? sel.label()
                         : null,
                     onTap: _pickMonth,
                   ),
@@ -207,7 +207,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                     selected: sel.preset == DateFilterPreset.pickYear,
                     title: "Theo năm…",
                     subtitle: sel.preset == DateFilterPreset.pickYear
-                        ? sel.label(context)
+                        ? sel.label()
                         : null,
                     onTap: _pickYear,
                   ),
@@ -215,7 +215,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                     selected: sel.preset == DateFilterPreset.custom,
                     title: "Khoảng ngày tuỳ chọn…",
                     subtitle: sel.preset == DateFilterPreset.custom
-                        ? sel.label(context)
+                        ? sel.label()
                         : null,
                     onTap: _pickCustom,
                   ),

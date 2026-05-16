@@ -1,5 +1,9 @@
 import "package:flutter/material.dart";
 
+import "../core/theme_settings.dart";
+import "../core/strings.dart";
+import "../core/theme_notifier.dart";
+import "../core/theme_presets.dart";
 import "../data/demo_seed.dart";
 import "../data/ledger_repository.dart";
 import "../widgets/add_options_sheet.dart";
@@ -71,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Huỷ"),
+            child: const Text(AppStrings.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -124,6 +128,95 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _load();
   }
 
+  Widget _buildAppearanceSection(BuildContext context) {
+    final notifier = ThemeScope.of(context);
+    final settings = notifier.settings;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Giao diện",
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 12),
+
+          Text(
+            "Chế độ hiển thị",
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(color: Theme.of(context).colorScheme.outline),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<AppThemePreference>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment<AppThemePreference>(
+                value: AppThemePreference.system,
+                label: Text("Hệ thống"),
+              ),
+              ButtonSegment<AppThemePreference>(
+                value: AppThemePreference.light,
+                label: Text("Sáng"),
+              ),
+              ButtonSegment<AppThemePreference>(
+                value: AppThemePreference.dark,
+                label: Text("Tối"),
+              ),
+            ],
+            selected: {settings.themePreference},
+            onSelectionChanged: (next) {
+              if (next.isEmpty) return;
+              notifier.update(
+                settings.copyWith(themePreference: next.first),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // ── Colour label ──────────────────────────────────────────────
+          Text(
+            "Màu chủ đạo",
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(color: Theme.of(context).colorScheme.outline),
+          ),
+          const SizedBox(height: 10),
+
+          // ── Colour swatches ───────────────────────────────────────────
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final preset in kThemePresets)
+                _ColorDot(
+                  preset: preset,
+                  selected: settings.seedColor == preset.color,
+                  onTap: () => notifier.update(
+                    settings.copyWith(seedColor: preset.color),
+                  ),
+                ),
+            ],
+          ),
+
+          // ── Coloured-surfaces toggle ──────────────────────────────────
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: const Text("Nền màu sắc"),
+            subtitle: const Text("Tông màu nhẹ theo màu chủ đạo"),
+            value: settings.useColoredSurfaces,
+            onChanged: (v) =>
+                notifier.update(settings.copyWith(useColoredSurfaces: v)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLeftPanel(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -164,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         ListTile(
           leading: const Icon(Icons.category_outlined),
-          title: const Text("Hạng mục"),
+          title: const Text(AppStrings.category),
           subtitle: const Text("Thêm, sửa, xoá danh mục thu chi"),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
@@ -278,6 +371,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                _buildAppearanceSection(context),
+                const Divider(height: 24, indent: 16, endIndent: 16),
                 _buildLeftPanel(context),
                 _buildDemoCard(context),
               ],
@@ -289,3 +384,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+// ── Private widgets ────────────────────────────────────────────────────────────
+
+/// A tappable coloured circle for the theme colour picker.
+class _ColorDot extends StatelessWidget {
+  const _ColorDot({
+    required this.preset,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final ThemePreset preset;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: preset.nameVi,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: preset.color,
+            shape: BoxShape.circle,
+            border: selected
+                ? Border.all(color: Colors.white, width: 3)
+                : Border.all(color: Colors.transparent, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: preset.color.withValues(
+                  alpha: selected ? 0.55 : 0.20,
+                ),
+                blurRadius: selected ? 10 : 4,
+                spreadRadius: selected ? 1 : 0,
+              ),
+            ],
+          ),
+          child: selected
+              ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
+              : null,
+        ),
+      ),
+    );
+  }
+}
+

@@ -1,0 +1,52 @@
+---
+description: Testing rules for the Flutter expense tracker
+alwaysApply: true
+---
+
+# Testing Rules
+
+Testing is important for finance-related logic.
+
+Prioritize tests for:
+- Money calculations
+- Monthly summaries
+- Date range filters
+- Category filtering
+- Budget usage
+- Income vs expense separation
+- Transaction validation
+- Repository behavior
+- Form behavior
+
+Unit tests:
+- Use unit tests for pure business logic.
+- Test edge cases.
+- Test empty transaction lists.
+- Test transactions across month boundaries.
+- Test income and expense calculations separately.
+
+Widget tests:
+- Test transaction form validation.
+- Test empty states.
+- Test loading states.
+- Test error states.
+- Test important buttons and navigation.
+
+Repository tests:
+- Prefer fake repositories.
+- Avoid depending on real local database unless specifically testing database integration.
+
+Test naming:
+- Test names should describe behavior clearly.
+- Example:
+  - `returns zero expense when transaction list is empty`
+  - `calculates monthly expense only for selected month`
+  - `shows validation message when amount is empty`
+
+When fixing bugs:
+- Add a regression test when practical.
+
+Do not:
+- Ignore failing tests.
+- Remove tests without good reason.
+- Test implementation details unnecessarily.

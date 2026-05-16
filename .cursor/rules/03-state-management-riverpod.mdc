@@ -1,0 +1,39 @@
+---
+description: Riverpod state management rules
+alwaysApply: true
+---
+
+# State Management Rules
+
+Prefer Riverpod for state management unless the existing project already uses another consistent approach.
+
+Riverpod rules:
+- Use providers for dependency injection.
+- Use Notifier/AsyncNotifier for mutable feature state.
+- Keep business logic outside Widgets.
+- Do not mix Riverpod with random `setState` for feature state.
+- `setState` is acceptable only for very small local UI state.
+
+Provider naming:
+- Use clear names ending with `Provider`.
+- Example:
+  - `transactionRepositoryProvider`
+  - `transactionListProvider`
+  - `monthlySummaryProvider`
+  - `categoryControllerProvider`
+
+State rules:
+- Loading, error, and empty states must be handled.
+- Async operations should expose proper loading/error states.
+- Avoid silent failures.
+- Avoid duplicated state.
+
+Do not:
+- Put database logic inside providers directly if it belongs in repositories.
+- Put formatting logic repeatedly inside widgets.
+- Create overly large providers that manage unrelated features.
+
+Prefer:
+- Small providers.
+- Feature-scoped providers.
+- Fake repositories for testing.

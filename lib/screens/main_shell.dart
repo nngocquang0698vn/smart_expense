@@ -1,7 +1,10 @@
 import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 
+import "../core/constants.dart";
+import "../core/strings.dart";
 import "../repo_scope.dart";
+import "../theme/app_chrome_theme.dart";
 import "../widgets/add_options_sheet.dart";
 import "../widgets/fab_center.dart";
 import "../widgets/pill_nav_bar.dart";
@@ -9,6 +12,21 @@ import "analytics_screen.dart";
 import "home_screen.dart";
 import "pending_screen.dart";
 import "profile_screen.dart";
+
+// Navigation item descriptor — keeps the desktop and mobile nav in sync.
+class _NavItem {
+  const _NavItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+}
+
+const _navItems = [
+  _NavItem(icon: Icons.home_rounded, label: AppStrings.navHome),
+  _NavItem(icon: Icons.fact_check_rounded, label: AppStrings.navPending),
+  _NavItem(icon: Icons.pie_chart_rounded, label: AppStrings.navAnalytics),
+  _NavItem(icon: Icons.person_rounded, label: AppStrings.navProfile),
+];
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -22,6 +40,8 @@ class _MainShellState extends State<MainShell> {
 
   void _goPending() => setState(() => _page = 1);
 
+  void _selectPage(int index) => setState(() => _page = index);
+
   @override
   Widget build(BuildContext context) {
     final repo = RepoScope.of(context);
@@ -31,135 +51,218 @@ class _MainShellState extends State<MainShell> {
       AnalyticsScreen(repo: repo),
       ProfileScreen(repo: repo, onOpenPending: _goPending),
     ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final mobile = constraints.maxWidth < 1000;
-        if (mobile) {
-          // Cap system bottom inset to prevent Chrome DevTools from
-          // reporting inflated viewPadding that breaks layout.
-          final sysBtm = MediaQuery.of(context).viewPadding.bottom.clamp(0.0, 60.0);
-          // PillNavBar intrinsic height: 8(top) + 56(row) + 8(bottom) = 72px
-          // Plus gap (12px) plus system inset.
-          final navBarHeight = 72.0 + 12.0 + sysBtm;
-          return Scaffold(
-            extendBody: true,
-            body: IndexedStack(index: _page, children: pages),
-            bottomNavigationBar: SizedBox(
-              height: navBarHeight,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 12.0 + sysBtm),
-                child: PillNavBar(
-                  currentIndex: _page,
-                  onSelect: (i) => setState(() => _page = i),
-                  fab: FabCenter(
-                    onPressed: () => handleAddFab(context, repo),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        final now = DateTime.now();
-        final timeText = DateFormat("HH:mm", "vi").format(now);
-        final dateText = DateFormat("EEEE, d MMM y", "vi").format(now);
-        return Scaffold(
-          backgroundColor: const Color(0xFFEAF7FF),
-          body: SafeArea(
-            child: Stack(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      width: 288,
-                      padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFDDF4FF), Color(0xFFCDEFFF)],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            timeText,
-                            style: const TextStyle(
-                              color: Color(0xFF00544D),
-                              fontSize: 34,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            dateText,
-                            style: TextStyle(
-                              color: const Color(0xFF00544D).withValues(alpha: 0.75),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          _DesktopNavItem(
-                            icon: Icons.home_rounded,
-                            label: "Trang chủ",
-                            active: _page == 0,
-                            onTap: () => setState(() => _page = 0),
-                          ),
-                          _DesktopNavItem(
-                            icon: Icons.fact_check_rounded,
-                            label: "Đối soát",
-                            active: _page == 1,
-                            onTap: () => setState(() => _page = 1),
-                          ),
-                          _DesktopNavItem(
-                            icon: Icons.pie_chart_rounded,
-                            label: "Báo cáo",
-                            active: _page == 2,
-                            onTap: () => setState(() => _page = 2),
-                          ),
-                          _DesktopNavItem(
-                            icon: Icons.person_rounded,
-                            label: "Cá nhân",
-                            active: _page == 3,
-                            onTap: () => setState(() => _page = 3),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5FBFF),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: IndexedStack(index: _page, children: pages),
-                      ),
-                    ),
-                  ],
-                  ),
-                  Positioned(
-                    right: 24,
-                    bottom: 24,
-                    child: FloatingActionButton(
-                      onPressed: () => handleAddFab(context, repo),
-                      child: const Icon(Icons.add),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+        final isMobile = constraints.maxWidth < AppBreakpoints.desktop;
+        return isMobile
+            ? _MobileShell(
+                page: _page,
+                pages: pages,
+                onSelect: _selectPage,
+                onFab: () => handleAddFab(context, repo),
+              )
+            : _DesktopShell(
+                page: _page,
+                pages: pages,
+                onSelect: _selectPage,
+                onFab: () => handleAddFab(context, repo),
+              );
+      },
     );
   }
 }
 
-class _DesktopNavItem extends StatelessWidget {
-  const _DesktopNavItem({
+// ── Mobile shell ──────────────────────────────────────────────────────────────
+
+class _MobileShell extends StatelessWidget {
+  const _MobileShell({
+    required this.page,
+    required this.pages,
+    required this.onSelect,
+    required this.onFab,
+  });
+
+  final int page;
+  final List<Widget> pages;
+  final ValueChanged<int> onSelect;
+  final VoidCallback onFab;
+
+  @override
+  Widget build(BuildContext context) {
+    // Cap system bottom inset to prevent Chrome DevTools from reporting
+    // inflated viewPadding that breaks layout.
+    final sysBtm =
+        MediaQuery.of(context).viewPadding.bottom.clamp(0.0, 60.0);
+    // PillNavBar intrinsic height: 8(top) + 56(row) + 8(bottom) = 72 px.
+    final navBarHeight = 72.0 + 12.0 + sysBtm;
+
+    return Scaffold(
+      extendBody: true,
+      body: IndexedStack(index: page, children: pages),
+      bottomNavigationBar: SizedBox(
+        height: navBarHeight,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 12.0 + sysBtm),
+          child: PillNavBar(
+            currentIndex: page,
+            onSelect: onSelect,
+            fab: FabCenter(onPressed: onFab),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Desktop shell ─────────────────────────────────────────────────────────────
+
+class _DesktopShell extends StatelessWidget {
+  const _DesktopShell({
+    required this.page,
+    required this.pages,
+    required this.onSelect,
+    required this.onFab,
+  });
+
+  final int page;
+  final List<Widget> pages;
+  final ValueChanged<int> onSelect;
+  final VoidCallback onFab;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+
+    final cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _Sidebar(
+                  now: now,
+                  selectedIndex: page,
+                  onSelect: onSelect,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: IndexedStack(index: page, children: pages),
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              right: 24,
+              bottom: 24,
+              child: FloatingActionButton(
+                onPressed: onFab,
+                child: const Icon(Icons.add),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+
+class _Sidebar extends StatelessWidget {
+  const _Sidebar({
+    required this.now,
+    required this.selectedIndex,
+    required this.onSelect,
+  });
+
+  final DateTime now;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final chrome = Theme.of(context).extension<AppChromeTheme>() ??
+        AppChromeTheme.fromSeed(
+          cs.primary,
+          Theme.of(context).brightness,
+        );
+    final timeText = DateFormat("HH:mm", "vi").format(now);
+    final dateText = DateFormat("EEEE, d MMM y", "vi").format(now);
+
+    return Container(
+      width: 288,
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            chrome.sidebarGradientTop,
+            chrome.sidebarGradientMid,
+            chrome.sidebarGradientBottom,
+          ],
+          stops: const [0.0, 0.52, 1.0],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: chrome.sidebarBorder.withValues(alpha: 0.65),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: chrome.sidebarShadow,
+            blurRadius: 28,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            timeText,
+            style: TextStyle(
+              color: cs.primary,
+              fontSize: 34,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            dateText,
+            style: TextStyle(
+              color: chrome.sidebarNavInactive.withValues(alpha: 0.82),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 20),
+          ..._navItems.asMap().entries.map(
+            (e) => _SidebarNavItem(
+              icon: e.value.icon,
+              label: e.value.label,
+              active: selectedIndex == e.key,
+              onTap: () => onSelect(e.key),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SidebarNavItem extends StatelessWidget {
+  const _SidebarNavItem({
     required this.icon,
     required this.label,
     required this.active,
@@ -173,10 +276,18 @@ class _DesktopNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final chrome = Theme.of(context).extension<AppChromeTheme>() ??
+        AppChromeTheme.fromSeed(
+          cs.primary,
+          Theme.of(context).brightness,
+        );
+    final color = active ? cs.onPrimary : chrome.sidebarNavInactive;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: active ? const Color(0xFF00544D) : Colors.transparent,
+        color: active ? cs.primary : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -185,13 +296,14 @@ class _DesktopNavItem extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
-                Icon(icon, color: active ? Colors.white : const Color(0xFF00544D)),
+                Icon(icon, color: color),
                 const SizedBox(width: 10),
                 Text(
                   label,
                   style: TextStyle(
-                    color: active ? Colors.white : const Color(0xFF00544D),
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                    color: color,
+                    fontWeight:
+                        active ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
               ],

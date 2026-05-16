@@ -10,6 +10,8 @@ import "package:image_picker/image_picker.dart";
 import "package:intl/intl.dart";
 import "package:record/record.dart";
 
+import "../core/constants.dart";
+import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 
@@ -155,7 +157,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Huỷ"),
+            child: const Text(AppStrings.cancel),
           ),
         ],
       ),
@@ -312,23 +314,27 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   Widget _buildAudioSection() {
     if (_microDenied) {
+      final cs = Theme.of(context).colorScheme;
       return Card(
-        color: const Color(0xFFFFF0F0),
+        color: cs.errorContainer,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
             children: [
-              const Icon(Icons.mic_off, color: Colors.red, size: 32),
+              Icon(Icons.mic_off, color: cs.onErrorContainer, size: 32),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 "Không thể truy cập Micro",
-                style: TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: cs.onErrorContainer,
+                ),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 "Kiểm tra lại quyền truy cập trong trình duyệt / thiết bị.",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12),
+                style: TextStyle(fontSize: 12, color: cs.onErrorContainer),
               ),
               const SizedBox(height: 8),
               OutlinedButton(
@@ -341,8 +347,9 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       );
     }
 
+    final cs = Theme.of(context).colorScheme;
     return Card(
-      color: const Color(0xFFEAF7FF),
+      color: cs.primaryContainer,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         child: Column(
@@ -351,10 +358,10 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
             const SizedBox(height: 6),
             Text(
               _fmtDuration(_recordDuration),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF00544D),
+                color: cs.primary,
               ),
             ),
             Text(
@@ -363,7 +370,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                   : (_audioBase64 != null
                       ? "Ghi âm thành công"
                       : "Sẵn sàng ghi âm"),
-              style: const TextStyle(fontSize: 12, color: Color(0xFF00544D)),
+              style: TextStyle(fontSize: 12, color: cs.primary),
             ),
             const SizedBox(height: 8),
             Row(
@@ -379,7 +386,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                         await _startRecording();
                       },
                       icon: const Icon(Icons.refresh, size: 16),
-                      label: const Text("Ghi lại"),
+                      label: const Text(AppStrings.reRecord),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -399,8 +406,10 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                     ),
                     label: Text(
                       _recording
-                          ? "Dừng"
-                          : (_audioBase64 == null ? "Bắt đầu" : "Nghe lại"),
+                          ? AppStrings.stopRecording
+                          : (_audioBase64 == null
+                              ? AppStrings.startRecording
+                              : AppStrings.playBack),
                     ),
                   ),
                 ),
@@ -455,7 +464,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                     IconButton(
                       onPressed: _handleClose,
                       icon: const Icon(Icons.close),
-                      tooltip: "Đóng",
+                      tooltip: AppStrings.close,
                     ),
                   ],
                 ),
@@ -465,14 +474,14 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    color: const Color(0xFFE2F2FA),
+                    borderRadius: BorderRadius.circular(AppRadius.container),
+                    color: Theme.of(context).colorScheme.primaryContainer,
                   ),
                   child: SegmentedButton<bool>(
                     showSelectedIcon: false,
                     segments: const [
-                      ButtonSegment(value: false, label: Text("Chi tiêu")),
-                      ButtonSegment(value: true, label: Text("Thu nhập")),
+                      ButtonSegment(value: false, label: Text(AppStrings.expense)),
+                      ButtonSegment(value: true, label: Text(AppStrings.income)),
                     ],
                     selected: {_income},
                     onSelectionChanged: (v) => setState(() {
@@ -491,7 +500,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF00544D),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                   decoration: const InputDecoration(
                     prefixText: "₫ ",
@@ -523,54 +532,59 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: cats
-                      .where((c) => c.isIncome == _income)
-                      .map((cat) {
-                    final active = cat.id == _categoryId;
-                    return GestureDetector(
-                      onTap: () => setState(() => _categoryId = cat.id),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: active
-                              ? const Color(0xFF00544D)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: active
-                                ? const Color(0xFF00544D)
-                                : const Color(0xFFD6E2EA),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              cat.icon,
-                              size: 16,
-                              color: active ? Colors.white : cat.color,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              cat.name,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                Builder(
+                  builder: (ctx) {
+                    final cs = Theme.of(ctx).colorScheme;
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: cats
+                          .where((c) => c.isIncome == _income)
+                          .map((cat) {
+                        final active = cat.id == _categoryId;
+                        return GestureDetector(
+                          onTap: () => setState(() => _categoryId = cat.id),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color:
+                                  active ? cs.primary : cs.surface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
                                 color: active
-                                    ? Colors.white
-                                    : Colors.black87,
+                                    ? cs.primary
+                                    : cs.outlineVariant,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  cat.icon,
+                                  size: 16,
+                                  color:
+                                      active ? cs.onPrimary : cat.color,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  cat.name,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: active
+                                        ? cs.onPrimary
+                                        : cs.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
+                  },
                 ),
                 const SizedBox(height: 14),
 
@@ -579,7 +593,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                   child: ListTile(
                     leading: const Icon(Icons.calendar_today_rounded),
                     title: Text(DateFormat("dd/MM/yyyy").format(_date)),
-                    subtitle: const Text("Ngày giao dịch"),
+                    subtitle: const Text(AppStrings.transactionDate),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -604,7 +618,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                           onPressed: () => _pickImage(ImageSource.camera),
                           icon: const Icon(Icons.photo_camera_outlined,
                               size: 16),
-                          label: const Text("Chụp ảnh"),
+                          label: const Text(AppStrings.takePhoto),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -614,7 +628,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                         onPressed: () => _pickImage(ImageSource.gallery),
                         icon: const Icon(Icons.photo_library_outlined,
                             size: 16),
-                        label: const Text("Chọn ảnh"),
+                        label: const Text(AppStrings.pickPhoto),
                       ),
                     ),
                     if (widget.mode != QuickEntryMode.voice) ...[
@@ -698,7 +712,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 // ── Pending toggle (free — no media restriction) ───────────
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text("Chờ đối soát"),
+                  title: const Text(AppStrings.pending),
                   subtitle: Text(
                     _hasMedia
                         ? "Có audio/ảnh — nên bật để đối soát sau."
@@ -790,6 +804,7 @@ class _WaveBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     const heights = [10.0, 18.0, 28.0, 40.0, 32.0, 24.0, 36.0, 20.0, 14.0];
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -800,9 +815,7 @@ class _WaveBars extends StatelessWidget {
             width: 6,
             height: h,
             decoration: BoxDecoration(
-              color: active
-                  ? const Color(0xFF00544D)
-                  : const Color(0xFF89CFC9),
+              color: active ? cs.primary : cs.outlineVariant,
               borderRadius: BorderRadius.circular(99),
             ),
           ),

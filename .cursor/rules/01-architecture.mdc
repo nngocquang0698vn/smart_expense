@@ -1,0 +1,65 @@
+---
+description: Architecture rules for the Flutter expense tracker
+alwaysApply: true
+---
+
+# Architecture Rules
+
+Use a feature-first architecture.
+
+Recommended structure:
+
+lib/
+  core/
+    constants/
+    errors/
+    extensions/
+    formatters/
+    theme/
+    utils/
+    widgets/
+  features/
+    transactions/
+      domain/
+      data/
+      application/
+      presentation/
+    categories/
+      domain/
+      data/
+      application/
+      presentation/
+    budgets/
+      domain/
+      data/
+      application/
+      presentation/
+    reports/
+      domain/
+      data/
+      application/
+      presentation/
+    settings/
+      domain/
+      data/
+      application/
+      presentation/
+
+Layer rules:
+- presentation: widgets, screens, UI state only.
+- application: use cases, controllers, providers, orchestration logic.
+- domain: entities, value objects, repository interfaces, pure business rules.
+- data: DTOs, local database models, repository implementations, data sources.
+
+Do not:
+- Put business logic directly inside Widgets.
+- Let UI call database/storage directly.
+- Mix unrelated features in the same file.
+- Create overly generic abstractions too early.
+
+Prefer:
+- Small, focused files.
+- Clear naming.
+- Repository pattern for data access.
+- Pure functions for calculations.
+- Feature-level separation.

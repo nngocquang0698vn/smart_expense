@@ -1,0 +1,42 @@
+---
+description: Flutter and Dart coding conventions
+alwaysApply: true
+---
+
+# Flutter Code Style
+
+General:
+- Write clean, readable, maintainable Dart code.
+- Prefer composition over inheritance.
+- Keep Widgets small and focused.
+- Extract reusable widgets when UI blocks are repeated.
+- Use meaningful names for classes, methods, variables, and providers.
+
+Dart:
+- Prefer `final` where possible.
+- Use null-safety properly.
+- Avoid force unwrap `!` unless truly safe.
+- Avoid large methods.
+- Avoid deeply nested code.
+- Prefer early returns.
+
+Flutter:
+- Prefer `const` constructors where possible.
+- Avoid unnecessary rebuilds.
+- Avoid expensive calculations inside `build`.
+- Keep `build` methods readable.
+- Extract complex UI sections into private widgets or separate files.
+
+Do not:
+- Add unnecessary dependencies.
+- Rewrite unrelated files.
+- Introduce global mutable state.
+- Hardcode repeated values.
+- Ignore analyzer warnings.
+
+After code changes, suggest running:
+
+```bash
+flutter analyze
+flutter test
+```

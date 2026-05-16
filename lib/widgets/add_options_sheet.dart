@@ -1,6 +1,8 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
+import "../core/constants.dart";
+import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "quick_entry_sheet.dart";
 
@@ -15,11 +17,13 @@ Future<void> handleAddFab(
 }
 
 Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
+  final surface = Theme.of(context).colorScheme.surface;
   return showModalBottomSheet<QuickEntryMode>(
     context: context,
     showDragHandle: true,
-    backgroundColor: Colors.white,
+    backgroundColor: surface,
     builder: (ctx) {
+      final cs = Theme.of(ctx).colorScheme;
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -47,17 +51,17 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
                 icon: Icons.touch_app,
                 title: "Chạm để nhập",
                 subtitle: "Nhập liệu cực nhanh với một lần chạm",
-                background: const Color(0xFF00544D),
-                foreground: Colors.white,
+                background: cs.primary,
+                foreground: cs.onPrimary,
                 onTap: () => Navigator.pop(ctx, QuickEntryMode.tap),
               ),
               const SizedBox(height: 10),
               _OptionCard(
                 icon: Icons.mic,
-                title: "Ghi âm",
+                title: AppStrings.record,
                 subtitle: "Ghi nhanh một bản ghi âm để đối soát sau",
-                background: const Color(0xFFE6F8FF),
-                foreground: const Color(0xFF004D4D),
+                background: cs.primaryContainer,
+                foreground: cs.onPrimaryContainer,
                 onTap: () => Navigator.pop(ctx, QuickEntryMode.voice),
               ),
               const SizedBox(height: 10),
@@ -68,8 +72,8 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
                 subtitle: kIsWeb
                     ? "Chọn ảnh từ máy để lưu hoá đơn đối soát"
                     : "Lưu ảnh hoá đơn để đối soát sau",
-                background: const Color(0xFFE6F8FF),
-                foreground: const Color(0xFF004D4D),
+                background: cs.primaryContainer,
+                foreground: cs.onPrimaryContainer,
                 onTap: () => Navigator.pop(ctx, QuickEntryMode.receipt),
               ),
             ],
@@ -99,18 +103,22 @@ class _OptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final avatarBg = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.92);
     return Material(
       color: background,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(AppRadius.card),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: Colors.white.withValues(alpha: 0.92),
+                backgroundColor: avatarBg,
                 child: Icon(icon, color: foreground),
               ),
               const SizedBox(width: 12),

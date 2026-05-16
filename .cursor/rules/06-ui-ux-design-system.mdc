@@ -1,0 +1,102 @@
+---
+description: User-centered rounded UI design system rules
+alwaysApply: true
+---
+
+# UI/UX Design System Rules
+
+Design direction:
+- User-centered
+- Vietnamese-first
+- Mobile-first
+- Modern fintech-inspired
+- Friendly
+- Soft
+- Rounded
+- Clean
+- Easy to scan
+
+Core UI style:
+- Use rounded corners consistently.
+- Prefer large border radius.
+- Use soft cards.
+- Use clean spacing.
+- Use clear visual hierarchy.
+- Avoid clutter.
+- Avoid sharp, harsh, enterprise-looking UI.
+
+Rounded design:
+- Cards should have rounded corners.
+- Buttons should have rounded corners.
+- Text fields should have rounded corners.
+- Dialogs should have rounded corners.
+- Bottom sheets should have rounded top corners.
+- Chips and filters should be pill-shaped where appropriate.
+
+Recommended border radius:
+- Small components: 12
+- Inputs and buttons: 16
+- Cards: 20
+- Bottom sheets and dialogs: 24
+- Large containers: 24-32
+
+Spacing:
+- Use generous whitespace.
+- Avoid cramped layouts.
+- Keep related items visually grouped.
+- Use consistent spacing scale.
+
+Suggested spacing scale:
+- 4
+- 8
+- 12
+- 16
+- 20
+- 24
+- 32
+
+User-centered UX:
+- Important actions should require minimal taps.
+- Adding an expense should be fast.
+- The amount input should be prominent.
+- Category selection should be easy.
+- Date selection should default to today.
+- Recent categories should be easy to access.
+- Avoid forcing users through unnecessary steps.
+
+Expense input UX:
+- Amount field should be the main focus.
+- Default transaction type can be expense.
+- Date should default to today.
+- Category should be visually selectable.
+- Save button should be obvious.
+- Validation should appear close to the problematic field.
+
+Dashboard UX:
+- Show key information first:
+  - Total expense this month
+  - Total income this month
+  - Balance
+  - Top spending categories
+  - Recent transactions
+- Avoid showing too many charts at once.
+- Financial data should be easy to scan quickly.
+
+Charts:
+- Charts must be simple.
+- Avoid overly complex visualizations.
+- Labels must be readable in Vietnamese.
+- Use charts only when they help understanding.
+- Do not make charts visually overwhelming.
+
+Accessibility:
+- Text must be readable.
+- Tap targets must be large enough.
+- Contrast must work in light and dark mode.
+- Do not rely only on color to communicate meaning.
+- Important icons should have labels or tooltips where appropriate.
+
+Animations:
+- Use smooth and lightweight animations.
+- Do not overuse animations.
+- Animations should support usability, not distract.

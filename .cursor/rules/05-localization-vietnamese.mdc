@@ -1,0 +1,88 @@
+---
+description: Vietnamese localization and Vietnamese-first UX rules
+alwaysApply: true
+---
+
+# Vietnamese Localization Rules
+
+The app must support Vietnamese 100%.
+
+Default language:
+- Vietnamese is the primary and default language.
+- All user-facing text must be natural Vietnamese.
+- Do not use English labels, messages, placeholders, or dialogs unless explicitly requested.
+
+User-facing text includes:
+- Button labels
+- Form labels
+- Input placeholders
+- Validation messages
+- Error messages
+- Empty states
+- Dialogs
+- Bottom sheets
+- Snackbars
+- Onboarding text
+- Navigation labels
+- Chart labels
+- Report labels
+- Settings labels
+
+Vietnamese tone:
+- Friendly
+- Clear
+- Short
+- Natural
+- Not robotic
+- Not overly formal
+- Not machine-translated
+
+Good examples:
+- `Thêm giao dịch`
+- `Số tiền`
+- `Danh mục`
+- `Ghi chú`
+- `Hôm nay`
+- `Tháng này`
+- `Không có giao dịch nào`
+- `Vui lòng nhập số tiền`
+- `Số tiền phải lớn hơn 0`
+- `Bạn có chắc muốn xoá giao dịch này không?`
+
+Avoid awkward text:
+- `Submit`
+- `Expense created successfully`
+- `Invalid amount`
+- `Transaction list empty`
+- `Bạn đã submit thành công`
+
+Currency:
+- Default currency should support VND naturally.
+- Display Vietnamese currency as `₫`.
+- Use Vietnamese number grouping.
+- Example: `1.250.000 ₫`.
+
+Date and time:
+- Use Vietnamese-friendly formats.
+- Examples:
+  - `16/05/2026`
+  - `Thứ Bảy, 16/05/2026`
+  - `Tháng 5, 2026`
+- Avoid US-style dates like `05/16/2026`.
+
+Localization architecture:
+- Avoid hardcoding repeated user-facing strings directly in widgets.
+- Prefer centralized localization/string files when the project grows.
+- Prepare the app for future multi-language support, but Vietnamese must be complete first.
+
+Validation messages:
+- Must be specific and helpful.
+- Tell users how to fix the problem.
+- Avoid vague messages like `Lỗi` or `Không hợp lệ`.
+
+Empty states:
+- Empty states should guide the user.
+- Example:
+  - Title: `Chưa có giao dịch nào`
+  - Message: `Hãy thêm giao dịch đầu tiên để bắt đầu theo dõi chi tiêu.`
+  - Action: `Thêm giao dịch`

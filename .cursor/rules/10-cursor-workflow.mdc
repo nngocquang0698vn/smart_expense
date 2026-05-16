@@ -1,0 +1,56 @@
+---
+description: Cursor AI workflow rules
+alwaysApply: true
+---
+
+# Cursor Workflow Rules
+
+Before making changes:
+- Inspect the existing project structure.
+- Search for existing patterns before creating new ones.
+- Understand current state management, routing, theme, and storage approach.
+- Prefer following existing conventions over inventing new ones.
+
+When editing:
+- Make minimal, focused changes.
+- Do not rewrite unrelated files.
+- Do not introduce unnecessary dependencies.
+- Do not create duplicate components if reusable ones already exist.
+- Do not invent APIs that do not exist.
+- Keep changes easy to review.
+
+When generating code:
+- Match the existing project style.
+- Use Vietnamese for user-facing text.
+- Keep UI rounded and user-centered.
+- Keep business logic outside Widgets.
+- Handle loading, error, empty, and success states.
+- Add validation for forms.
+- Consider Android and PWA web responsiveness.
+
+When uncertain:
+- Search the codebase first.
+- Prefer asking for clarification instead of making risky assumptions.
+- If a reasonable assumption is necessary, state it clearly.
+
+After changes:
+- Summarize affected files.
+- Explain the main behavior changed.
+- Mention possible risks.
+- Suggest verification commands:
+
+```bash
+flutter analyze
+flutter test
+flutter run
+```
+
+Quality checklist:
+- Does the UI use Vietnamese?
+- Is the UI mobile-friendly?
+- Is the UI responsive for PWA?
+- Are corners rounded consistently?
+- Is business logic outside Widgets?
+- Are errors and empty states handled?
+- Are money and dates handled safely?
+- Are tests added or updated where needed?

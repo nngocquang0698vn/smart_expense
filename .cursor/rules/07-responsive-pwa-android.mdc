@@ -1,0 +1,52 @@
+---
+description: Responsive layout rules for Android and PWA web
+alwaysApply: true
+---
+
+# Responsive PWA and Android Rules
+
+The app targets:
+- Android phones
+- Android tablets
+- PWA web
+- Desktop web browsers
+
+Responsive rules:
+- Mobile layout comes first.
+- Web layout should not look like a stretched mobile app.
+- Use responsive breakpoints where appropriate.
+- Avoid fixed widths that break on small screens.
+- Avoid layouts that overflow on web or mobile.
+
+Suggested layout behavior:
+- Phone: single-column layout.
+- Tablet: wider content, optional side panels.
+- Desktop web: centered content with max width or multi-column layout.
+
+Navigation:
+- On mobile, prefer bottom navigation.
+- On larger screens, consider navigation rail or sidebar.
+- Navigation labels must be Vietnamese.
+
+Forms:
+- Forms must work well on small screens.
+- Inputs should be easy to tap.
+- The keyboard should not cover important buttons.
+- Use scrollable layout when needed.
+
+PWA rules:
+- UI should work with browser resizing.
+- Avoid Android-only assumptions.
+- Avoid platform-specific code unless guarded properly.
+- Consider installable PWA experience where relevant.
+
+Android rules:
+- Support one-handed usage.
+- Important actions should be near reachable zones.
+- Floating action button can be used for quick transaction creation.
+- Handle back navigation naturally.
+
+Do not:
+- Hardcode screen sizes.
+- Assume all devices are phones.
+- Create UI that only works in portrait mode unless explicitly required.

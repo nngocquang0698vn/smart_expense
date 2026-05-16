@@ -312,6 +312,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   Widget _stepPopup(List<CategoryModel> all) {
     final cats = all.where((c) => c.isIncome == _income).take(8).toList();
     _categoryId ??= cats.isNotEmpty ? cats.first.id : null;
+    final cs = Theme.of(context).colorScheme;
 
     Widget body = const SizedBox.shrink();
     if (_step == _EntryStep.amount) {
@@ -325,7 +326,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
-              color: const Color(0xFFE2F2FA),
+              color: cs.primaryContainer,
             ),
             child: SegmentedButton<bool>(
               showSelectedIcon: false,
@@ -350,7 +351,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF00544D),
+                  color: cs.primary,
                 ),
             decoration: const InputDecoration(prefixText: "₫ ", hintText: "0"),
           ),
@@ -399,24 +400,24 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                 onTap: () => setState(() => _categoryId = cat.id),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: active ? const Color(0xFF00544D) : Colors.white,
+                    color: active ? cs.primary : cs.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: active ? const Color(0xFF00544D) : const Color(0xFFD6E2EA),
+                      color: active ? cs.primary : cs.outlineVariant,
                     ),
                   ),
                   padding: const EdgeInsets.all(8),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(cat.icon, color: active ? Colors.white : cat.color),
+                      Icon(cat.icon, color: active ? cs.onPrimary : cat.color),
                       const SizedBox(height: 6),
                       Text(
                         cat.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: active ? Colors.white : Colors.black87,
+                          color: active ? cs.onPrimary : cs.onSurface,
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                         ),
@@ -638,7 +639,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                         _fmt(_recordDuration),
                         style: Theme.of(context).textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF00544D),
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                       ),
                       const SizedBox(height: 8),
@@ -780,6 +781,7 @@ class _WaveBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final heights = [16.0, 28.0, 40.0, 56.0, 44.0, 36.0, 48.0, 30.0, 20.0];
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -790,7 +792,7 @@ class _WaveBars extends StatelessWidget {
             width: 8,
             height: h,
             decoration: BoxDecoration(
-              color: active ? const Color(0xFF00544D) : const Color(0xFF89CFC9),
+              color: active ? cs.primary : cs.outlineVariant,
               borderRadius: BorderRadius.circular(99),
             ),
           ),
