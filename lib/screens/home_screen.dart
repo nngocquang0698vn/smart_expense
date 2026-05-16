@@ -11,6 +11,7 @@ import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "../widgets/date_filter_sheet.dart";
 import "../widgets/empty_state.dart";
 import "../widgets/money.dart";
+import "../widgets/page_header_sliver.dart";
 import "../widgets/summary_card.dart";
 import "../widgets/transaction_editor_sheet.dart";
 import "../widgets/tx_row.dart";
@@ -332,8 +333,8 @@ class _HomeScreenState extends State<HomeScreen> {
         controller: _scroll,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          SliverAppBar.large(
-            title: const Text("Trang chủ"),
+          PageHeaderSliver(
+            title: "Trang chủ",
             actions: [
               TextButton.icon(
                 onPressed: _pickFilter,

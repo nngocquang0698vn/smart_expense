@@ -2,10 +2,10 @@ import "package:flutter/material.dart";
 
 import "../core/constants.dart";
 
-/// Page title row that matches [HomeScreen] desktop headers on wide layouts.
+/// Compact page title row — same layout on phone and desktop.
 ///
-/// On desktop the title sits on the content panel (no [SliverAppBar] fill).
-/// On mobile it uses [SliverAppBar.large] with the theme app-bar colours.
+/// Avoids [SliverAppBar.large] on mobile, which leaves a tall empty band above
+/// the title when the page has little scrollable content (Báo cáo, Cá nhân).
 class PageHeaderSliver extends StatelessWidget {
   const PageHeaderSliver({
     super.key,
@@ -20,33 +20,31 @@ class PageHeaderSliver extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDesktop =
         MediaQuery.sizeOf(context).width >= AppBreakpoints.desktop;
+    final topInset = MediaQuery.paddingOf(context).top;
 
-    if (isDesktop) {
-      return SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          isDesktop ? 20 : 16,
+          isDesktop ? 16 : topInset + 8,
+          isDesktop ? 20 : 16,
+          12,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
                 title,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
               ),
-              if (actions.isNotEmpty) ...[
-                const Spacer(),
-                ...actions,
-              ],
-            ],
-          ),
+            ),
+            if (actions.isNotEmpty) ...actions,
+          ],
         ),
-      );
-    }
-
-    return SliverAppBar.large(
-      title: Text(title),
-      actions: actions,
+      ),
     );
   }
 }
