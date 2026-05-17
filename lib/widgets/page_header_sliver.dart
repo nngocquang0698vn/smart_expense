@@ -37,8 +37,8 @@ class PageHeaderSliver extends StatelessWidget {
               child: Text(
                 title,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             if (actions.isNotEmpty) ...actions,

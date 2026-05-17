@@ -21,7 +21,8 @@ class AppBankingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = backgroundColor ??
+    final color =
+        backgroundColor ??
         Theme.of(context).cardTheme.color ??
         Theme.of(context).colorScheme.surface;
 

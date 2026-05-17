@@ -6,10 +6,7 @@ import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "quick_entry_sheet.dart";
 
-Future<void> handleAddFab(
-  BuildContext context,
-  LedgerRepository repo,
-) async {
+Future<void> handleAddFab(BuildContext context, LedgerRepository repo) async {
   final choice = await _showAddOptionsSheet(context);
   if (!context.mounted || choice == null) return;
 
@@ -36,8 +33,8 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
                   Text(
                     "Thêm nhanh",
                     style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const Spacer(),
                   IconButton(
@@ -67,7 +64,9 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
               const SizedBox(height: 10),
               // Show receipt on all platforms; web gets gallery-only picker
               _OptionCard(
-                icon: kIsWeb ? Icons.photo_library_outlined : Icons.photo_camera,
+                icon: kIsWeb
+                    ? Icons.photo_library_outlined
+                    : Icons.photo_camera,
                 title: kIsWeb ? "Chọn ảnh hoá đơn" : "Chụp ảnh hoá đơn",
                 subtitle: kIsWeb
                     ? "Chọn ảnh từ máy để lưu hoá đơn đối soát"
@@ -129,16 +128,16 @@ class _OptionCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: foreground,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        color: foreground,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: foreground.withValues(alpha: 0.85),
-                          ),
+                        color: foreground.withValues(alpha: 0.85),
+                      ),
                     ),
                   ],
                 ),

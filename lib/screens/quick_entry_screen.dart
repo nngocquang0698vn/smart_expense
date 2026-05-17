@@ -1,21 +1,17 @@
-import "dart:async";
 import "dart:convert";
-import "dart:typed_data";
 
-import "package:audioplayers/audioplayers.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:image_picker/image_picker.dart";
 import "package:intl/intl.dart";
-import "package:record/record.dart";
 
 import "../core/amount_input.dart";
 import "../core/constants.dart";
 import "../data/ledger_repository.dart";
+import "../data/models/category_model.dart";
+import "../shared/widgets/app_voice_note_section.dart";
 import "../theme/app_finance_colors.dart";
 import "../widgets/app_text_field.dart";
-import "../data/models/category_model.dart";
 import "../widgets/form_amount_field.dart";
 
 enum QuickEntryStartMode { tap, voice, receipt }
@@ -40,17 +36,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   final _titleCtrl = TextEditingController();
   final _amount = AmountInputController();
   final _noteCtrl = TextEditingController();
-  final _recorder = AudioRecorder();
-  final _audioPlayer = AudioPlayer();
   final _picker = ImagePicker();
-
-  StreamSubscription<Uint8List>? _recordSub;
-  Timer? _recordTimer;
-  final List<int> _recordBytes = [];
-
-  bool _recording = false;
-  Duration _recordDuration = Duration.zero;
-  bool _microDenied = false;
 
   bool _income = false;
   bool _pending = false;
@@ -72,8 +58,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
       _amount.value > 0 ||
       _noteCtrl.text.trim().isNotEmpty ||
       _audioBase64 != null ||
-      _imageBase64List.isNotEmpty ||
-      _recording;
+      _imageBase64List.isNotEmpty;
 
   @override
   void initState() {
@@ -85,9 +70,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      if (widget.startMode == QuickEntryStartMode.voice) {
-        await _startRecording();
-      } else if (widget.startMode == QuickEntryStartMode.receipt && !_isLaptop) {
+      if (widget.startMode == QuickEntryStartMode.receipt && !_isLaptop) {
         await _pickImage(ImageSource.camera);
       }
     });
@@ -95,10 +78,6 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
 
   @override
   void dispose() {
-    _recordTimer?.cancel();
-    _recordSub?.cancel();
-    _recorder.dispose();
-    _audioPlayer.dispose();
     _titleCtrl.dispose();
     _amount.dispose();
     _noteCtrl.dispose();
@@ -135,62 +114,6 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     Navigator.pop(context);
   }
 
-  Future<void> _startRecording() async {
-    final granted = await _recorder.hasPermission();
-    if (!granted) {
-      if (!mounted) return;
-      setState(() => _microDenied = true);
-      return;
-    }
-    setState(() => _microDenied = false);
-
-    await _recordSub?.cancel();
-    _recordSub = null;
-    _recordTimer?.cancel();
-    _recordBytes.clear();
-    _recordDuration = Duration.zero;
-    _audioBase64 = null;
-
-    final stream = await _recorder.startStream(
-      const RecordConfig(
-        encoder: AudioEncoder.pcm16bits,
-        sampleRate: 16000,
-        numChannels: 1,
-      ),
-    );
-    _recordSub = stream.listen((chunk) => _recordBytes.addAll(chunk));
-    _recordTimer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => setState(() => _recordDuration += const Duration(seconds: 1)),
-    );
-    if (!mounted) return;
-    setState(() => _recording = true);
-  }
-
-  Future<void> _stopRecording() async {
-    await _recordSub?.cancel();
-    _recordSub = null;
-    _recordTimer?.cancel();
-    _recordTimer = null;
-    await _recorder.stop();
-    if (_recordBytes.isEmpty) {
-      setState(() => _recording = false);
-      return;
-    }
-    final wav = _pcm16ToWav(Uint8List.fromList(_recordBytes));
-    setState(() {
-      _recording = false;
-      _audioBase64 = base64Encode(wav);
-      _pending = true;
-    });
-  }
-
-  Future<void> _playAudio() async {
-    if (_audioBase64 == null) return;
-    await _audioPlayer.stop();
-    await _audioPlayer.play(BytesSource(base64Decode(_audioBase64!)));
-  }
-
   Future<void> _pickImage(ImageSource source) async {
     final file = await _picker.pickImage(source: source, imageQuality: 80);
     if (file == null) return;
@@ -199,12 +122,6 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
       _imageBase64List.add(base64Encode(bytes));
       _pending = true;
     });
-  }
-
-  String _fmt(Duration d) {
-    final mm = d.inMinutes.remainder(60).toString().padLeft(2, "0");
-    final ss = d.inSeconds.remainder(60).toString().padLeft(2, "0");
-    return "$mm:$ss";
   }
 
   bool _next(List<CategoryModel> all) {
@@ -251,7 +168,8 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     final amount = _amount.value;
     if (amount <= 0) return;
     final matched = all.where((c) => c.isIncome == _income).toList();
-    final selected = _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
+    final selected =
+        _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
     if (selected == null) return;
 
     await widget.repo.addQuick(
@@ -270,14 +188,12 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     );
     if (!mounted) return;
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Đã lưu giao dịch.")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Đã lưu giao dịch.")));
   }
 
   Future<void> _saveVoiceOnly(List<CategoryModel> all) async {
-    if (_recording) await _stopRecording();
-    if (!mounted) return;
     if (_audioBase64 == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Bạn cần ghi âm trước khi xác nhận.")),
@@ -309,16 +225,10 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         children: [
           SizedBox(
             width: 90,
-            child: Text(
-              k,
-              style: TextStyle(color: muted),
-            ),
+            child: Text(k, style: TextStyle(color: muted)),
           ),
           Expanded(
-            child: Text(
-              v,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
+            child: Text(v, style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -338,9 +248,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         children: [
           Text(
             "Nhập nhanh",
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 10),
           Container(
@@ -361,18 +271,15 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          AppTextField(
-            controller: _titleCtrl,
-            labelText: "Tiêu đề",
-          ),
+          AppTextField(controller: _titleCtrl, labelText: "Tiêu đề"),
           const SizedBox(height: 12),
           FormAmountField(
             controller: _amount,
-            alwaysShowKeypad: true,
-            autofocus: true,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            alwaysShowKeypad: widget.startMode == QuickEntryStartMode.tap,
+            autofocus: widget.startMode == QuickEntryStartMode.tap,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       );
@@ -383,9 +290,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         children: [
           Text(
             "Thông tin giao dịch",
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 10),
           Card(
@@ -404,7 +311,10 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Text("Danh mục phổ biến", style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            "Danh mục phổ biến",
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           GridView.builder(
             shrinkWrap: true,
@@ -465,28 +375,25 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         children: [
           Text(
             "Ghi chú và đính kèm",
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 10),
           AppTextField(
             controller: _noteCtrl,
             maxLines: 2,
             labelText: "Ghi chú (tuỳ chọn)",
-            suffix: IconButton(
-              onPressed: _recording ? _stopRecording : _startRecording,
-              icon: Icon(_recording ? Icons.stop_circle : Icons.mic),
-            ),
           ),
-          if (_audioBase64 != null || _recording) ...[
-            const SizedBox(height: 8),
-            Chip(
-              avatar: Icon(_recording ? Icons.graphic_eq : Icons.audiotrack),
-              label: Text(_recording ? "Đang ghi âm..." : "Đã có audio ghi chú"),
-              onDeleted: _recording ? null : () => setState(() => _audioBase64 = null),
-            ),
-          ],
+          const SizedBox(height: 10),
+          AppVoiceNoteSection(
+            audioBase64: _audioBase64,
+            onChanged: (b64) => setState(() {
+              _audioBase64 = b64;
+              if (b64 != null) _pending = true;
+            }),
+            maxRecordDuration: const Duration(minutes: 3),
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -517,9 +424,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         children: [
           Text(
             "Ghi chú và đối soát",
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 10),
           AppTextField(
@@ -532,7 +439,12 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
           _row("Số tiền", "₫ ${_amount.displayText}"),
           _row("Ngày", DateFormat("dd/MM/yyyy").format(_date)),
           _row("Audio", _audioBase64 != null ? "Có" : "Không"),
-          _row("Ảnh", _imageBase64List.isEmpty ? "Không" : "${_imageBase64List.length} ảnh"),
+          _row(
+            "Ảnh",
+            _imageBase64List.isEmpty
+                ? "Không"
+                : "${_imageBase64List.length} ảnh",
+          ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text("Cần đối soát"),
@@ -545,7 +457,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
             onChanged: (v) {
               if (_hasMedia && !v) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Có media thì bắt buộc cần đối soát.")),
+                  const SnackBar(
+                    content: Text("Có media thì bắt buộc cần đối soát."),
+                  ),
                 );
                 return;
               }
@@ -564,7 +478,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 child: Column(
@@ -588,7 +504,8 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                               child: const Text("Quay lại"),
                             ),
                           ),
-                        if (_step != _EntryStep.amount) const SizedBox(width: 10),
+                        if (_step != _EntryStep.amount)
+                          const SizedBox(width: 10),
                         Expanded(
                           child: FilledButton(
                             onPressed: () async {
@@ -600,7 +517,11 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                               if (!ok || !mounted) return;
                               setState(() {});
                             },
-                            child: Text(_step == _EntryStep.notePending ? "Lưu giao dịch" : "Tiếp tục"),
+                            child: Text(
+                              _step == _EntryStep.notePending
+                                  ? "Lưu giao dịch"
+                                  : "Tiếp tục",
+                            ),
                           ),
                         ),
                       ],
@@ -616,46 +537,6 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   }
 
   Widget _voiceFlow(List<CategoryModel> all) {
-    if (_microDenied) {
-      return SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.mic_off, color: Colors.red, size: 56),
-                      const SizedBox(height: 12),
-                      const Text(
-                        "Không thể truy cập Micro",
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Vui lòng kiểm tra lại quyền truy cập micro trong trình duyệt hoặc thiết bị của bạn.",
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 14),
-                      FilledButton(
-                        onPressed: _startRecording,
-                        child: const Text("Thử lại"),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
     return SafeArea(
       child: Center(
         child: ConstrainedBox(
@@ -666,52 +547,17 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _fmt(_recordDuration),
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _recording ? "Đang lắng nghe..." : "Ghi âm thành công",
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 28),
-                      _WaveBars(active: _recording),
-                    ],
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: AppVoiceNoteSection(
+                      audioBase64: _audioBase64,
+                      autoStartRecording: true,
+                      onChanged: (b64) => setState(() {
+                        _audioBase64 = b64;
+                        if (b64 != null) _pending = true;
+                      }),
+                    ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          await _audioPlayer.stop();
-                          setState(() => _audioBase64 = null);
-                          await _startRecording();
-                        },
-                        child: const Text("Ghi âm lại"),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: _recording
-                            ? _stopRecording
-                            : (_audioBase64 == null ? _startRecording : _playAudio),
-                        child: Text(
-                          _recording
-                              ? "Dừng"
-                              : (_audioBase64 == null ? "Bắt đầu" : "Nghe lại"),
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: 10),
                 FilledButton.tonal(
@@ -740,7 +586,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
       future: widget.repo.categories(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         final all = snapshot.data!;
         return PopScope(
@@ -767,70 +615,6 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
           ),
         );
       },
-    );
-  }
-
-  Uint8List _pcm16ToWav(
-    Uint8List pcm, {
-    int sampleRate = 16000,
-    int channels = 1,
-    int bitsPerSample = 16,
-  }) {
-    final dataLength = pcm.length;
-    final byteRate = sampleRate * channels * bitsPerSample ~/ 8;
-    final blockAlign = channels * bitsPerSample ~/ 8;
-    final fileSize = 36 + dataLength;
-
-    final out = BytesBuilder();
-    out.add(ascii.encode("RIFF"));
-    out.add(_le32(fileSize));
-    out.add(ascii.encode("WAVE"));
-    out.add(ascii.encode("fmt "));
-    out.add(_le32(16));
-    out.add(_le16(1));
-    out.add(_le16(channels));
-    out.add(_le32(sampleRate));
-    out.add(_le32(byteRate));
-    out.add(_le16(blockAlign));
-    out.add(_le16(bitsPerSample));
-    out.add(ascii.encode("data"));
-    out.add(_le32(dataLength));
-    out.add(pcm);
-    return out.takeBytes();
-  }
-
-  List<int> _le16(int value) => [value & 0xff, (value >> 8) & 0xff];
-
-  List<int> _le32(int value) => [
-        value & 0xff,
-        (value >> 8) & 0xff,
-        (value >> 16) & 0xff,
-        (value >> 24) & 0xff,
-      ];
-}
-
-class _WaveBars extends StatelessWidget {
-  const _WaveBars({required this.active});
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final heights = [16.0, 28.0, 40.0, 56.0, 44.0, 36.0, 48.0, 30.0, 20.0];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (final h in heights)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            width: 8,
-            height: h,
-            decoration: BoxDecoration(
-              color: active ? cs.primary : cs.outlineVariant,
-              borderRadius: BorderRadius.circular(99),
-            ),
-          ),
-      ],
     );
   }
 }

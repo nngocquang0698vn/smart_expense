@@ -7,7 +7,6 @@ environment:
   sdk: ^3.11.5
 
 dependencies:
-  audioplayers: ^6.5.0
   flutter:
     sdk: flutter
   fl_chart: ^1.1.1
@@ -15,11 +14,13 @@ dependencies:
   intl: ^0.20.2
   path: ^1.9.1
   path_provider: ^2.1.5
-  record: ^6.1.2
   sembast: ^3.8.5
   sembast_web: ^2.4.2
   uuid: ^4.5.1
   shared_preferences: ^2.5.5
+  cupertino_icons: ^1.0.9
+  record: ^6.2.0
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:

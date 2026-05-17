@@ -74,8 +74,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   padding: const EdgeInsets.only(top: 6, right: 12),
                   child: TextButton(
                     style: TextButton.styleFrom(
-                      foregroundColor:
-                          Theme.of(context).colorScheme.onSurfaceVariant,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant,
                     ),
                     onPressed: () => _page.animateToPage(
                       _total - 1,
@@ -138,10 +139,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     decoration: BoxDecoration(
                       color: active
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.25),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   );
@@ -175,8 +175,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               children: [
                                 OutlinedButton.icon(
                                   onPressed: _prev,
-                                  icon: const Icon(Icons.arrow_back_rounded,
-                                      size: 18),
+                                  icon: const Icon(
+                                    Icons.arrow_back_rounded,
+                                    size: 18,
+                                  ),
                                   label: const Text("Quay lại"),
                                 ),
                                 const SizedBox(width: 12),
@@ -198,7 +200,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         if (_i > 0) ...[
                           OutlinedButton.icon(
                             onPressed: _prev,
-                            icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              size: 18,
+                            ),
                             label: const Text("Trước"),
                           ),
                           const SizedBox(width: 16),
@@ -206,7 +211,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         FilledButton.icon(
                           onPressed: _next,
                           label: const Text("Tiếp theo"),
-                          icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                          icon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 18,
+                          ),
                           iconAlignment: IconAlignment.end,
                         ),
                       ],

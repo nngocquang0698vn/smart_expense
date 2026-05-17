@@ -110,8 +110,7 @@ class AppChromeTheme extends ThemeExtension<AppChromeTheme> {
     final border = HSLColor.fromAHSL(1.0, h, borderSat, 0.32).toColor();
 
     final navSat = (hsl.saturation * 0.28).clamp(0.06, 0.28);
-    final navInactive =
-        HSLColor.fromAHSL(1.0, h, navSat, 0.74).toColor();
+    final navInactive = HSLColor.fromAHSL(1.0, h, navSat, 0.74).toColor();
 
     return AppChromeTheme(
       sidebarGradientTop: top,
@@ -150,16 +149,28 @@ class AppChromeTheme extends ThemeExtension<AppChromeTheme> {
   ) {
     if (other is! AppChromeTheme) return this;
     return AppChromeTheme(
-      sidebarGradientTop:
-          Color.lerp(sidebarGradientTop, other.sidebarGradientTop, t)!,
-      sidebarGradientMid:
-          Color.lerp(sidebarGradientMid, other.sidebarGradientMid, t)!,
-      sidebarGradientBottom:
-          Color.lerp(sidebarGradientBottom, other.sidebarGradientBottom, t)!,
+      sidebarGradientTop: Color.lerp(
+        sidebarGradientTop,
+        other.sidebarGradientTop,
+        t,
+      )!,
+      sidebarGradientMid: Color.lerp(
+        sidebarGradientMid,
+        other.sidebarGradientMid,
+        t,
+      )!,
+      sidebarGradientBottom: Color.lerp(
+        sidebarGradientBottom,
+        other.sidebarGradientBottom,
+        t,
+      )!,
       sidebarBorder: Color.lerp(sidebarBorder, other.sidebarBorder, t)!,
       sidebarShadow: Color.lerp(sidebarShadow, other.sidebarShadow, t)!,
-      sidebarNavInactive:
-          Color.lerp(sidebarNavInactive, other.sidebarNavInactive, t)!,
+      sidebarNavInactive: Color.lerp(
+        sidebarNavInactive,
+        other.sidebarNavInactive,
+        t,
+      )!,
     );
   }
 }

@@ -19,7 +19,10 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
 
   // ── Date offset helpers ───────────────────────────────────────────────────
   final today = DateTime(
-      DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
   final refEnd = DateTime(2026, 5, 10); // reference "today" in the seed
   final shiftDays = today.difference(refEnd).inDays;
 
@@ -27,19 +30,14 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
       DateTime(year, month, day).add(Duration(days: shiftDays));
 
   // "today - N days" for pending entries
-  DateTime recent(int daysAgo) =>
-      today.subtract(Duration(days: daysAgo));
+  DateTime recent(int daysAgo) => today.subtract(Duration(days: daysAgo));
 
   // ── Load demo media assets ────────────────────────────────────────────────
-  final audioBytes =
-      await rootBundle.load("assets/demo/audio_demo.mp3");
-  final audioB64 =
-      base64Encode(audioBytes.buffer.asUint8List());
+  final audioBytes = await rootBundle.load("assets/demo/audio_demo.mp3");
+  final audioB64 = base64Encode(audioBytes.buffer.asUint8List());
 
-  final imageBytes =
-      await rootBundle.load("assets/demo/bill_demo.jpg");
-  final imageB64 =
-      base64Encode(imageBytes.buffer.asUint8List());
+  final imageBytes = await rootBundle.load("assets/demo/bill_demo.jpg");
+  final imageB64 = base64Encode(imageBytes.buffer.asUint8List());
 
   // ── Category lookup ───────────────────────────────────────────────────────
   final cats = await repo.categories();

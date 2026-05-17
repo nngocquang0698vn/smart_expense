@@ -29,33 +29,40 @@ class LedgerRepository extends ChangeNotifier {
     await _ensureKhac();
     final meta = await _meta.record("app").get(_db);
     if (meta == null) {
-      await _meta.record("app").put(_db, {
-        "userName": "",
-        "onboarded": false,
-      });
+      await _meta.record("app").put(_db, {"userName": "", "onboarded": false});
     }
   }
 
   Future<void> _ensureKhac() async {
     final khacExp = await _categories.record(kOtherExpenseId).get(_db);
     if (khacExp == null) {
-      await _categories.record(kOtherExpenseId).put(_db, const CategoryModel(
-        id: kOtherExpenseId,
-        name: "Khác",
-        iconKey: "category",
-        colorValue: 0xFF78909C,
-        isIncome: false,
-      ).toMap());
+      await _categories
+          .record(kOtherExpenseId)
+          .put(
+            _db,
+            const CategoryModel(
+              id: kOtherExpenseId,
+              name: "Khác",
+              iconKey: "category",
+              colorValue: 0xFF78909C,
+              isIncome: false,
+            ).toMap(),
+          );
     }
     final khacInc = await _categories.record(kOtherIncomeId).get(_db);
     if (khacInc == null) {
-      await _categories.record(kOtherIncomeId).put(_db, const CategoryModel(
-        id: kOtherIncomeId,
-        name: "Khác",
-        iconKey: "category",
-        colorValue: 0xFF78909C,
-        isIncome: true,
-      ).toMap());
+      await _categories
+          .record(kOtherIncomeId)
+          .put(
+            _db,
+            const CategoryModel(
+              id: kOtherIncomeId,
+              name: "Khác",
+              iconKey: "category",
+              colorValue: 0xFF78909C,
+              isIncome: true,
+            ).toMap(),
+          );
     }
   }
 
@@ -188,9 +195,7 @@ class LedgerRepository extends ChangeNotifier {
 
   Future<List<CategoryModel>> categories() async {
     final snap = await _categories.find(_db);
-    return snap
-        .map((r) => CategoryModel.fromMap(r.key, r.value))
-        .toList()
+    return snap.map((r) => CategoryModel.fromMap(r.key, r.value)).toList()
       ..sort((a, b) => a.name.compareTo(b.name));
   }
 
@@ -206,8 +211,9 @@ class LedgerRepository extends ChangeNotifier {
 
   Future<List<TransactionModel>> allTransactions() async {
     final snap = await _transactions.find(_db);
-    final list =
-        snap.map((r) => TransactionModel.fromMap(r.key, r.value)).toList();
+    final list = snap
+        .map((r) => TransactionModel.fromMap(r.key, r.value))
+        .toList();
     list.sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
     return list;
   }
@@ -267,14 +273,10 @@ class LedgerRepository extends ChangeNotifier {
   }) async {
     final all = await allTransactions();
     final range = filter.resolveRange(DateTime.now());
-    final list =
-        _inRange(all, range).where((t) => !t.pending).toList();
+    final list = _inRange(all, range).where((t) => !t.pending).toList();
     list.sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
     if (offset >= list.length) return [];
-    return list.sublist(
-      offset,
-      (offset + limit).clamp(0, list.length),
-    );
+    return list.sublist(offset, (offset + limit).clamp(0, list.length));
   }
 
   Future<void> putTransaction(TransactionModel t) async {
@@ -296,9 +298,7 @@ class LedgerRepository extends ChangeNotifier {
     final raw = await _transactions.record(id).get(_db);
     if (raw == null) return;
     final t = TransactionModel.fromMap(id, raw);
-    await putTransaction(
-      t.copyWith(pending: false, complete: true),
-    );
+    await putTransaction(t.copyWith(pending: false, complete: true));
   }
 
   Future<TransactionModel> addQuick({
@@ -358,9 +358,10 @@ class LedgerRepository extends ChangeNotifier {
     final now = DateTime.now();
     final range = period.resolve(now, custom: custom);
     final all = await allTransactions();
-    final inR = _inRange(all, range).where(
-      (t) => !t.pending && t.isIncome == incomeSide,
-    );
+    final inR = _inRange(
+      all,
+      range,
+    ).where((t) => !t.pending && t.isIncome == incomeSide);
     final map = <String, int>{};
     for (final t in inR) {
       map[t.categoryId] = (map[t.categoryId] ?? 0) + t.amountVnd;
@@ -398,9 +399,10 @@ class LedgerRepository extends ChangeNotifier {
     final now = DateTime.now();
     final range = period.resolve(now, custom: custom);
     final all = await allTransactions();
-    return _inRange(all, range)
-        .where((t) => !t.pending && t.categoryId == categoryId)
-        .toList()
+    return _inRange(
+        all,
+        range,
+      ).where((t) => !t.pending && t.categoryId == categoryId).toList()
       ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
   }
 }

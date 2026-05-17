@@ -96,10 +96,7 @@ class AmountKeypad extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: _BackspaceKey(onTap: onBackspace),
-                    ),
+                    Expanded(flex: 2, child: _BackspaceKey(onTap: onBackspace)),
                     const SizedBox(height: AppSpacing.xs),
                     Expanded(
                       flex: 2,
@@ -142,9 +139,9 @@ class _NumKey extends StatelessWidget {
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: context.financeColors.fieldText,
-                    ),
+                  fontWeight: FontWeight.w500,
+                  color: context.financeColors.fieldText,
+                ),
               ),
             ),
           ),
@@ -176,7 +173,9 @@ class _BackspaceKey extends StatelessWidget {
             child: Icon(
               Icons.backspace_outlined,
               size: 26,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.85),
             ),
           ),
         ),

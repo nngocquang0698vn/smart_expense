@@ -53,10 +53,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (ctx) => _CategoryEditorSheet(
-        repo: widget.repo,
-        existing: existing,
-      ),
+      builder: (ctx) =>
+          _CategoryEditorSheet(repo: widget.repo, existing: existing),
     );
   }
 
@@ -117,9 +115,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              letterSpacing: 0.5,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -151,8 +149,8 @@ class _CategoryTile extends StatelessWidget {
         subtitle: system
             ? const Text("Hạng mục mặc định")
             : cat.enabled
-                ? null
-                : const Text("Đã tắt"),
+            ? null
+            : const Text("Đã tắt"),
         trailing: system
             ? null
             : Switch.adaptive(
@@ -318,13 +316,15 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                 SegmentedButton<bool>(
                   segments: const [
                     ButtonSegment(
-                        value: false,
-                        label: Text(AppStrings.expense),
-                        icon: Icon(Icons.arrow_downward_rounded)),
+                      value: false,
+                      label: Text(AppStrings.expense),
+                      icon: Icon(Icons.arrow_downward_rounded),
+                    ),
                     ButtonSegment(
-                        value: true,
-                        label: Text(AppStrings.income),
-                        icon: Icon(Icons.arrow_upward_rounded)),
+                      value: true,
+                      label: Text(AppStrings.income),
+                      icon: Icon(Icons.arrow_upward_rounded),
+                    ),
                   ],
                   selected: {_isIncome},
                   onSelectionChanged: (s) =>
@@ -333,8 +333,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                 const SizedBox(height: 20),
 
                 // Color picker
-                Text("Màu sắc",
-                    style: Theme.of(context).textTheme.labelLarge),
+                Text("Màu sắc", style: Theme.of(context).textTheme.labelLarge),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -351,22 +350,23 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                               color: Color(cv),
                               shape: BoxShape.circle,
                               border: _colorValue == cv
-                                  ? Border.all(
-                                      color: cs.onSurface, width: 2.5)
+                                  ? Border.all(color: cs.onSurface, width: 2.5)
                                   : null,
                               boxShadow: _colorValue == cv
                                   ? [
                                       BoxShadow(
-                                        color:
-                                            Color(cv).withValues(alpha: 0.5),
+                                        color: Color(cv).withValues(alpha: 0.5),
                                         blurRadius: 6,
-                                      )
+                                      ),
                                     ]
                                   : null,
                             ),
                             child: _colorValue == cv
-                                ? const Icon(Icons.check,
-                                    color: Colors.white, size: 18)
+                                ? const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 18,
+                                  )
                                 : null,
                           ),
                         ),
@@ -376,14 +376,15 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                 const SizedBox(height: 20),
 
                 // Icon picker
-                Text("Biểu tượng",
-                    style: Theme.of(context).textTheme.labelLarge),
+                Text(
+                  "Biểu tượng",
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
                 const SizedBox(height: 8),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 52,
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
@@ -399,8 +400,9 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                         decoration: BoxDecoration(
                           color: selected
                               ? currentColor.withValues(alpha: 0.18)
-                              : cs.surfaceContainerHighest
-                                  .withValues(alpha: 0.5),
+                              : cs.surfaceContainerHighest.withValues(
+                                  alpha: 0.5,
+                                ),
                           borderRadius: BorderRadius.circular(10),
                           border: selected
                               ? Border.all(color: currentColor, width: 2)

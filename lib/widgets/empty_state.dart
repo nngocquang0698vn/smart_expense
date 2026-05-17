@@ -3,11 +3,7 @@ import "package:flutter/material.dart";
 import "../shared/widgets/app_empty_state.dart";
 
 class EmptyState extends StatelessWidget {
-  const EmptyState({
-    super.key,
-    required this.message,
-    this.color,
-  });
+  const EmptyState({super.key, required this.message, this.color});
 
   final String message;
   final Color? color;

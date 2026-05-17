@@ -87,11 +87,9 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 1, 12, 31),
-      initialDateRange: sel.custom ??
-          DateTimeRange(
-            start: DateTime(now.year, now.month, 1),
-            end: now,
-          ),
+      initialDateRange:
+          sel.custom ??
+          DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
     if (range != null && mounted) {
       setState(() {

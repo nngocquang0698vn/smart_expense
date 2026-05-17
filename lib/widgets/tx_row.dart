@@ -33,8 +33,9 @@ class TxRow extends StatelessWidget {
     final icon = disabled
         ? Icons.category_outlined
         : (cat?.icon ?? Icons.category_outlined);
-    final color =
-        disabled ? cs.onSurfaceVariant : (cat?.color ?? cs.onSurfaceVariant);
+    final color = disabled
+        ? cs.onSurfaceVariant
+        : (cat?.color ?? cs.onSurfaceVariant);
     final hasAudio = (t.audioBase64 ?? "").isNotEmpty;
     final hasImages = t.imageBase64List.isNotEmpty;
 
@@ -53,9 +54,9 @@ class TxRow extends StatelessWidget {
               child: Text(
                 AppStrings.otherCategory,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: finance.textMuted,
-                      fontStyle: FontStyle.italic,
-                    ),
+                  color: finance.textMuted,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             )
           else if (cat != null)
@@ -64,15 +65,15 @@ class TxRow extends StatelessWidget {
               child: Text(
                 cat.name,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Color.lerp(finance.textMuted, color, 0.5),
-                    ),
+                  color: Color.lerp(finance.textMuted, color, 0.5),
+                ),
               ),
             ),
           Text(
             DateFormat.MMMd("vi").format(t.occurredAt),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: finance.textMuted,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: finance.textMuted),
           ),
         ],
       ),
@@ -85,7 +86,8 @@ class TxRow extends StatelessWidget {
                     size: 14,
                     color: Theme.of(context).colorScheme.outline,
                   ),
-                if (hasAudio && hasImages) const SizedBox(width: AppSpacing.xxs),
+                if (hasAudio && hasImages)
+                  const SizedBox(width: AppSpacing.xxs),
                 if (hasImages)
                   Icon(
                     Icons.image_outlined,
@@ -98,9 +100,9 @@ class TxRow extends StatelessWidget {
       amount: MoneyText(
         t.amountVnd,
         isIncome: t.isIncome,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: AppTypography.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: AppTypography.bold),
       ),
       trailing: trailing,
     );
@@ -164,9 +166,9 @@ class TxDayHeader extends StatelessWidget {
         children: [
           Text(
             DateFormat.yMMMEd("vi").format(day),
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: AppTypography.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: AppTypography.bold),
           ),
           Text(
             "${formatMoneyVi(totalVnd)} · $count ${AppStrings.transactionNoun}",
@@ -236,10 +238,10 @@ class _Badge extends StatelessWidget {
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: foreground,
-                fontWeight: AppTypography.bold,
-                fontSize: 11,
-              ),
+            color: foreground,
+            fontWeight: AppTypography.bold,
+            fontSize: 11,
+          ),
         ),
       ),
     );

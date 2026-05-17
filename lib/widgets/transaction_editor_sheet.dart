@@ -1,10 +1,10 @@
 import "dart:convert";
 
-import "package:audioplayers/audioplayers.dart";
 import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 
 import "../core/amount_input.dart";
+import "../shared/widgets/app_voice_note_section.dart";
 import "../core/constants.dart";
 import "../core/strings.dart";
 import "../theme/app_finance_colors.dart";
@@ -54,7 +54,6 @@ class _EditorBody extends StatefulWidget {
 }
 
 class _EditorBodyState extends State<_EditorBody> {
-  final _audioPlayer = AudioPlayer();
   final _titleCtrl = TextEditingController();
   final _amount = AmountInputController();
   final _noteCtrl = TextEditingController();
@@ -62,6 +61,7 @@ class _EditorBodyState extends State<_EditorBody> {
   String? _categoryId;
   late DateTime _date;
   late bool _pending;
+  String? _audioBase64;
 
   // Snapshots for dirty detection
   late String _initTitle;
@@ -71,6 +71,7 @@ class _EditorBodyState extends State<_EditorBody> {
   late String? _initCategoryId;
   late DateTime _initDate;
   late bool _initPending;
+  late String? _initAudioBase64;
 
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
@@ -79,7 +80,8 @@ class _EditorBodyState extends State<_EditorBody> {
       _income != _initIncome ||
       _categoryId != _initCategoryId ||
       _date != _initDate ||
-      _pending != _initPending;
+      _pending != _initPending ||
+      _audioBase64 != _initAudioBase64;
 
   @override
   void initState() {
@@ -93,10 +95,12 @@ class _EditorBodyState extends State<_EditorBody> {
       _categoryId = e.categoryId;
       _date = e.occurredAt;
       _pending = e.pending;
+      _audioBase64 = e.audioBase64;
     } else {
       _income = false;
       _date = DateTime.now();
       _pending = widget.defaultPending;
+      _audioBase64 = null;
     }
     // Snapshot initial values for dirty check
     _initTitle = _titleCtrl.text;
@@ -106,6 +110,7 @@ class _EditorBodyState extends State<_EditorBody> {
     _initCategoryId = _categoryId;
     _initDate = _date;
     _initPending = _pending;
+    _initAudioBase64 = _audioBase64;
 
     // Rebuild on text changes so dirty flag updates
     _titleCtrl.addListener(() => setState(() {}));
@@ -115,16 +120,10 @@ class _EditorBodyState extends State<_EditorBody> {
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
     _titleCtrl.dispose();
     _amount.dispose();
     _noteCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _playAudio(String base64Audio) async {
-    await _audioPlayer.stop();
-    await _audioPlayer.play(BytesSource(base64Decode(base64Audio)));
   }
 
   Future<void> _handleClose() async {
@@ -175,8 +174,11 @@ class _EditorBodyState extends State<_EditorBody> {
       return;
     }
 
-    final catId = _categoryId ??
-        cats.firstWhere((c) => c.isIncome == _income, orElse: () => cats.first).id;
+    final catId =
+        _categoryId ??
+        cats
+            .firstWhere((c) => c.isIncome == _income, orElse: () => cats.first)
+            .id;
 
     final isInfoComplete = amount > 0;
     final effectiveComplete = _pending ? isInfoComplete : true;
@@ -192,6 +194,7 @@ class _EditorBodyState extends State<_EditorBody> {
         pending: _pending,
         complete: effectiveComplete,
         note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+        audioBase64: _audioBase64,
       );
     } else {
       await widget.repo.putTransaction(
@@ -204,6 +207,7 @@ class _EditorBodyState extends State<_EditorBody> {
           pending: _pending,
           complete: effectiveComplete,
           note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+          audioBase64: _audioBase64,
         ),
       );
     }
@@ -213,9 +217,7 @@ class _EditorBodyState extends State<_EditorBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _pending
-              ? "Đã lưu vào danh sách chờ đối soát."
-              : "Đã lưu giao dịch.",
+          _pending ? "Đã lưu vào danh sách chờ đối soát." : "Đã lưu giao dịch.",
         ),
       ),
     );
@@ -238,9 +240,9 @@ class _EditorBodyState extends State<_EditorBody> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<CategoryModel>>(
-      future: widget.repo
-          .categories()
-          .then((list) => list.where((c) => c.enabled).toList()),
+      future: widget.repo.categories().then(
+        (list) => list.where((c) => c.enabled).toList(),
+      ),
       builder: (context, snap) {
         if (!snap.hasData) {
           return const Padding(
@@ -253,10 +255,7 @@ class _EditorBodyState extends State<_EditorBody> {
             .firstWhere((c) => c.isIncome == _income, orElse: () => cats.first)
             .id;
 
-        final hasAudio =
-            (widget.existing?.audioBase64 ?? "").isNotEmpty;
-        final hasImages =
-            widget.existing?.imageBase64List.isNotEmpty ?? false;
+        final hasImages = widget.existing?.imageBase64List.isNotEmpty ?? false;
         final finance = context.financeColors;
 
         return SafeArea(
@@ -302,30 +301,38 @@ class _EditorBodyState extends State<_EditorBody> {
                     border: Border.all(color: finance.fieldBorder),
                   ),
                   child: SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(value: false, label: Text(AppStrings.expense)),
-                    ButtonSegment(value: true, label: Text(AppStrings.income)),
-                  ],
-                  selected: {_income},
-                  onSelectionChanged: (s) {
-                    setState(() {
-                      _income = s.first;
-                      _categoryId = cats
-                          .firstWhere((c) => c.isIncome == _income,
-                              orElse: () => cats.first)
-                          .id;
-                    });
-                  },
-                ),
+                    segments: const [
+                      ButtonSegment(
+                        value: false,
+                        label: Text(AppStrings.expense),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        label: Text(AppStrings.income),
+                      ),
+                    ],
+                    selected: {_income},
+                    onSelectionChanged: (s) {
+                      setState(() {
+                        _income = s.first;
+                        _categoryId = cats
+                            .firstWhere(
+                              (c) => c.isIncome == _income,
+                              orElse: () => cats.first,
+                            )
+                            .id;
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 12),
 
                 // Category dropdown
                 DropdownButtonFormField<String>(
                   dropdownColor: finance.sheetBackground,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: finance.fieldText,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: finance.fieldText),
                   // ignore: deprecated_member_use
                   value: _categoryId,
                   items: cats
@@ -347,7 +354,9 @@ class _EditorBodyState extends State<_EditorBody> {
                       )
                       .toList(),
                   onChanged: (v) => setState(() => _categoryId = v),
-                  decoration: const InputDecoration(labelText: AppStrings.category),
+                  decoration: const InputDecoration(
+                    labelText: AppStrings.category,
+                  ),
                 ),
                 const SizedBox(height: 12),
 
@@ -364,14 +373,16 @@ class _EditorBodyState extends State<_EditorBody> {
                   tileColor: finance.fieldFill,
                   title: const Text(AppStrings.transactionDate),
                   subtitle: Text(DateFormat.yMMMd("vi").format(_date)),
-                  trailing: Icon(Icons.calendar_month, color: finance.textMuted),
+                  trailing: Icon(
+                    Icons.calendar_month,
+                    color: finance.textMuted,
+                  ),
                   onTap: () async {
                     final d = await showDatePicker(
                       context: context,
                       initialDate: _date,
                       firstDate: DateTime(2000),
-                      lastDate:
-                          DateTime(DateTime.now().year + 1, 12, 31),
+                      lastDate: DateTime(DateTime.now().year + 1, 12, 31),
                     );
                     if (d != null) setState(() => _date = d);
                   },
@@ -395,46 +406,15 @@ class _EditorBodyState extends State<_EditorBody> {
                   maxLines: 2,
                 ),
 
-                // Audio playback
-                if (hasAudio) ...[
-                  const SizedBox(height: 12),
-                  Card(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.audiotrack,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
-                      title: Text(
-                        "Audio đính kèm",
-                        style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onPrimaryContainer,
-                        ),
-                      ),
-                      subtitle: Text(
-                        "Nhấn ▶ để nghe lại ghi âm",
-                        style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onPrimaryContainer
-                              .withValues(alpha: 0.85),
-                        ),
-                      ),
-                      trailing: IconButton(
-                        onPressed: () =>
-                            _playAudio(widget.existing!.audioBase64!),
-                        icon: Icon(
-                          Icons.play_arrow,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                const SizedBox(height: 12),
+                AppVoiceNoteSection(
+                  audioBase64: _audioBase64,
+                  showWhenEmpty: true,
+                  onChanged: (audioBase64) => setState(() {
+                    _audioBase64 = audioBase64;
+                    if (audioBase64 != null) _pending = true;
+                  }),
+                ),
 
                 // Image thumbnails
                 if (hasImages) ...[
@@ -443,13 +423,13 @@ class _EditorBodyState extends State<_EditorBody> {
                     height: 96,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemCount:
-                          widget.existing!.imageBase64List.length,
+                      itemCount: widget.existing!.imageBase64List.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(width: 8),
                       itemBuilder: (context, i) {
                         final bytes = base64Decode(
-                            widget.existing!.imageBase64List[i]);
+                          widget.existing!.imageBase64List[i],
+                        );
                         return ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.memory(

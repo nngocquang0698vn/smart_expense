@@ -93,8 +93,7 @@ class _MobileShell extends StatelessWidget {
   Widget build(BuildContext context) {
     // Cap system bottom inset to prevent Chrome DevTools from reporting
     // inflated viewPadding that breaks layout.
-    final sysBtm =
-        MediaQuery.of(context).viewPadding.bottom.clamp(0.0, 60.0);
+    final sysBtm = MediaQuery.of(context).viewPadding.bottom.clamp(0.0, 60.0);
     // PillNavBar intrinsic height: 8(top) + 56(row) + 8(bottom) = 72 px.
     final navBarHeight = 72.0 + 12.0 + sysBtm;
 
@@ -136,7 +135,8 @@ class _DesktopShell extends StatelessWidget {
     final now = DateTime.now();
 
     final cs = Theme.of(context).colorScheme;
-    final contentColor = Theme.of(context).extension<AppLayoutTheme>()?.desktopContentColor ??
+    final contentColor =
+        Theme.of(context).extension<AppLayoutTheme>()?.desktopContentColor ??
         cs.surface;
 
     return Scaffold(
@@ -147,11 +147,7 @@ class _DesktopShell extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Sidebar(
-                  now: now,
-                  selectedIndex: page,
-                  onSelect: onSelect,
-                ),
+                _Sidebar(now: now, selectedIndex: page, onSelect: onSelect),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
@@ -196,11 +192,9 @@ class _Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final chrome = Theme.of(context).extension<AppChromeTheme>() ??
-        AppChromeTheme.fromSeed(
-          cs.primary,
-          Theme.of(context).brightness,
-        );
+    final chrome =
+        Theme.of(context).extension<AppChromeTheme>() ??
+        AppChromeTheme.fromSeed(cs.primary, Theme.of(context).brightness);
     final timeText = DateFormat("HH:mm", "vi").format(now);
     final dateText = DateFormat("EEEE, d MMM y", "vi").format(now);
 
@@ -219,9 +213,7 @@ class _Sidebar extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: chrome.sidebarBorder.withValues(alpha: 0.65),
-        ),
+        border: Border.all(color: chrome.sidebarBorder.withValues(alpha: 0.65)),
         boxShadow: [
           BoxShadow(
             color: chrome.sidebarShadow,
@@ -280,11 +272,9 @@ class _SidebarNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final chrome = Theme.of(context).extension<AppChromeTheme>() ??
-        AppChromeTheme.fromSeed(
-          cs.primary,
-          Theme.of(context).brightness,
-        );
+    final chrome =
+        Theme.of(context).extension<AppChromeTheme>() ??
+        AppChromeTheme.fromSeed(cs.primary, Theme.of(context).brightness);
     final color = active ? cs.onPrimary : chrome.sidebarNavInactive;
 
     return Padding(
@@ -305,8 +295,7 @@ class _SidebarNavItem extends StatelessWidget {
                   label,
                   style: TextStyle(
                     color: color,
-                    fontWeight:
-                        active ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
               ],

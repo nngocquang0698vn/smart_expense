@@ -58,9 +58,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveName() async {
     await widget.repo.setUserName(_nameCtrl.text.trim());
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Đã lưu tên")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Đã lưu tên")));
     }
   }
 
@@ -125,10 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Giao diện",
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text("Giao diện", style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
 
           SwitchListTile.adaptive(
@@ -175,8 +172,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   "Ngọc lục bảo (mặc định)",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -185,12 +182,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 16),
             Text(
               "Màu chủ đạo",
-              style: Theme.of(context)
-                  .textTheme
-                  .labelMedium
-                  ?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -222,10 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Tuỳ chỉnh",
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text("Tuỳ chỉnh", style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
               // Name row stretches to full column width so "Lưu" aligns with ">"
               Row(
@@ -286,10 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Dữ liệu demo",
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text("Dữ liệu demo", style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
           Card(
             child: Padding(
@@ -300,12 +288,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.primaryContainer,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
                         child: const Text(
                           "JN",
                           style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 13),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -315,13 +306,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             Text(
                               "Nhân vật Johny Nguyễn",
-                              style:
-                                  Theme.of(context).textTheme.titleSmall,
+                              style: Theme.of(context).textTheme.titleSmall,
                             ),
                             Text(
                               "Software Engineer · TP.HCM · 45tr/tháng",
-                              style:
-                                  Theme.of(context).textTheme.bodySmall,
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),
@@ -414,9 +403,7 @@ class _ColorDot extends StatelessWidget {
                 : Border.all(color: Colors.transparent, width: 3),
             boxShadow: [
               BoxShadow(
-                color: preset.color.withValues(
-                  alpha: selected ? 0.55 : 0.20,
-                ),
+                color: preset.color.withValues(alpha: selected ? 0.55 : 0.20),
                 blurRadius: selected ? 10 : 4,
                 spreadRadius: selected ? 1 : 0,
               ),

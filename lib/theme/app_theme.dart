@@ -37,31 +37,31 @@ abstract final class AppTheme {
 
     final scaffoldBg = isDark
         ? (tinted
-            ? Color.alphaBlend(
-                seed.withValues(alpha: 0.18),
-                AppColors.darkBackground,
-              )
-            : AppColors.darkBackground)
+              ? Color.alphaBlend(
+                  seed.withValues(alpha: 0.18),
+                  AppColors.darkBackground,
+                )
+              : AppColors.darkBackground)
         : (tinted
-            ? Color.alphaBlend(
-                seed.withValues(alpha: 0.08),
-                AppColors.background,
-              )
-            : AppColors.background);
+              ? Color.alphaBlend(
+                  seed.withValues(alpha: 0.08),
+                  AppColors.background,
+                )
+              : AppColors.background);
 
     final cardBg = isDark
         ? (tinted
-            ? Color.alphaBlend(
-                seed.withValues(alpha: 0.08),
-                AppColors.darkSurface,
-              )
-            : AppColors.darkSurface)
+              ? Color.alphaBlend(
+                  seed.withValues(alpha: 0.08),
+                  AppColors.darkSurface,
+                )
+              : AppColors.darkSurface)
         : (tinted
-            ? Color.alphaBlend(
-                seed.withValues(alpha: 0.04),
-                AppColors.surface,
-              )
-            : AppColors.surface);
+              ? Color.alphaBlend(
+                  seed.withValues(alpha: 0.04),
+                  AppColors.surface,
+                )
+              : AppColors.surface);
 
     final base = ThemeData(
       useMaterial3: true,
@@ -92,8 +92,9 @@ abstract final class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: scaffoldBg,
-        foregroundColor:
-            isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        foregroundColor: isDark
+            ? AppColors.darkTextPrimary
+            : AppColors.textPrimary,
         titleTextStyle: TextStyle(
           color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
           fontSize: AppTypography.title,
@@ -134,8 +135,7 @@ abstract final class AppTheme {
           borderRadius: inputRadius,
           borderSide: BorderSide(color: scheme.error),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm,
         ),

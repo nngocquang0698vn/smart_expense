@@ -1,20 +1,16 @@
-import "dart:async";
 import "dart:convert";
-import "dart:typed_data";
 
-import "package:audioplayers/audioplayers.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:image_picker/image_picker.dart";
 import "package:intl/intl.dart";
-import "package:record/record.dart";
 
 import "../core/amount_input.dart";
 import "../core/constants.dart";
 import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
+import "../shared/widgets/app_voice_note_section.dart";
 import "../theme/app_finance_colors.dart";
 import "app_text_field.dart";
 import "form_amount_field.dart";
@@ -64,15 +60,6 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
   late String _initTitle;
   late int _initAmount;
 
-  // Audio
-  final _recorder = AudioRecorder();
-  final _audioPlayer = AudioPlayer();
-  StreamSubscription<Uint8List>? _recordSub;
-  Timer? _recordTimer;
-  final List<int> _recordBytes = [];
-  bool _recording = false;
-  Duration _recordDuration = Duration.zero;
-  bool _microDenied = false;
   String? _audioBase64;
 
   // Images
@@ -89,8 +76,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       _amount.value != _initAmount ||
       _noteCtrl.text.isNotEmpty ||
       _audioBase64 != null ||
-      _imageBase64List.isNotEmpty ||
-      _recording;
+      _imageBase64List.isNotEmpty;
 
   @override
   void initState() {
@@ -101,9 +87,6 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       final ts = DateFormat("dd/MM HH:mm").format(DateTime.now());
       _titleCtrl.text = "Ghi âm giao dịch - $ts";
       _amount.setValue(0);
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (mounted) await _startRecording();
-      });
     } else if (widget.mode == QuickEntryMode.receipt) {
       final ts = DateFormat("dd/MM HH:mm").format(DateTime.now());
       _titleCtrl.text = "Ảnh hoá đơn - $ts";
@@ -127,10 +110,6 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   @override
   void dispose() {
-    _recordTimer?.cancel();
-    _recordSub?.cancel();
-    _recorder.dispose();
-    _audioPlayer.dispose();
     _titleCtrl.dispose();
     _amount.dispose();
     _noteCtrl.dispose();
@@ -169,64 +148,6 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     if (discard == true && mounted) Navigator.pop(context);
   }
 
-  // ── Audio recording ────────────────────────────────────────────────────────
-
-  Future<void> _startRecording() async {
-    final granted = await _recorder.hasPermission();
-    if (!granted) {
-      if (!mounted) return;
-      setState(() => _microDenied = true);
-      return;
-    }
-    setState(() => _microDenied = false);
-
-    await _recordSub?.cancel();
-    _recordSub = null;
-    _recordTimer?.cancel();
-    _recordBytes.clear();
-    _recordDuration = Duration.zero;
-    _audioBase64 = null;
-
-    final stream = await _recorder.startStream(
-      const RecordConfig(
-        encoder: AudioEncoder.pcm16bits,
-        sampleRate: 16000,
-        numChannels: 1,
-      ),
-    );
-    _recordSub = stream.listen((chunk) => _recordBytes.addAll(chunk));
-    _recordTimer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => setState(() => _recordDuration += const Duration(seconds: 1)),
-    );
-    if (!mounted) return;
-    setState(() => _recording = true);
-  }
-
-  Future<void> _stopRecording() async {
-    await _recordSub?.cancel();
-    _recordSub = null;
-    _recordTimer?.cancel();
-    _recordTimer = null;
-    await _recorder.stop();
-    if (_recordBytes.isEmpty) {
-      setState(() => _recording = false);
-      return;
-    }
-    final wav = _pcm16ToWav(Uint8List.fromList(_recordBytes));
-    setState(() {
-      _recording = false;
-      _audioBase64 = base64Encode(wav);
-      _pending = true;
-    });
-  }
-
-  Future<void> _playAudio() async {
-    if (_audioBase64 == null) return;
-    await _audioPlayer.stop();
-    await _audioPlayer.play(BytesSource(base64Decode(_audioBase64!)));
-  }
-
   // ── Image picking ──────────────────────────────────────────────────────────
 
   Future<void> _pickImage(ImageSource source) async {
@@ -257,17 +178,13 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     }
 
     final matched = cats.where((c) => c.isIncome == _income).toList();
-    final catId =
-        _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
+    final catId = _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
     if (!_pending && catId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng chọn danh mục.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Vui lòng chọn danh mục.")));
       return;
     }
-
-    if (_recording) await _stopRecording();
-    if (!mounted) return;
 
     final isInfoComplete = amount > 0 && catId != null;
     final effectiveComplete = _pending ? isInfoComplete : true;
@@ -290,126 +207,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _pending
-              ? "Đã lưu vào danh sách chờ đối soát."
-              : "Đã lưu giao dịch.",
-        ),
-      ),
-    );
-  }
-
-  // ── UI helpers ─────────────────────────────────────────────────────────────
-
-  String _fmtDuration(Duration d) {
-    final mm = d.inMinutes.remainder(60).toString().padLeft(2, "0");
-    final ss = d.inSeconds.remainder(60).toString().padLeft(2, "0");
-    return "$mm:$ss";
-  }
-
-  Widget _buildAudioSection() {
-    if (_microDenied) {
-      final cs = Theme.of(context).colorScheme;
-      return Card(
-        color: cs.errorContainer,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              Icon(Icons.mic_off, color: cs.onErrorContainer, size: 32),
-              const SizedBox(height: 6),
-              Text(
-                "Không thể truy cập Micro",
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: cs.onErrorContainer,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "Kiểm tra lại quyền truy cập trong trình duyệt / thiết bị.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: cs.onErrorContainer),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton(
-                onPressed: _startRecording,
-                child: const Text("Thử lại"),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final cs = Theme.of(context).colorScheme;
-    return Card(
-      color: cs.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        child: Column(
-          children: [
-            _WaveBars(active: _recording),
-            const SizedBox(height: 6),
-            Text(
-              _fmtDuration(_recordDuration),
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: cs.onPrimaryContainer,
-              ),
-            ),
-            Text(
-              _recording
-                  ? "Đang ghi âm..."
-                  : (_audioBase64 != null
-                      ? "Ghi âm thành công"
-                      : "Sẵn sàng ghi âm"),
-              style: TextStyle(fontSize: 12, color: cs.onPrimaryContainer),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                if (_audioBase64 != null && !_recording) ...[
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        setState(() {
-                          _audioBase64 = null;
-                          _recordDuration = Duration.zero;
-                        });
-                        await _startRecording();
-                      },
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: const Text(AppStrings.reRecord),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _recording
-                        ? _stopRecording
-                        : (_audioBase64 == null ? _startRecording : _playAudio),
-                    icon: Icon(
-                      _recording
-                          ? Icons.stop
-                          : (_audioBase64 == null
-                              ? Icons.mic
-                              : Icons.play_arrow),
-                      size: 16,
-                    ),
-                    label: Text(
-                      _recording
-                          ? AppStrings.stopRecording
-                          : (_audioBase64 == null
-                              ? AppStrings.startRecording
-                              : AppStrings.playBack),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+          _pending ? "Đã lưu vào danh sách chờ đối soát." : "Đã lưu giao dịch.",
         ),
       ),
     );
@@ -420,9 +218,9 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<CategoryModel>>(
-      future: widget.repo
-          .categories()
-          .then((list) => list.where((c) => c.enabled).toList()),
+      future: widget.repo.categories().then(
+        (list) => list.where((c) => c.enabled).toList(),
+      ),
       builder: (context, snap) {
         if (!snap.hasData) {
           return const Padding(
@@ -469,25 +267,33 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                   builder: (context) {
                     final finance = context.financeColors;
                     return Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadius.container),
-                    color: finance.fieldFill,
-                    border: Border.all(color: finance.fieldBorder),
-                  ),
-                  child: SegmentedButton<bool>(
-                    showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(value: false, label: Text(AppStrings.expense)),
-                      ButtonSegment(value: true, label: Text(AppStrings.income)),
-                    ],
-                    selected: {_income},
-                    onSelectionChanged: (v) => setState(() {
-                      _income = v.first;
-                      _categoryId = null;
-                    }),
-                  ),
-                );
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          AppRadius.container,
+                        ),
+                        color: finance.fieldFill,
+                        border: Border.all(color: finance.fieldBorder),
+                      ),
+                      child: SegmentedButton<bool>(
+                        showSelectedIcon: false,
+                        segments: const [
+                          ButtonSegment(
+                            value: false,
+                            label: Text(AppStrings.expense),
+                          ),
+                          ButtonSegment(
+                            value: true,
+                            label: Text(AppStrings.income),
+                          ),
+                        ],
+                        selected: {_income},
+                        onSelectionChanged: (v) => setState(() {
+                          _income = v.first;
+                          _categoryId = null;
+                        }),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 14),
@@ -495,8 +301,8 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 // ── Amount — large & prominent ─────────────────────────────
                 FormAmountField(
                   controller: _amount,
-                  alwaysShowKeypad: true,
-                  autofocus: true,
+                  alwaysShowKeypad: widget.mode == QuickEntryMode.tap,
+                  autofocus: widget.mode == QuickEntryMode.tap,
                 ),
                 const SizedBox(height: 10),
 
@@ -509,17 +315,20 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
                 // ── Audio section ─────────────────────────────────────────
                 if (widget.mode == QuickEntryMode.voice ||
-                    _audioBase64 != null ||
-                    _recording) ...[
-                  _buildAudioSection(),
+                    _audioBase64 != null) ...[
+                  AppVoiceNoteSection(
+                    audioBase64: _audioBase64,
+                    autoStartRecording: widget.mode == QuickEntryMode.voice,
+                    onChanged: (b64) => setState(() {
+                      _audioBase64 = b64;
+                      if (b64 != null) _pending = true;
+                    }),
+                  ),
                   const SizedBox(height: 14),
                 ],
 
                 // ── Category chips (compact, shows all categories) ────────
-                Text(
-                  "Danh mục",
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text("Danh mục", style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
                 Builder(
                   builder: (ctx) {
@@ -527,16 +336,18 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                     return Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: cats
-                          .where((c) => c.isIncome == _income)
-                          .map((cat) {
+                      children: cats.where((c) => c.isIncome == _income).map((
+                        cat,
+                      ) {
                         final active = cat.id == _categoryId;
                         return GestureDetector(
                           onTap: () => setState(() => _categoryId = cat.id),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: active
                                   ? cs.primary
@@ -554,8 +365,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                                 Icon(
                                   cat.icon,
                                   size: 16,
-                                  color:
-                                      active ? cs.onPrimary : cat.color,
+                                  color: active ? cs.onPrimary : cat.color,
                                 ),
                                 const SizedBox(width: 5),
                                 Text(
@@ -563,9 +373,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: active
-                                        ? cs.onPrimary
-                                        : cs.onSurface,
+                                    color: active ? cs.onPrimary : cs.onSurface,
                                   ),
                                 ),
                               ],
@@ -590,8 +398,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                         context: context,
                         initialDate: _date,
                         firstDate: DateTime(2000),
-                        lastDate:
-                            DateTime.now().add(const Duration(days: 365)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
                       );
                       if (picked != null) setState(() => _date = picked);
                     },
@@ -606,8 +413,10 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => _pickImage(ImageSource.camera),
-                          icon: const Icon(Icons.photo_camera_outlined,
-                              size: 16),
+                          icon: const Icon(
+                            Icons.photo_camera_outlined,
+                            size: 16,
+                          ),
                           label: const Text(AppStrings.takePhoto),
                         ),
                       ),
@@ -616,30 +425,13 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _pickImage(ImageSource.gallery),
-                        icon: const Icon(Icons.photo_library_outlined,
-                            size: 16),
+                        icon: const Icon(
+                          Icons.photo_library_outlined,
+                          size: 16,
+                        ),
                         label: const Text(AppStrings.pickPhoto),
                       ),
                     ),
-                    if (widget.mode != QuickEntryMode.voice) ...[
-                      const SizedBox(width: 8),
-                      OutlinedButton(
-                        onPressed:
-                            _recording ? _stopRecording : _startRecording,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _recording ? Colors.red : null,
-                          side: BorderSide(
-                            color: _recording
-                                ? Colors.red
-                                : Theme.of(context).colorScheme.outline,
-                          ),
-                        ),
-                        child: Icon(
-                          _recording ? Icons.stop : Icons.mic,
-                          size: 20,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
 
@@ -668,14 +460,13 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                             top: 2,
                             right: 2,
                             child: GestureDetector(
-                              onTap: () => setState(
-                                  () => _imageBase64List.removeAt(i)),
+                              onTap: () =>
+                                  setState(() => _imageBase64List.removeAt(i)),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .scrim
-                                      .withValues(alpha: 0.62),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.scrim.withValues(alpha: 0.62),
                                   shape: BoxShape.circle,
                                 ),
                                 padding: const EdgeInsets.all(2),
@@ -731,75 +522,6 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
           ),
         );
       },
-    );
-  }
-
-  // ── PCM → WAV helpers ──────────────────────────────────────────────────────
-
-  Uint8List _pcm16ToWav(
-    Uint8List pcm, {
-    int sampleRate = 16000,
-    int channels = 1,
-    int bitsPerSample = 16,
-  }) {
-    final dataLength = pcm.length;
-    final byteRate = sampleRate * channels * bitsPerSample ~/ 8;
-    final blockAlign = channels * bitsPerSample ~/ 8;
-    final fileSize = 36 + dataLength;
-
-    final out = BytesBuilder();
-    out.add(ascii.encode("RIFF"));
-    out.add(_le32(fileSize));
-    out.add(ascii.encode("WAVE"));
-    out.add(ascii.encode("fmt "));
-    out.add(_le32(16));
-    out.add(_le16(1));
-    out.add(_le16(channels));
-    out.add(_le32(sampleRate));
-    out.add(_le32(byteRate));
-    out.add(_le16(blockAlign));
-    out.add(_le16(bitsPerSample));
-    out.add(ascii.encode("data"));
-    out.add(_le32(dataLength));
-    out.add(pcm);
-    return out.takeBytes();
-  }
-
-  List<int> _le16(int v) => [v & 0xff, (v >> 8) & 0xff];
-
-  List<int> _le32(int v) => [
-        v & 0xff,
-        (v >> 8) & 0xff,
-        (v >> 16) & 0xff,
-        (v >> 24) & 0xff,
-      ];
-}
-
-// ── Simple wave-bar visual indicator ─────────────────────────────────────────
-
-class _WaveBars extends StatelessWidget {
-  const _WaveBars({required this.active});
-
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    const heights = [10.0, 18.0, 28.0, 40.0, 32.0, 24.0, 36.0, 20.0, 14.0];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (final h in heights)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            width: 6,
-            height: h,
-            decoration: BoxDecoration(
-              color: active ? cs.primary : cs.outlineVariant,
-              borderRadius: BorderRadius.circular(99),
-            ),
-          ),
-      ],
     );
   }
 }

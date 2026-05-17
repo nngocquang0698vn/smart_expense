@@ -27,10 +27,10 @@ enum AppThemePreference {
   String get jsonValue => name;
 
   ThemeMode get materialThemeMode => switch (this) {
-        AppThemePreference.system => ThemeMode.system,
-        AppThemePreference.light => ThemeMode.light,
-        AppThemePreference.dark => ThemeMode.dark,
-      };
+    AppThemePreference.system => ThemeMode.system,
+    AppThemePreference.light => ThemeMode.light,
+    AppThemePreference.dark => ThemeMode.dark,
+  };
 
   bool get isDark => this == AppThemePreference.dark;
 }
@@ -77,23 +77,23 @@ class ThemeSettings {
   }
 
   Map<String, dynamic> toJson() => {
-        "seedColor": seedColor.toARGB32(),
-        "useColoredSurfaces": useColoredSurfaces,
-        "enableAccentColors": enableAccentColors,
-        "themePreference": themePreference.jsonValue,
-      };
+    "seedColor": seedColor.toARGB32(),
+    "useColoredSurfaces": useColoredSurfaces,
+    "enableAccentColors": enableAccentColors,
+    "themePreference": themePreference.jsonValue,
+  };
 
   factory ThemeSettings.fromJson(String raw) {
     try {
       final m = json.decode(raw) as Map<String, dynamic>;
-      final storedSeed =
-          Color(m["seedColor"] as int? ?? AppColors.brand.toARGB32());
+      final storedSeed = Color(
+        m["seedColor"] as int? ?? AppColors.brand.toARGB32(),
+      );
       final hadCustomSeed = storedSeed != AppColors.brand;
       return ThemeSettings(
         seedColor: storedSeed,
         useColoredSurfaces: m["useColoredSurfaces"] as bool? ?? true,
-        enableAccentColors:
-            m["enableAccentColors"] as bool? ?? hadCustomSeed,
+        enableAccentColors: m["enableAccentColors"] as bool? ?? hadCustomSeed,
         themePreference: AppThemePreference.fromJson(m["themePreference"]),
       );
     } catch (_) {
@@ -111,9 +111,9 @@ class ThemeSettings {
 
   @override
   int get hashCode => Object.hash(
-        seedColor,
-        useColoredSurfaces,
-        enableAccentColors,
-        themePreference,
-      );
+    seedColor,
+    useColoredSurfaces,
+    enableAccentColors,
+    themePreference,
+  );
 }

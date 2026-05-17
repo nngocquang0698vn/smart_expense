@@ -9,8 +9,10 @@ abstract final class AppSpacing {
   static const double xl = 24;
   static const double xxl = 32;
 
-  static const EdgeInsets screen =
-      EdgeInsets.symmetric(horizontal: md, vertical: sm);
+  static const EdgeInsets screen = EdgeInsets.symmetric(
+    horizontal: md,
+    vertical: sm,
+  );
   static const EdgeInsets card = EdgeInsets.all(md);
   static const EdgeInsets sheet = EdgeInsets.fromLTRB(lg, xs, lg, xl);
 }

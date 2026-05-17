@@ -42,11 +42,12 @@ class AppTextField extends StatelessWidget {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       textAlign: textAlign,
-      style: style ??
+      style:
+          style ??
           Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: finance.fieldText,
-                fontWeight: FontWeight.w500,
-              ),
+            color: finance.fieldText,
+            fontWeight: FontWeight.w500,
+          ),
       cursorColor: cs.primary,
       decoration: InputDecoration(
         labelText: labelText,
@@ -73,8 +74,10 @@ class AppTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.input),
           borderSide: BorderSide(color: cs.primary, width: 2),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }

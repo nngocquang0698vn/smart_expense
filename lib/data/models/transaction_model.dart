@@ -26,17 +26,17 @@ class TransactionModel {
   final List<String> imageBase64List;
 
   Map<String, Object?> toMap() => {
-        "title": title,
-        "amountVnd": amountVnd,
-        "isIncome": isIncome,
-        "categoryId": categoryId,
-        "occurredAt": occurredAt.toIso8601String(),
-        "pending": pending,
-        "complete": complete,
-        "note": note,
-        "audioBase64": audioBase64,
-        "imageBase64List": imageBase64List,
-      };
+    "title": title,
+    "amountVnd": amountVnd,
+    "isIncome": isIncome,
+    "categoryId": categoryId,
+    "occurredAt": occurredAt.toIso8601String(),
+    "pending": pending,
+    "complete": complete,
+    "note": note,
+    "audioBase64": audioBase64,
+    "imageBase64List": imageBase64List,
+  };
 
   static TransactionModel fromMap(String id, Map<String, Object?> map) {
     final legacy = map["amountCents"];
@@ -61,6 +61,8 @@ class TransactionModel {
     );
   }
 
+  static const _unset = Object();
+
   TransactionModel copyWith({
     String? title,
     int? amountVnd,
@@ -69,8 +71,8 @@ class TransactionModel {
     DateTime? occurredAt,
     bool? pending,
     bool? complete,
-    String? note,
-    String? audioBase64,
+    Object? note = _unset,
+    Object? audioBase64 = _unset,
     List<String>? imageBase64List,
   }) {
     return TransactionModel(
@@ -82,8 +84,10 @@ class TransactionModel {
       occurredAt: occurredAt ?? this.occurredAt,
       pending: pending ?? this.pending,
       complete: complete ?? this.complete,
-      note: note ?? this.note,
-      audioBase64: audioBase64 ?? this.audioBase64,
+      note: note == _unset ? this.note : note as String?,
+      audioBase64: audioBase64 == _unset
+          ? this.audioBase64
+          : audioBase64 as String?,
       imageBase64List: imageBase64List ?? this.imageBase64List,
     );
   }

@@ -163,10 +163,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _pendingTrailing(TransactionModel t) => buildPendingActions(
-        transaction: t,
-        onConfirm: () => _confirmPending(t),
-        onEdit: () => _openEditor(t),
-      );
+    transaction: t,
+    onConfirm: () => _confirmPending(t),
+    onEdit: () => _openEditor(t),
+  );
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
@@ -231,7 +231,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: RefreshIndicator(
                   onRefresh: _refreshTop,
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 0, AppInsets.listBottom),
+                    padding: const EdgeInsets.fromLTRB(
+                      0,
+                      8,
+                      0,
+                      AppInsets.listBottom,
+                    ),
                     children: [
                       _SectionHeader(
                         child: Row(
@@ -276,28 +281,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 flex: 6,
                 child: ListView(
                   controller: _scroll,
-                  padding: const EdgeInsets.fromLTRB(0, 8, 0, AppInsets.listBottom),
+                  padding: const EdgeInsets.fromLTRB(
+                    0,
+                    8,
+                    0,
+                    AppInsets.listBottom,
+                  ),
                   children: [
                     _SectionHeader(
                       child: Row(
                         children: [
-                            Text(
-                              AppStrings.historyTitle,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            if (_historyLoaded.isNotEmpty) ...[
-                              const SizedBox(width: 6),
-                              HistoryCountBadge(
-                                label: _fmtCount(
-                                  _historyLoaded.length,
-                                  hasMore: !_allLoaded,
-                                ),
+                          Text(
+                            AppStrings.historyTitle,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          if (_historyLoaded.isNotEmpty) ...[
+                            const SizedBox(width: 6),
+                            HistoryCountBadge(
+                              label: _fmtCount(
+                                _historyLoaded.length,
+                                hasMore: !_allLoaded,
                               ),
-                            ],
+                            ),
                           ],
-                        ),
+                        ],
                       ),
-                      ..._historyWidgets(catMap),
+                    ),
+                    ..._historyWidgets(catMap),
                     if (_loadingMore)
                       const Padding(
                         padding: EdgeInsets.all(12),
@@ -535,8 +545,8 @@ class _DesktopHeader extends StatelessWidget {
               Text(
                 "Trang chủ",
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const Spacer(),
               OutlinedButton.icon(
@@ -614,9 +624,6 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: AppInsets.sectionHeader,
-      child: child,
-    );
+    return Padding(padding: AppInsets.sectionHeader, child: child);
   }
 }

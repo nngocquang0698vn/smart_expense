@@ -6,12 +6,7 @@ import "../theme/app_finance_colors.dart";
 export "../core/money_format.dart" show formatMoneyVi, formatMoneyDigits;
 
 class MoneyText extends StatelessWidget {
-  const MoneyText(
-    this.amountVnd, {
-    super.key,
-    this.style,
-    this.isIncome,
-  });
+  const MoneyText(this.amountVnd, {super.key, this.style, this.isIncome});
 
   final int amountVnd;
   final TextStyle? style;

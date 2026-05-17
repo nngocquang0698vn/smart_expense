@@ -66,64 +66,73 @@ class _FormAmountFieldState extends State<FormAmountField> {
     final radius = BorderRadius.circular(AppRadius.input);
     final showKeypad = _keypadOpen;
 
-    final displayStyle = widget.style?.copyWith(color: finance.fieldText) ??
+    final displayStyle =
+        widget.style?.copyWith(color: finance.fieldText) ??
         Theme.of(context).textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: finance.fieldText,
-            );
+          fontWeight: FontWeight.w800,
+          color: finance.fieldText,
+        );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Material(
-          color: finance.fieldFill,
-          borderRadius: radius,
-          child: InkWell(
-            onTap: _openKeypad,
+    return TapRegion(
+      onTapOutside: (_) {
+        if (_keypadOpen) _closeKeypad();
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            color: finance.fieldFill,
             borderRadius: radius,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: radius,
-                border: Border.all(
-                  color: showKeypad ? cs.primary : finance.fieldBorder,
-                  width: showKeypad ? 2 : 1,
+            child: InkWell(
+              onTap: _openKeypad,
+              borderRadius: radius,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: radius,
+                  border: Border.all(
+                    color: showKeypad ? cs.primary : finance.fieldBorder,
+                    width: showKeypad ? 2 : 1,
+                  ),
                 ),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "₫ ",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: finance.fieldText,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  Flexible(
-                    child: Text(
-                      widget.controller.displayText,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: displayStyle,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 12,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "₫ ",
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: finance.fieldText,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                    Flexible(
+                      child: Text(
+                        widget.controller.displayText,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: displayStyle,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        if (showKeypad) ...[
-          const SizedBox(height: AppSpacing.xs),
-          AmountKeypad(
-            onDigit: widget.controller.appendDigit,
-            onTripleZero: widget.controller.appendTripleZero,
-            onBackspace: widget.controller.backspace,
-            onDone: _closeKeypad,
-          ),
+          if (showKeypad) ...[
+            const SizedBox(height: AppSpacing.xs),
+            AmountKeypad(
+              onDigit: widget.controller.appendDigit,
+              onTripleZero: widget.controller.appendTripleZero,
+              onBackspace: widget.controller.backspace,
+              onDone: _closeKeypad,
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

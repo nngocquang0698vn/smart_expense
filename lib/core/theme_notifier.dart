@@ -56,8 +56,7 @@ class ThemeScope extends InheritedNotifier<ThemeNotifier> {
   });
 
   static ThemeNotifier of(BuildContext context) {
-    final scope =
-        context.dependOnInheritedWidgetOfExactType<ThemeScope>();
+    final scope = context.dependOnInheritedWidgetOfExactType<ThemeScope>();
     assert(scope != null, "ThemeScope not found in widget tree");
     return scope!.notifier!;
   }

@@ -21,12 +21,7 @@ Future<void> main() async {
   final repo = LedgerRepository(db);
   await repo.ensureDefaults();
 
-  runApp(
-    SmartExpenseRoot(
-      repo: repo,
-      themeNotifier: ThemeNotifier(prefs),
-    ),
-  );
+  runApp(SmartExpenseRoot(repo: repo, themeNotifier: ThemeNotifier(prefs)));
 }
 
 class SmartExpenseRoot extends StatefulWidget {
@@ -81,11 +76,8 @@ class _SmartExpenseRootState extends State<SmartExpenseRoot> {
                       body: AppLoadingState(message: AppStrings.loading),
                     )
                   : _onboarded!
-                      ? const MainShell()
-                      : OnboardingScreen(
-                          repo: widget.repo,
-                          onDone: _syncMeta,
-                        ),
+                  ? const MainShell()
+                  : OnboardingScreen(repo: widget.repo, onDone: _syncMeta),
             );
           },
         ),

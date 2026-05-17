@@ -125,23 +125,22 @@ class CategoryModel {
     int? colorValue,
     bool? isIncome,
     bool? enabled,
-  }) =>
-      CategoryModel(
-        id: id,
-        name: name ?? this.name,
-        iconKey: iconKey ?? this.iconKey,
-        colorValue: colorValue ?? this.colorValue,
-        isIncome: isIncome ?? this.isIncome,
-        enabled: enabled ?? this.enabled,
-      );
+  }) => CategoryModel(
+    id: id,
+    name: name ?? this.name,
+    iconKey: iconKey ?? this.iconKey,
+    colorValue: colorValue ?? this.colorValue,
+    isIncome: isIncome ?? this.isIncome,
+    enabled: enabled ?? this.enabled,
+  );
 
   Map<String, Object?> toMap() => {
-        "name": name,
-        "iconKey": iconKey,
-        "colorValue": colorValue,
-        "isIncome": isIncome,
-        "enabled": enabled,
-      };
+    "name": name,
+    "iconKey": iconKey,
+    "colorValue": colorValue,
+    "isIncome": isIncome,
+    "enabled": enabled,
+  };
 
   static CategoryModel fromMap(String id, Map<String, Object?> map) {
     final ik = map["iconKey"] as String?;

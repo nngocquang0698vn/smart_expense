@@ -79,11 +79,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 1, 12, 31),
-      initialDateRange: _custom ??
-          DateTimeRange(
-            start: DateTime(now.year, now.month, 1),
-            end: now,
-          ),
+      initialDateRange:
+          _custom ??
+          DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
     if (r != null) {
       _period = AnalyticsPeriod.custom;
@@ -239,14 +237,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               padding: const EdgeInsets.all(40),
               child: Column(
                 children: [
-                  Icon(Icons.bar_chart_outlined,
-                      size: 56, color: cs.outlineVariant),
+                  Icon(
+                    Icons.bar_chart_outlined,
+                    size: 56,
+                    color: cs.outlineVariant,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     "Chưa có dữ liệu cho kỳ này.",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -269,42 +270,45 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         pieTouchData: PieTouchData(
                           touchCallback:
                               (FlTouchEvent event, pieTouchResponse) {
-                            final idx = pieTouchResponse
-                                    ?.touchedSection?.touchedSectionIndex ??
-                                -1;
-                            if (event is FlLongPressEnd ||
-                                event is FlPanEndEvent ||
-                                event is FlTapUpEvent) {
-                              setState(() => _touchedIndex = -1);
-                            } else {
-                              setState(() => _touchedIndex = idx);
-                            }
-                          },
+                                final idx =
+                                    pieTouchResponse
+                                        ?.touchedSection
+                                        ?.touchedSectionIndex ??
+                                    -1;
+                                if (event is FlLongPressEnd ||
+                                    event is FlPanEndEvent ||
+                                    event is FlTapUpEvent) {
+                                  setState(() => _touchedIndex = -1);
+                                } else {
+                                  setState(() => _touchedIndex = idx);
+                                }
+                              },
                         ),
                         sections: _buildSections(sumSlice),
                       ),
-                      duration:
-                          const Duration(milliseconds: 400),
+                      duration: const Duration(milliseconds: 400),
                     ),
                     // Center label
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
-                      child: _touchedIndex >= 0 &&
-                              _touchedIndex < _slices.length
+                      child:
+                          _touchedIndex >= 0 && _touchedIndex < _slices.length
                           ? _DonutCenter(
                               key: ValueKey(_touchedIndex),
                               cat: _slices[_touchedIndex].cat!,
                               pct: sumSlice > 0
                                   ? 100 *
-                                      _slices[_touchedIndex].amount /
-                                      sumSlice
+                                        _slices[_touchedIndex].amount /
+                                        sumSlice
                                   : 0,
                               amount: _slices[_touchedIndex].amount,
                               isIncome: _incomeSide,
                             )
                           : _DonutCenterIdle(
                               key: const ValueKey("idle"),
-                              label: _incomeSide ? AppStrings.income : AppStrings.expense,
+                              label: _incomeSide
+                                  ? AppStrings.income
+                                  : AppStrings.expense,
                               total: sumSlice,
                               count: _slices.length,
                               isIncome: _incomeSide,
@@ -325,9 +329,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               child: Text(
                 "Theo hạng mục · ${_incomeSide ? AppStrings.income : AppStrings.expense}",
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      letterSpacing: 0.3,
-                    ),
+                  color: cs.onSurfaceVariant,
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
           ),
@@ -340,10 +344,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 sumSlice: sumSlice,
                 isIncome: _incomeSide,
                 highlighted: _touchedIndex == i,
-                onTap: () => _openCategoryDrillDown(
-                  _slices[i].id,
-                  _slices[i].cat!.name,
-                ),
+                onTap: () =>
+                    _openCategoryDrillDown(_slices[i].id, _slices[i].cat!.name),
               ),
             ),
         ],
@@ -356,8 +358,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   List<PieChartSectionData> _buildSections(int sumSlice) {
     double cumPct = 0;
     return List.generate(_slices.length, (i) {
-      final pct =
-          sumSlice > 0 ? 100.0 * _slices[i].amount / sumSlice : 0.0;
+      final pct = sumSlice > 0 ? 100.0 * _slices[i].amount / sumSlice : 0.0;
       cumPct += pct;
       final isTouched = _touchedIndex == i;
       // Hide badge for very small segments unless touched.
@@ -380,8 +381,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     });
   }
 
-  Future<void> _openCategoryDrillDown(
-      String categoryId, String name) async {
+  Future<void> _openCategoryDrillDown(String categoryId, String name) async {
     final list = await widget.repo.transactionsForCategory(
       categoryId: categoryId,
       period: _period,
@@ -411,8 +411,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 const Divider(height: 1),
                 Expanded(
                   child: list.isEmpty
-                      ? const Center(
-                          child: Text("Chưa có giao dịch nào."))
+                      ? const Center(child: Text("Chưa có giao dịch nào."))
                       : ListView.builder(
                           controller: scrollController,
                           itemCount: list.length,
@@ -421,8 +420,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                             return ListTile(
                               title: Text(t.title),
                               subtitle: Text(
-                                DateFormat("dd/MM/yyyy", "vi")
-                                    .format(t.occurredAt),
+                                DateFormat(
+                                  "dd/MM/yyyy",
+                                  "vi",
+                                ).format(t.occurredAt),
                               ),
                               trailing: MoneyText(
                                 t.amountVnd,
@@ -465,8 +466,7 @@ class _AnalysisSummaryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: Theme.of(context).textTheme.labelLarge),
+            Text(label, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 6),
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -474,9 +474,9 @@ class _AnalysisSummaryCard extends StatelessWidget {
               child: MoneyText(
                 amount.abs(),
                 isIncome: isIncome,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -520,17 +520,14 @@ class _ToggleTab extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                size: 16,
-                color: selected ? color : cs.onSurfaceVariant),
+            Icon(icon, size: 16, color: selected ? color : cs.onSurfaceVariant),
             const SizedBox(width: 6),
             Text(
               label,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: selected ? color : cs.onSurfaceVariant,
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.normal,
-                  ),
+                color: selected ? color : cs.onSurfaceVariant,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+              ),
             ),
           ],
         ),
@@ -561,23 +558,23 @@ class _DonutCenterIdle extends StatelessWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 2),
         MoneyText(
           total,
           isIncome: isIncome,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         Text(
           "$count hạng mục",
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
     );
@@ -611,9 +608,9 @@ class _DonutCenter extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           "${pct.toStringAsFixed(0)}%",
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         FittedBox(
           child: MoneyText(
@@ -680,8 +677,8 @@ class _CategoryRow extends StatelessWidget {
                   Text(
                     cat.name,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -694,20 +691,19 @@ class _CategoryRow extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: pct.toDouble(),
                             minHeight: 5,
-                            backgroundColor:
-                                cat.color.withValues(alpha: 0.12),
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(cat.color),
+                            backgroundColor: cat.color.withValues(alpha: 0.12),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              cat.color,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         "${(pct * 100).toStringAsFixed(1)}%",
-                        style:
-                            Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -719,9 +715,9 @@ class _CategoryRow extends StatelessWidget {
             MoneyText(
               slice.amount,
               isIncome: isIncome,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
           ],
         ),

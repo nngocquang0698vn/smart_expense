@@ -49,15 +49,9 @@ class DateFilterSelection {
         final start = startOfDay.subtract(Duration(days: weekday - 1));
         return DateTimeRange(start: start, end: now);
       case DateFilterPreset.thisMonth:
-        return DateTimeRange(
-          start: DateTime(now.year, now.month, 1),
-          end: now,
-        );
+        return DateTimeRange(start: DateTime(now.year, now.month, 1), end: now);
       case DateFilterPreset.thisYear:
-        return DateTimeRange(
-          start: DateTime(now.year, 1, 1),
-          end: now,
-        );
+        return DateTimeRange(start: DateTime(now.year, 1, 1), end: now);
       case DateFilterPreset.allTime:
         return DateTimeRange(
           start: DateTime(1970, 1, 1),
@@ -80,19 +74,8 @@ class DateFilterSelection {
           return DateTimeRange(start: startOfDay, end: now);
         }
         return DateTimeRange(
-          start: DateTime(
-            c.start.year,
-            c.start.month,
-            c.start.day,
-          ),
-          end: DateTime(
-            c.end.year,
-            c.end.month,
-            c.end.day,
-            23,
-            59,
-            59,
-          ),
+          start: DateTime(c.start.year, c.start.month, c.start.day),
+          end: DateTime(c.end.year, c.end.month, c.end.day, 23, 59, 59),
         );
     }
   }
@@ -133,21 +116,12 @@ extension AnalyticsPeriodX on AnalyticsPeriod {
         final start = startOfDay.subtract(Duration(days: weekday - 1));
         return DateTimeRange(start: start, end: now);
       case AnalyticsPeriod.month:
-        return DateTimeRange(
-          start: DateTime(now.year, now.month, 1),
-          end: now,
-        );
+        return DateTimeRange(start: DateTime(now.year, now.month, 1), end: now);
       case AnalyticsPeriod.quarter:
         final q = ((now.month - 1) ~/ 3) * 3 + 1;
-        return DateTimeRange(
-          start: DateTime(now.year, q, 1),
-          end: now,
-        );
+        return DateTimeRange(start: DateTime(now.year, q, 1), end: now);
       case AnalyticsPeriod.year:
-        return DateTimeRange(
-          start: DateTime(now.year, 1, 1),
-          end: now,
-        );
+        return DateTimeRange(start: DateTime(now.year, 1, 1), end: now);
       case AnalyticsPeriod.custom:
         final c = custom;
         if (c == null) {

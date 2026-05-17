@@ -4,11 +4,7 @@ import "../core/constants.dart";
 import "../shared/widgets/app_banking_card.dart";
 
 class SummaryCard extends StatelessWidget {
-  const SummaryCard({
-    super.key,
-    required this.label,
-    required this.child,
-  });
+  const SummaryCard({super.key, required this.label, required this.child});
 
   final String label;
   final Widget child;
@@ -22,9 +18,9 @@ class SummaryCard extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: AppTypography.semibold,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: AppTypography.semibold,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           child,

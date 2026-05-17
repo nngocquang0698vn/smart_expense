@@ -97,8 +97,7 @@ class AppFinanceColors extends ThemeExtension<AppFinanceColors> {
       textHint: Color.lerp(textHint, other.textHint, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
       fieldFill: Color.lerp(fieldFill, other.fieldFill, t)!,
-      sheetBackground:
-          Color.lerp(sheetBackground, other.sheetBackground, t)!,
+      sheetBackground: Color.lerp(sheetBackground, other.sheetBackground, t)!,
       fieldBorder: Color.lerp(fieldBorder, other.fieldBorder, t)!,
     );
   }
