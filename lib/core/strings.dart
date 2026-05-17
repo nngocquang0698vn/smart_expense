@@ -91,6 +91,33 @@ abstract final class AppStrings {
   static const String dateFilterPickYear = "Theo năm…";
   static const String dateFilterCustomRange = "Khoảng ngày tuỳ chọn…";
   static const String pickYearTitle = "Chọn năm";
+
+  // ── PWA install ───────────────────────────────────────────────────────────
+
+  static const String pwaInstallTitle = "Cài Smart Expense lên màn hình chính";
+  static const String pwaInstallSubtitle =
+      "Truy cập nhanh hơn như một ứng dụng. Dữ liệu vẫn được lưu cục bộ trên thiết bị của bạn.";
+  static const String pwaInstallNow = "Cài đặt ngay";
+  static const String pwaInstallLater = "Để sau";
+  static const String pwaInstallNever = "Không nhắc lại";
+  static const String pwaInstallGuideTitle = "Cách cài ứng dụng";
+  static const String pwaInstallMenuItem = "Cài app lên màn hình chính";
+  static const String pwaInstallMenuSubtitle =
+      "Xem hướng dẫn thêm vào màn hình chính";
+  static const String pwaInstallAndroidStep1 = "Nhấn menu ⋮ ở góc trên bên phải";
+  static const String pwaInstallAndroidStep2 =
+      "Chọn \"Cài đặt ứng dụng\" hoặc \"Thêm vào màn hình chính\"";
+  static const String pwaInstallAndroidStep3 =
+      "Xác nhận để thêm biểu tượng lên màn hình chính";
+  static const String pwaInstallIosStep1 = "Nhấn nút Chia sẻ (hình vuông có mũi tên)";
+  static const String pwaInstallIosStep2 = "Chọn \"Thêm vào Màn hình chính\"";
+  static const String pwaInstallIosStep3 = "Nhấn \"Thêm\" để hoàn tất";
+  static const String pwaInstallDesktopStep1 =
+      "Nhấn biểu tượng cài đặt trên thanh địa chỉ (hoặc menu trình duyệt)";
+  static const String pwaInstallDesktopStep2 =
+      "Chọn \"Cài đặt Smart Expense\" hoặc \"Install app\"";
+  static const String pwaInstallDesktopStep3 =
+      "Mở ứng dụng từ shortcut trên máy tính";
   static const String transactionTitle = "Tên giao dịch";
   static const String amount = "Số tiền (VND)";
 

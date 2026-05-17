@@ -5,6 +5,7 @@ import "../core/constants.dart";
 import "../core/strings.dart";
 import "../core/widgets/fab_center.dart";
 import "../core/widgets/pill_nav_bar.dart";
+import "../core/widgets/pwa_install_banner_host.dart";
 import "../features/home/presentation/home_screen.dart";
 import "../features/pending/presentation/pending_screen.dart";
 import "../features/reports/presentation/analytics_screen.dart";
@@ -99,7 +100,10 @@ class _MobileShell extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: page, children: pages),
+      body: PwaInstallBannerHost(
+        pageIndex: page,
+        child: IndexedStack(index: page, children: pages),
+      ),
       bottomNavigationBar: SizedBox(
         height: navBarHeight,
         child: Padding(
@@ -156,7 +160,10 @@ class _DesktopShell extends StatelessWidget {
                       color: contentColor,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: IndexedStack(index: page, children: pages),
+                    child: PwaInstallBannerHost(
+                      pageIndex: page,
+                      child: IndexedStack(index: page, children: pages),
+                    ),
                   ),
                 ),
               ],

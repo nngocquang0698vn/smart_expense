@@ -32,13 +32,53 @@ Liệt kê thiết bị: `flutter devices`
 
 ## Build
 
-**Web (release):**
+**Web (release, PWA offline-first):**
 
 ```bash
-flutter build web --release
+flutter build web --release --pwa-strategy=offline-first
 ```
 
-Kết quả: thư mục `build/web` (triển khai lên static host).
+Kết quả: thư mục `build/web` (triển khai lên static host). File `web/_redirects` được copy sang `build/web` để SPA fallback trên Cloudflare Pages.
+
+**Kiểm tra bản build local:**
+
+```bash
+# Sau khi build, serve thư mục build/web (vd. dùng npx serve)
+npx --yes serve build/web -p 8080
+```
+
+Mở DevTools → Application: kiểm tra manifest, service worker, icons.
+
+## PWA và cài lên màn hình chính
+
+- Web có manifest, theme `#006B68`, icon trong `web/icons/`.
+- Trên trình duyệt (không phải APK Android), app có thể gợi ý **Cài lên màn hình chính** (Android Chrome / iOS Safari / desktop Chromium).
+- Dữ liệu giao dịch vẫn lưu cục bộ (Sembast); service worker cache shell app để mở lại khi offline sau lần tải đầu.
+- Vào **Cá nhân** → **Cài app lên màn hình chính** để xem lại hướng dẫn.
+
+**Giới hạn:** iOS không hỗ trợ cài tự động như Chrome; `beforeinstallprompt` chỉ có trên Chromium (HTTPS + tiêu chí trình duyệt).
+
+## Deploy Cloudflare Pages (GitHub Actions)
+
+Workflow: [`.github/workflows/deploy-cloudflare-pages.yml`](.github/workflows/deploy-cloudflare-pages.yml)
+
+- Trigger: push nhánh `main` hoặc `workflow_dispatch`.
+- Chạy: `flutter analyze`, `flutter test`, `flutter build web --release --pwa-strategy=offline-first`, deploy `build/web`.
+
+**GitHub Secrets (Settings → Secrets and variables → Actions):**
+
+| Secret | Mô tả |
+|--------|--------|
+| `CLOUDFLARE_API_TOKEN` | API token có quyền Cloudflare Pages |
+| `CLOUDFLARE_ACCOUNT_ID` | Account ID Cloudflare |
+
+**GitHub Variables:**
+
+| Variable | Mô tả |
+|----------|--------|
+| `CLOUDFLARE_PROJECT_NAME` | Tên project Pages (vd. `smart-expense`) |
+
+Tạo project Pages trên Cloudflare trước lần deploy đầu (hoặc để Wrangler tạo nếu account cho phép).
 
 **APK debug:**
 

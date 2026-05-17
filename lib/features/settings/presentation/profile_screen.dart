@@ -1,7 +1,11 @@
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
 import "../../../core/constants.dart";
+import "../../../core/pwa/pwa_install_service.dart";
+import "../../../core/pwa/pwa_scope.dart";
 import "../../../core/strings.dart";
+import "../../../core/widgets/pwa_install_guide_sheet.dart";
 import "../../../core/theme_notifier.dart";
 import "../../../core/theme_presets.dart";
 import "../../../core/theme_settings.dart";
@@ -275,7 +279,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: const Text("Thêm giao dịch nhanh"),
           onTap: () => handleAddFab(context, widget.repo),
         ),
+        if (_showPwaInstallEntry(context)) _buildPwaInstallTile(context),
       ],
+    );
+  }
+
+  bool _showPwaInstallEntry(BuildContext context) {
+    if (!kIsWeb) return false;
+    final controller = PwaScope.maybeOf(context);
+    if (controller == null) return false;
+    return !controller.isStandalone;
+  }
+
+  Widget _buildPwaInstallTile(BuildContext context) {
+    final controller = PwaScope.of(context);
+    return ListTile(
+      leading: const Icon(Icons.install_mobile_rounded),
+      title: const Text(AppStrings.pwaInstallMenuItem),
+      subtitle: const Text(AppStrings.pwaInstallMenuSubtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () async {
+        await PwaInstallGuideSheet.show(
+          context,
+          platform: controller.platform,
+          showNativeInstall: controller.canNativeInstall,
+          onNativeInstall: () async {
+            final result = await controller.install();
+            if (result == PwaInstallPromptResult.accepted) {
+              await controller.onInstallAccepted();
+            }
+          },
+        );
+      },
     );
   }
 
