@@ -24,6 +24,19 @@ abstract final class AppStrings {
   static const String deleteTransactionMessage =
       "Hành động này không thể hoàn tác.";
   static const String deleteCategoryTitle = "Xoá hạng mục?";
+  static const String addCategory = "Thêm hạng mục";
+  static const String editCategory = "Chỉnh sửa hạng mục";
+  static const String newCategory = "Hạng mục mới";
+  static const String categoryName = "Tên hạng mục";
+  static const String categoryColor = "Màu sắc";
+  static const String categoryIcon = "Biểu tượng";
+  static const String categoryDefault = "Hạng mục mặc định";
+  static const String categoryDisabled = "Đã tắt";
+  static const String categoryNameRequired = "Vui lòng nhập tên hạng mục.";
+  static const String categorySystemDeleteDenied =
+      "Không thể xoá hạng mục mặc định.";
+  static const String categoryInUseDeleteDenied =
+      "Không xoá được: còn giao dịch dùng hạng mục này.";
   static const String demoDataTitle = "Nạp dữ liệu demo?";
   static const String demoDataMessage =
       "Thao tác này sẽ xoá toàn bộ giao dịch hiện tại và thay bằng dữ liệu demo.";
@@ -104,6 +117,7 @@ abstract final class AppStrings {
 
   static const String noPending = "Không có giao dịch chờ.";
   static const String noPendingShort = "Không có giao dịch chờ";
+  static const String noCategories = "Chưa có hạng mục nào.";
   static const String noDataForFilter = "Chưa có giao dịch trong khoảng lọc.";
   static const String noDataForPeriod = "Chưa có dữ liệu cho kỳ này.";
   static const String noTransactions = "Chưa có giao dịch nào.";

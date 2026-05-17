@@ -1,13 +1,19 @@
 import "package:flutter/material.dart";
 
+import "../core/constants.dart";
 import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
+import "../features/categories/application/categories_controller.dart";
+import "../features/categories/application/category_editor_policy.dart";
+import "../shared/widgets/app_card.dart";
 import "../shared/widgets/app_confirm_bottom_sheet.dart";
-
-bool _isSystem(CategoryModel c) =>
-    c.id == LedgerRepository.kOtherExpenseId ||
-    c.id == LedgerRepository.kOtherIncomeId;
+import "../shared/widgets/app_empty_state.dart";
+import "../shared/widgets/app_icon_button.dart";
+import "../shared/widgets/app_loading_state.dart";
+import "../shared/widgets/app_primary_button.dart";
+import "../shared/widgets/app_scaffold.dart";
+import "../shared/widgets/app_section_header.dart";
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key, required this.repo});
@@ -19,33 +25,18 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  List<CategoryModel> _cats = [];
-  bool _loading = true;
+  late final CategoriesController _controller;
 
   @override
   void initState() {
     super.initState();
-    widget.repo.addListener(_load);
-    _load();
+    _controller = CategoriesController(repo: widget.repo)..load();
   }
 
   @override
   void dispose() {
-    widget.repo.removeListener(_load);
+    _controller.dispose();
     super.dispose();
-  }
-
-  Future<void> _load() async {
-    final cats = await widget.repo.categories();
-    if (!mounted) return;
-    setState(() {
-      _cats = cats;
-      _loading = false;
-    });
-  }
-
-  Future<void> _toggleEnabled(CategoryModel c) async {
-    await widget.repo.upsertCategory(c.copyWith(enabled: !c.enabled));
   }
 
   Future<void> _openEditor({CategoryModel? existing}) async {
@@ -53,125 +44,149 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (ctx) =>
-          _CategoryEditorSheet(repo: widget.repo, existing: existing),
+      useSafeArea: true,
+      builder: (context) =>
+          _CategoryEditorSheet(controller: _controller, existing: existing),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final expense = _cats.where((c) => !c.isIncome).toList();
-    final income = _cats.where((c) => c.isIncome).toList();
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final viewModel = _controller.viewModel;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.category)),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openEditor(),
-        child: const Icon(Icons.add),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: ListView(
-                  children: [
-                    _SectionHeader(label: AppStrings.expense),
-                    ...expense.map(
-                      (c) => _CategoryTile(
-                        cat: c,
-                        onToggle: () => _toggleEnabled(c),
-                        onTap: () => _openEditor(existing: c),
-                      ),
+        return AppScaffold(
+          title: AppStrings.category,
+          padding: EdgeInsets.zero,
+          floatingActionButton: FloatingActionButton(
+            tooltip: AppStrings.addCategory,
+            onPressed: () => _openEditor(),
+            child: const Icon(Icons.add),
+          ),
+          body: _controller.loading
+              ? const AppLoadingState(message: AppStrings.loading)
+              : viewModel.isEmpty
+              ? const AppEmptyState(
+                  message: AppStrings.noCategories,
+                  icon: Icons.category_outlined,
+                )
+              : Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppBreakpoints.tablet,
                     ),
-                    const Divider(height: 1),
-                    _SectionHeader(label: AppStrings.income),
-                    ...income.map(
-                      (c) => _CategoryTile(
-                        cat: c,
-                        onToggle: () => _toggleEnabled(c),
-                        onTap: () => _openEditor(existing: c),
+                    child: ListView(
+                      padding: const EdgeInsets.only(
+                        bottom: AppInsets.listBottom,
                       ),
+                      children: [
+                        AppSectionHeader(title: AppStrings.expense),
+                        for (final category in viewModel.expense)
+                          _CategoryTile(
+                            category: category,
+                            isSystem: viewModel.isSystem(category),
+                            onToggle: () => _controller.toggleEnabled(category),
+                            onTap: () => _openEditor(existing: category),
+                          ),
+                        const SizedBox(height: AppSpacing.xs),
+                        AppSectionHeader(title: AppStrings.income),
+                        for (final category in viewModel.income)
+                          _CategoryTile(
+                            category: category,
+                            isSystem: viewModel.isSystem(category),
+                            onToggle: () => _controller.toggleEnabled(category),
+                            onTap: () => _openEditor(existing: category),
+                          ),
+                      ],
                     ),
-                    const SizedBox(height: 96),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          letterSpacing: 0.5,
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
 class _CategoryTile extends StatelessWidget {
   const _CategoryTile({
-    required this.cat,
+    required this.category,
+    required this.isSystem,
     required this.onToggle,
     required this.onTap,
   });
 
-  final CategoryModel cat;
+  final CategoryModel category;
+  final bool isSystem;
   final VoidCallback onToggle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final system = _isSystem(cat);
+    final scheme = Theme.of(context).colorScheme;
+    final subtitle = isSystem
+        ? AppStrings.categoryDefault
+        : category.enabled
+        ? null
+        : AppStrings.categoryDisabled;
+
     return Opacity(
-      opacity: cat.enabled ? 1.0 : 0.45,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: cat.color.withValues(alpha: 0.15),
-          child: Icon(cat.icon, color: cat.color, size: 22),
+      opacity: category.enabled ? 1 : 0.48,
+      child: AppCard(
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xxs,
         ),
-        title: Text(cat.name),
-        subtitle: system
-            ? const Text("Hạng mục mặc định")
-            : cat.enabled
-            ? null
-            : const Text("Đã tắt"),
-        trailing: system
-            ? null
-            : Switch.adaptive(
-                value: cat.enabled,
-                onChanged: (_) => onToggle(),
-                activeThumbColor: cs.primary,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        onTap: isSystem ? null : onTap,
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: category.color.withValues(alpha: 0.14),
+              child: Icon(category.icon, color: category.color, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-        onTap: system ? null : onTap,
+            ),
+            if (!isSystem)
+              Switch.adaptive(
+                value: category.enabled,
+                onChanged: (_) => onToggle(),
+                activeThumbColor: scheme.primary,
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Add / Edit sheet
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _CategoryEditorSheet extends StatefulWidget {
-  const _CategoryEditorSheet({required this.repo, this.existing});
+  const _CategoryEditorSheet({required this.controller, this.existing});
 
-  final LedgerRepository repo;
+  final CategoriesController controller;
   final CategoryModel? existing;
 
   @override
@@ -179,257 +194,330 @@ class _CategoryEditorSheet extends StatefulWidget {
 }
 
 class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
-  late final TextEditingController _nameCtrl;
-  late String _iconKey;
-  late int _colorValue;
-  late bool _isIncome;
+  final _policy = const CategoryEditorPolicy();
+  late final TextEditingController _nameController;
+  late CategoryDraft _draft;
+  bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    final e = widget.existing;
-    _nameCtrl = TextEditingController(text: e?.name ?? "");
-    _iconKey = e?.iconKey ?? "category";
-    _colorValue = e?.colorValue ?? kCategoryColors.first;
-    _isIncome = e?.isIncome ?? false;
+    _draft = _policy.initialDraft(existing: widget.existing);
+    _nameController = TextEditingController(text: _draft.name);
   }
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
+  void _updateDraft(CategoryDraft draft) {
+    setState(() => _draft = draft);
+  }
+
   Future<void> _save() async {
-    final name = _nameCtrl.text.trim();
-    if (name.isEmpty) return;
-    if (widget.existing != null) {
-      await widget.repo.upsertCategory(
-        widget.existing!.copyWith(
-          name: name,
-          iconKey: _iconKey,
-          colorValue: _colorValue,
-          isIncome: _isIncome,
-        ),
-      );
-    } else {
-      await widget.repo.createCategory(
-        name: name,
-        isIncome: _isIncome,
-        iconKey: _iconKey,
-        colorValue: _colorValue,
-      );
+    if (_saving) return;
+    setState(() => _saving = true);
+    final result = await widget.controller.saveDraft(
+      draft: _draft.copyWith(name: _nameController.text),
+      existing: widget.existing,
+    );
+    if (!mounted) return;
+    setState(() => _saving = false);
+
+    if (!result.isValid) {
+      _showMessage(result.message ?? AppStrings.genericError);
+      return;
     }
-    if (mounted) Navigator.of(context).pop();
+    Navigator.of(context).pop();
   }
 
   Future<void> _delete() async {
-    final inUse = await widget.repo.categoryInUse(widget.existing!.id);
+    final category = widget.existing;
+    if (category == null) return;
+
+    final decision = await widget.controller.canDelete(category);
     if (!mounted) return;
-    if (inUse) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Không xoá được: còn giao dịch dùng hạng mục này"),
-        ),
-      );
+    if (!decision.allowed) {
+      _showMessage(decision.message ?? AppStrings.genericError);
       return;
     }
-    final ok = await AppConfirmBottomSheet.show(
+
+    final confirmed = await AppConfirmBottomSheet.show(
       context,
       title: AppStrings.deleteCategoryTitle,
-      message: widget.existing!.name,
+      message: category.name,
       confirmLabel: AppStrings.delete,
       isDestructive: true,
     );
-    if (ok && mounted) {
-      await widget.repo.deleteCategory(widget.existing!.id);
-      if (mounted) Navigator.of(context).pop();
-    }
+    if (!confirmed || !mounted) return;
+
+    await widget.controller.delete(category);
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     final isEdit = widget.existing != null;
     final iconEntries = CategoryIcons.byName.entries.toList();
-    final currentColor = Color(_colorValue);
+    final currentColor = Color(_draft.colorValue);
 
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.75,
+      initialChildSize: 0.76,
       maxChildSize: 0.95,
-      builder: (context, scrollCtrl) => Column(
-        children: [
-          // ── Header ──────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Row(
-              children: [
-                Text(
-                  isEdit ? "Chỉnh sửa hạng mục" : "Hạng mục mới",
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const Spacer(),
-                if (isEdit && !_isSystem(widget.existing!))
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    color: cs.error,
-                    tooltip: "Xoá",
-                    onPressed: _delete,
+      builder: (context, scrollController) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                0,
+                AppSpacing.lg,
+                AppSpacing.xs,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      isEdit ? AppStrings.editCategory : AppStrings.newCategory,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
-              ],
+                  if (isEdit)
+                    AppIconButton(
+                      icon: Icons.delete_outline,
+                      tooltip: AppStrings.delete,
+                      onPressed: _delete,
+                    ),
+                ],
+              ),
             ),
-          ),
-          const Divider(height: 1),
-          // ── Scrollable body ─────────────────────────────────────────────
-          Expanded(
-            child: ListView(
-              controller: scrollCtrl,
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              children: [
-                // Preview
-                Center(
-                  child: CircleAvatar(
-                    radius: 32,
-                    backgroundColor: currentColor.withValues(alpha: 0.15),
-                    child: Icon(
-                      CategoryIcons.get(_iconKey),
-                      color: currentColor,
-                      size: 32,
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.xl,
+                ),
+                children: [
+                  Center(
+                    child: CircleAvatar(
+                      radius: 34,
+                      backgroundColor: currentColor.withValues(alpha: 0.15),
+                      child: Icon(
+                        CategoryIcons.get(_draft.iconKey),
+                        color: currentColor,
+                        size: 34,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-
-                // Name
-                TextField(
-                  controller: _nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: "Tên hạng mục",
-                    prefixIcon: Icon(Icons.edit_outlined),
+                  const SizedBox(height: AppSpacing.lg),
+                  TextField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: AppStrings.categoryName,
+                      prefixIcon: Icon(Icons.edit_outlined),
+                    ),
+                    textCapitalization: TextCapitalization.sentences,
+                    onSubmitted: (_) => _save(),
                   ),
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-                const SizedBox(height: 16),
-
-                // Chi / Thu toggle
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(
-                      value: false,
-                      label: Text(AppStrings.expense),
-                      icon: Icon(Icons.arrow_downward_rounded),
+                  const SizedBox(height: AppSpacing.md),
+                  SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(
+                        value: false,
+                        label: Text(AppStrings.expense),
+                        icon: Icon(Icons.arrow_downward_rounded),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        label: Text(AppStrings.income),
+                        icon: Icon(Icons.arrow_upward_rounded),
+                      ),
+                    ],
+                    selected: {_draft.isIncome},
+                    onSelectionChanged: (selection) => _updateDraft(
+                      _draft.copyWith(isIncome: selection.first),
                     ),
-                    ButtonSegment(
-                      value: true,
-                      label: Text(AppStrings.income),
-                      icon: Icon(Icons.arrow_upward_rounded),
-                    ),
-                  ],
-                  selected: {_isIncome},
-                  onSelectionChanged: (s) =>
-                      setState(() => _isIncome = s.first),
-                ),
-                const SizedBox(height: 20),
-
-                // Color picker
-                Text("Màu sắc", style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: kCategoryColors
-                      .map(
-                        (cv) => GestureDetector(
-                          onTap: () => setState(() => _colorValue = cv),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: Color(cv),
-                              shape: BoxShape.circle,
-                              border: _colorValue == cv
-                                  ? Border.all(color: cs.onSurface, width: 2.5)
-                                  : null,
-                              boxShadow: _colorValue == cv
-                                  ? [
-                                      BoxShadow(
-                                        color: Color(cv).withValues(alpha: 0.5),
-                                        blurRadius: 6,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: _colorValue == cv
-                                ? const Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                    size: 18,
-                                  )
-                                : null,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _PickerLabel(label: AppStrings.categoryColor),
+                  const SizedBox(height: AppSpacing.xs),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      for (final colorValue in kCategoryColors)
+                        _ColorOption(
+                          colorValue: colorValue,
+                          selected: _draft.colorValue == colorValue,
+                          onTap: () => _updateDraft(
+                            _draft.copyWith(colorValue: colorValue),
                           ),
                         ),
-                      )
-                      .toList(),
-                ),
-                const SizedBox(height: 20),
-
-                // Icon picker
-                Text(
-                  "Biểu tượng",
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 8),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 52,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
+                    ],
                   ),
-                  itemCount: iconEntries.length,
-                  itemBuilder: (context, i) {
-                    final entry = iconEntries[i];
-                    final selected = _iconKey == entry.key;
-                    return GestureDetector(
-                      onTap: () => setState(() => _iconKey = entry.key),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? currentColor.withValues(alpha: 0.18)
-                              : cs.surfaceContainerHighest.withValues(
-                                  alpha: 0.5,
-                                ),
-                          borderRadius: BorderRadius.circular(10),
-                          border: selected
-                              ? Border.all(color: currentColor, width: 2)
-                              : null,
+                  const SizedBox(height: AppSpacing.lg),
+                  _PickerLabel(label: AppStrings.categoryIcon),
+                  const SizedBox(height: AppSpacing.xs),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 52,
+                          mainAxisSpacing: AppSpacing.xs,
+                          crossAxisSpacing: AppSpacing.xs,
                         ),
-                        child: Icon(
-                          entry.value,
-                          size: 22,
-                          color: selected ? currentColor : cs.onSurfaceVariant,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Save button
-                FilledButton.icon(
-                  onPressed: _save,
-                  icon: const Icon(Icons.check),
-                  label: Text(isEdit ? "Lưu thay đổi" : "Thêm hạng mục"),
-                ),
-                const SizedBox(height: 16),
-              ],
+                    itemCount: iconEntries.length,
+                    itemBuilder: (context, index) {
+                      final entry = iconEntries[index];
+                      final selected = _draft.iconKey == entry.key;
+                      return _IconOption(
+                        icon: entry.value,
+                        selected: selected,
+                        selectedColor: currentColor,
+                        backgroundColor: scheme.surfaceContainerHighest,
+                        onTap: () =>
+                            _updateDraft(_draft.copyWith(iconKey: entry.key)),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  AppPrimaryButton(
+                    label: isEdit ? AppStrings.save : AppStrings.addCategory,
+                    icon: Icons.check,
+                    isLoading: _saving,
+                    onPressed: _save,
+                  ),
+                ],
+              ),
             ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PickerLabel extends StatelessWidget {
+  const _PickerLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: Theme.of(
+        context,
+      ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+    );
+  }
+}
+
+class _ColorOption extends StatelessWidget {
+  const _ColorOption({
+    required this.colorValue,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final int colorValue;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Color(colorValue);
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppDurations.fast,
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: selected
+                ? Border.all(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    width: 2.5,
+                  )
+                : null,
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.45),
+                      blurRadius: 8,
+                    ),
+                  ]
+                : null,
           ),
-        ],
+          child: selected
+              ? const Icon(Icons.check, color: Colors.white, size: 18)
+              : null,
+        ),
+      ),
+    );
+  }
+}
+
+class _IconOption extends StatelessWidget {
+  const _IconOption({
+    required this.icon,
+    required this.selected,
+    required this.selectedColor,
+    required this.backgroundColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final bool selected;
+  final Color selectedColor;
+  final Color backgroundColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppDurations.fast,
+        decoration: BoxDecoration(
+          color: selected
+              ? selectedColor.withValues(alpha: 0.18)
+              : backgroundColor.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          border: selected ? Border.all(color: selectedColor, width: 2) : null,
+        ),
+        child: Icon(
+          icon,
+          size: 22,
+          color: selected ? selectedColor : scheme.onSurfaceVariant,
+        ),
       ),
     );
   }
