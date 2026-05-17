@@ -126,15 +126,6 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
     await _controller.start();
   }
 
-  // ignore: unused_element
-  void _confirm() {
-    final note = _controller.voiceNote;
-    if (note == null) return;
-    _controller.confirm();
-    widget.onChanged(note.audio);
-    _showMessage("Đã chọn ghi âm này.");
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -378,91 +369,6 @@ class _RecordingPanel extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ignore: unused_element
-class _LoopingRecordingBar extends StatelessWidget {
-  const _LoopingRecordingBar({
-    required this.elapsed,
-    required this.paused,
-    required this.timerText,
-    required this.onTogglePause,
-  });
-
-  static const _loopDuration = Duration(seconds: 15);
-  static const _baseHeight = 42.0;
-  static const _scale = 18.0 / _baseHeight;
-
-  final Duration elapsed;
-  final bool paused;
-  final String timerText;
-  final VoidCallback? onTogglePause;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final loopMs = _loopDuration.inMilliseconds;
-    final progress = (elapsed.inMilliseconds % loopMs) / loopMs;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
-      child: SizedBox(
-        height: _baseHeight * _scale,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            ColoredBox(color: cs.primary.withValues(alpha: 0.16)),
-            FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: progress.clamp(0.0, 1.0),
-              child: ColoredBox(
-                color: cs.primary.withValues(alpha: paused ? 0.36 : 0.9),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4 * _scale),
-              child: Row(
-                children: [
-                  _RoundBarIconButton(
-                    size: 34 * _scale,
-                    iconSize: 16 * _scale,
-                    onPressed: onTogglePause,
-                    tooltip: paused ? "Tiếp tục ghi" : "Tạm dừng",
-                    iconData: paused
-                        ? Icons.play_arrow_rounded
-                        : Icons.pause_rounded,
-                    backgroundColor: cs.onPrimary.withValues(alpha: 0.95),
-                    foregroundColor: cs.primary,
-                  ),
-                  const Spacer(),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: cs.surface.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10 * _scale,
-                        vertical: 4 * _scale,
-                      ),
-                      child: Text(
-                        timerText,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: cs.primary,
-                          fontSize: 12 * _scale,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

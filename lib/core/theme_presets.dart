@@ -10,7 +10,7 @@ class ThemePreset {
 }
 
 const List<ThemePreset> kThemePresets = [
-  ThemePreset("Xanh ngân hàng", AppColors.brandGreen),
+  ThemePreset("Xanh hồng ngọc", AppColors.brandGreen),
   ThemePreset("Xanh biển đậm", Color(0xFF1D4ED8)),
   ThemePreset("Chàm", Color(0xFF4338CA)),
   ThemePreset("Tím", Color(0xFF7C3AED)),
