@@ -99,13 +99,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
 
+    var seeded = false;
     try {
       await populateJohnyData(widget.repo);
+      seeded = true;
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text(AppStrings.genericError)));
+      }
     } finally {
       if (mounted) Navigator.of(context).pop(); // dismiss loading
     }
 
-    if (!mounted) return;
+    if (!mounted || !seeded) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Đã nạp xong dữ liệu Johny Nguyễn!"),

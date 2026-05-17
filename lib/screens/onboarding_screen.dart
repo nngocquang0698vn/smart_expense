@@ -99,7 +99,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   _IntroPage(
                     title: "Smart Ledger",
                     body:
-                        "Ghi chép thu chi thông minh — lưu trữ ngay trên thiết bị, không cần kết nối mạng.",
+                        "Ghi chép thu chi thông minh — lưu trữ ngay trên thiết bị — không cần kết nối mạng.",
                     icon: Icons.account_balance_wallet_outlined,
                   ),
                   _IntroPage(

@@ -93,11 +93,6 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     bool audio = false,
     bool image = false,
   }) async {
-    if (!audio && !image) {
-      throw ArgumentError(
-        "Pending demo transaction must include audio or image: $title",
-      );
-    }
     await repo.addQuick(
       title: title,
       amountVnd: amount,
@@ -124,6 +119,11 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     bool audio = false,
     bool image = false,
   }) async {
+    if (!audio && !image) {
+      throw ArgumentError(
+        "Pending demo transaction must include audio or image: $title",
+      );
+    }
     await repo.addQuick(
       title: title,
       amountVnd: amount,
