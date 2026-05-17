@@ -54,6 +54,9 @@ abstract final class AppStrings {
   static const String transactionNoun = "giao dịch";
 
   static const String historyTitle = "Lịch sử giao dịch";
+  static const String reportTitle = "Báo cáo";
+  static const String reportBalance = "Còn lại";
+  static const String reportByCategory = "Theo hạng mục";
 
   // ── Common action labels ──────────────────────────────────────────────────
 

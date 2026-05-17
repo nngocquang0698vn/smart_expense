@@ -7,6 +7,8 @@ import "../theme/app_finance_colors.dart";
 import "../data/date_filter.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
+import "../features/reports/application/report_controller.dart";
+import "../features/reports/application/report_view_model.dart";
 import "../widgets/money.dart";
 import "../widgets/page_header_sliver.dart";
 
@@ -19,58 +21,31 @@ class AnalyticsScreen extends StatefulWidget {
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen>
-    with SingleTickerProviderStateMixin {
-  AnalyticsPeriod _period = AnalyticsPeriod.month;
-  DateTimeRange? _custom;
-  bool _incomeSide = false;
+class _AnalyticsScreenState extends State<AnalyticsScreen> {
+  late final ReportController _controller;
   int _touchedIndex = -1;
 
-  Map<String, int> _totals = {};
-  List<_Slice> _slices = [];
-  bool _loading = true;
+  AnalyticsPeriod get _period => _controller.period;
+
+  DateTimeRange? get _custom => _controller.customRange;
 
   @override
   void initState() {
     super.initState();
-    widget.repo.addListener(_reload);
-    _reload();
+    _controller = ReportController(widget.repo)..load();
+    _controller.addListener(_resetTouchedSlice);
   }
 
   @override
   void dispose() {
-    widget.repo.removeListener(_reload);
+    _controller.removeListener(_resetTouchedSlice);
+    _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _reload() async {
-    setState(() => _loading = true);
-    final results = await Future.wait([
-      widget.repo.analyticsTotals(period: _period, custom: _custom),
-      widget.repo.categoryBreakdown(
-        period: _period,
-        incomeSide: _incomeSide,
-        custom: _custom,
-      ),
-      widget.repo.categories(),
-    ]);
+  void _resetTouchedSlice() {
     if (!mounted) return;
-    final totals = results[0] as Map<String, int>;
-    final breakdown = results[1] as Map<String, int>;
-    final cats = results[2] as List<CategoryModel>;
-    final catMap = {for (final c in cats) c.id: c};
-    final entries = breakdown.entries
-        .where((e) => e.value > 0)
-        .map((e) => _Slice(cat: catMap[e.key], amount: e.value, id: e.key))
-        .where((s) => s.cat != null)
-        .toList();
-    entries.sort((a, b) => b.amount.compareTo(a.amount));
-    setState(() {
-      _totals = totals;
-      _slices = entries;
-      _touchedIndex = -1;
-      _loading = false;
-    });
+    setState(() => _touchedIndex = -1);
   }
 
   Future<void> _pickCustomRange() async {
@@ -80,13 +55,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 1, 12, 31),
       initialDateRange:
-          _custom ??
+          _controller.customRange ??
           DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
     if (r != null) {
-      _period = AnalyticsPeriod.custom;
-      _custom = r;
-      await _reload();
+      await _controller.selectCustomRange(r);
     }
   }
 
@@ -101,14 +74,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final income = _totals["income"] ?? 0;
-    final expense = _totals["expense"] ?? 0;
-    final net = income - expense;
-    final sumSlice = _slices.fold<int>(0, (s, e) => s + e.amount);
+    final viewModel = _controller.viewModel;
+    final income = viewModel.income;
+    final expense = viewModel.expense;
+    final net = viewModel.balance;
+    final slices = viewModel.slices;
+    final sumSlice = viewModel.sliceTotal;
+    final loading = _controller.loading;
+    final incomeSide = _controller.incomeSide;
 
     return CustomScrollView(
       slivers: [
-        const PageHeaderSliver(title: "Báo cáo"),
+        const PageHeaderSliver(title: AppStrings.reportTitle),
 
         // ── Period chips ──────────────────────────────────────────────────
         SliverToBoxAdapter(
@@ -133,9 +110,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         if (p == AnalyticsPeriod.custom) {
                           await _pickCustomRange();
                         } else {
-                          _period = p;
-                          _custom = null;
-                          await _reload();
+                          await _controller.selectPeriod(p);
                         }
                       },
                     ),
@@ -151,7 +126,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _loading
+            child: loading
                 ? const Center(
                     heightFactor: 2,
                     child: CircularProgressIndicator(),
@@ -176,7 +151,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       const SizedBox(width: 10),
                       Expanded(
                         child: _AnalysisSummaryCard(
-                          label: "Còn lại",
+                          label: AppStrings.reportBalance,
                           amount: net,
                           isIncome: net >= 0,
                         ),
@@ -198,13 +173,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   child: _ToggleTab(
                     label: AppStrings.expense,
                     icon: Icons.arrow_downward_rounded,
-                    selected: !_incomeSide,
+                    selected: !incomeSide,
                     color: context.financeColors.expenseAmount,
                     onTap: () {
-                      if (_incomeSide) {
-                        _incomeSide = false;
-                        _reload();
-                      }
+                      _controller.selectIncomeSide(false);
                     },
                   ),
                 ),
@@ -213,13 +185,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   child: _ToggleTab(
                     label: AppStrings.income,
                     icon: Icons.arrow_upward_rounded,
-                    selected: _incomeSide,
+                    selected: incomeSide,
                     color: context.financeColors.incomeAmount,
                     onTap: () {
-                      if (!_incomeSide) {
-                        _incomeSide = true;
-                        _reload();
-                      }
+                      _controller.selectIncomeSide(true);
                     },
                   ),
                 ),
@@ -231,7 +200,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
         // ── Donut chart ───────────────────────────────────────────────────
-        if (!_loading && _slices.isEmpty)
+        if (!loading && slices.isEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(40),
@@ -244,7 +213,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "Chưa có dữ liệu cho kỳ này.",
+                    AppStrings.noDataForPeriod,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                     ),
@@ -253,7 +222,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               ),
             ),
           )
-        else if (!_loading) ...[
+        else if (!loading) ...[
           SliverToBoxAdapter(
             child: Center(
               child: SizedBox(
@@ -284,34 +253,33 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                                 }
                               },
                         ),
-                        sections: _buildSections(sumSlice),
+                        sections: _buildSections(slices, sumSlice),
                       ),
                       duration: const Duration(milliseconds: 400),
                     ),
                     // Center label
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
-                      child:
-                          _touchedIndex >= 0 && _touchedIndex < _slices.length
+                      child: _touchedIndex >= 0 && _touchedIndex < slices.length
                           ? _DonutCenter(
                               key: ValueKey(_touchedIndex),
-                              cat: _slices[_touchedIndex].cat!,
+                              cat: slices[_touchedIndex].category,
                               pct: sumSlice > 0
                                   ? 100 *
-                                        _slices[_touchedIndex].amount /
+                                        slices[_touchedIndex].amount /
                                         sumSlice
                                   : 0,
-                              amount: _slices[_touchedIndex].amount,
-                              isIncome: _incomeSide,
+                              amount: slices[_touchedIndex].amount,
+                              isIncome: incomeSide,
                             )
                           : _DonutCenterIdle(
                               key: const ValueKey("idle"),
-                              label: _incomeSide
+                              label: incomeSide
                                   ? AppStrings.income
                                   : AppStrings.expense,
                               total: sumSlice,
-                              count: _slices.length,
-                              isIncome: _incomeSide,
+                              count: slices.length,
+                              isIncome: incomeSide,
                             ),
                     ),
                   ],
@@ -327,7 +295,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                "Theo hạng mục · ${_incomeSide ? AppStrings.income : AppStrings.expense}",
+                "${AppStrings.reportByCategory} · ${incomeSide ? AppStrings.income : AppStrings.expense}",
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: cs.onSurfaceVariant,
                   letterSpacing: 0.3,
@@ -337,15 +305,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           ),
 
           // ── Category rows ────────────────────────────────────────────────
-          for (var i = 0; i < _slices.length; i++)
+          for (var i = 0; i < slices.length; i++)
             SliverToBoxAdapter(
               child: _CategoryRow(
-                slice: _slices[i],
+                slice: slices[i],
                 sumSlice: sumSlice,
-                isIncome: _incomeSide,
+                isIncome: incomeSide,
                 highlighted: _touchedIndex == i,
-                onTap: () =>
-                    _openCategoryDrillDown(_slices[i].id, _slices[i].cat!.name),
+                onTap: () => _openCategoryDrillDown(
+                  slices[i].id,
+                  slices[i].category.name,
+                ),
               ),
             ),
         ],
@@ -355,22 +325,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     );
   }
 
-  List<PieChartSectionData> _buildSections(int sumSlice) {
+  List<PieChartSectionData> _buildSections(
+    List<ReportCategorySlice> slices,
+    int sumSlice,
+  ) {
     double cumPct = 0;
-    return List.generate(_slices.length, (i) {
-      final pct = sumSlice > 0 ? 100.0 * _slices[i].amount / sumSlice : 0.0;
+    return List.generate(slices.length, (i) {
+      final pct = sumSlice > 0 ? 100.0 * slices[i].amount / sumSlice : 0.0;
       cumPct += pct;
       final isTouched = _touchedIndex == i;
       // Hide badge for very small segments unless touched.
       final showBadge = pct >= 5 || isTouched;
       return PieChartSectionData(
-        color: _slices[i].cat!.color,
-        value: _slices[i].amount.toDouble(),
+        color: slices[i].category.color,
+        value: slices[i].amount.toDouble(),
         title: "",
         radius: isTouched ? 46 : 38,
         badgeWidget: showBadge
             ? _PieBadge(
-                cat: _slices[i].cat!,
+                cat: slices[i].category,
                 pct: pct,
                 isTouched: isTouched,
                 labelAbove: cumPct - pct / 2 < 50,
@@ -411,7 +384,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 const Divider(height: 1),
                 Expanded(
                   child: list.isEmpty
-                      ? const Center(child: Text("Chưa có giao dịch nào."))
+                      ? const Center(child: Text(AppStrings.noTransactions))
                       : ListView.builder(
                           controller: scrollController,
                           itemCount: list.length,
@@ -633,7 +606,7 @@ class _CategoryRow extends StatelessWidget {
     required this.onTap,
   });
 
-  final _Slice slice;
+  final ReportCategorySlice slice;
   final int sumSlice;
   final bool isIncome;
   final bool highlighted;
@@ -643,7 +616,7 @@ class _CategoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final pct = sumSlice > 0 ? slice.amount / sumSlice : 0.0;
-    final cat = slice.cat!;
+    final cat = slice.category;
 
     return InkWell(
       onTap: onTap,
@@ -803,11 +776,3 @@ class _PieBadge extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Data
 // ─────────────────────────────────────────────────────────────────────────────
-
-class _Slice {
-  _Slice({required this.cat, required this.amount, required this.id});
-
-  final CategoryModel? cat;
-  final int amount;
-  final String id;
-}
