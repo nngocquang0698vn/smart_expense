@@ -4,8 +4,12 @@ import "package:uuid/uuid.dart";
 
 import "../features/image_attachment/data/image_storage_service.dart";
 import "../features/image_attachment/domain/image_attachment_model.dart";
+import "../features/transactions/data/transaction_model_mapper.dart";
+import "../features/transactions/domain/entities/ledger_transaction.dart";
+import "../features/transactions/domain/services/ledger_query_service.dart";
 import "../features/voice_note/data/audio_storage_service.dart";
 import "../features/voice_note/domain/audio_attachment_model.dart";
+import "../shared/core/date_range.dart";
 import "date_filter.dart";
 import "models/category_model.dart";
 import "models/transaction_model.dart";
@@ -17,6 +21,7 @@ class LedgerRepository extends ChangeNotifier {
   final AudioStorageService _audioStorage = AudioStorageService();
   final ImageStorageService _imageStorage = ImageStorageService();
   final _uuid = const Uuid();
+  final _queries = const LedgerQueryService();
 
   static final _meta = stringMapStoreFactory.store("meta");
   static final _categories = stringMapStoreFactory.store("categories");
@@ -224,34 +229,12 @@ class LedgerRepository extends ChangeNotifier {
     return list;
   }
 
-  List<TransactionModel> _inRange(
-    List<TransactionModel> all,
-    DateTimeRange range,
-  ) {
-    return all
-        .where(
-          (t) =>
-              !t.occurredAt.isBefore(range.start) &&
-              !t.occurredAt.isAfter(range.end),
-        )
-        .toList();
-  }
-
   Future<Map<String, int>> homeSummary(DateFilterSelection filter) async {
     final all = await allTransactions();
     final range = filter.resolveRange(DateTime.now());
-    final inR = _inRange(all, range);
-    var income = 0;
-    var expense = 0;
-    for (final t in inR) {
-      if (t.pending) continue;
-      if (t.isIncome) {
-        income += t.amountVnd;
-      } else {
-        expense += t.amountVnd;
-      }
-    }
-    return {"income": income, "expense": expense};
+    return _queries
+        .confirmedTotals(_entities(all), _appRange(range))
+        .toLegacyMap();
   }
 
   Future<List<TransactionModel>> pendingForHome(
@@ -259,17 +242,19 @@ class LedgerRepository extends ChangeNotifier {
   ) async {
     final all = await allTransactions();
     final range = filter.resolveRange(DateTime.now());
-    final list = _inRange(all, range).where((t) => t.pending).toList();
-    list.sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
-    return list.take(3).toList();
+    return _modelsForEntities(
+      all,
+      _queries.pendingInRange(_entities(all), _appRange(range), limit: 3),
+    );
   }
 
   Future<List<TransactionModel>> pendingAll(DateFilterSelection filter) async {
     final all = await allTransactions();
     final range = filter.resolveRange(DateTime.now());
-    final list = _inRange(all, range).where((t) => t.pending).toList();
-    list.sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
-    return list;
+    return _modelsForEntities(
+      all,
+      _queries.pendingInRange(_entities(all), _appRange(range)),
+    );
   }
 
   Future<List<TransactionModel>> historyPage({
@@ -279,10 +264,15 @@ class LedgerRepository extends ChangeNotifier {
   }) async {
     final all = await allTransactions();
     final range = filter.resolveRange(DateTime.now());
-    final list = _inRange(all, range).where((t) => !t.pending).toList();
-    list.sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
-    if (offset >= list.length) return [];
-    return list.sublist(offset, (offset + limit).clamp(0, list.length));
+    return _modelsForEntities(
+      all,
+      _queries.confirmedHistoryPage(
+        _entities(all),
+        _appRange(range),
+        offset: offset,
+        limit: limit,
+      ),
+    );
   }
 
   Future<void> putTransaction(TransactionModel t) async {
@@ -359,17 +349,9 @@ class LedgerRepository extends ChangeNotifier {
     final now = DateTime.now();
     final range = period.resolve(now, custom: custom);
     final all = await allTransactions();
-    final inR = _inRange(all, range).where((t) => !t.pending);
-    var income = 0;
-    var expense = 0;
-    for (final t in inR) {
-      if (t.isIncome) {
-        income += t.amountVnd;
-      } else {
-        expense += t.amountVnd;
-      }
-    }
-    return {"income": income, "expense": expense};
+    return _queries
+        .confirmedTotals(_entities(all), _appRange(range))
+        .toLegacyMap();
   }
 
   Future<Map<String, int>> categoryBreakdown({
@@ -380,15 +362,11 @@ class LedgerRepository extends ChangeNotifier {
     final now = DateTime.now();
     final range = period.resolve(now, custom: custom);
     final all = await allTransactions();
-    final inR = _inRange(
-      all,
-      range,
-    ).where((t) => !t.pending && t.isIncome == incomeSide);
-    final map = <String, int>{};
-    for (final t in inR) {
-      map[t.categoryId] = (map[t.categoryId] ?? 0) + t.amountVnd;
-    }
-    return map;
+    return _queries.categoryBreakdown(
+      _entities(all),
+      _appRange(range),
+      incomeSide: incomeSide,
+    );
   }
 
   Future<bool> categoryInUse(String categoryId) async {
@@ -421,11 +399,35 @@ class LedgerRepository extends ChangeNotifier {
     final now = DateTime.now();
     final range = period.resolve(now, custom: custom);
     final all = await allTransactions();
-    return _inRange(
-        all,
-        range,
-      ).where((t) => !t.pending && t.categoryId == categoryId).toList()
-      ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+    return _modelsForEntities(
+      all,
+      _queries.transactionsForCategory(
+        _entities(all),
+        _appRange(range),
+        categoryId: categoryId,
+      ),
+    );
+  }
+
+  List<LedgerTransaction> _entities(List<TransactionModel> transactions) {
+    return transactions.map((transaction) => transaction.toEntity()).toList();
+  }
+
+  List<TransactionModel> _modelsForEntities(
+    List<TransactionModel> source,
+    List<LedgerTransaction> entities,
+  ) {
+    final byId = {
+      for (final transaction in source) transaction.id: transaction,
+    };
+    return [
+      for (final entity in entities)
+        if (byId[entity.id] != null) byId[entity.id]!,
+    ];
+  }
+
+  AppDateRange _appRange(DateTimeRange range) {
+    return AppDateRange(start: range.start, end: range.end);
   }
 
   Future<void> _deleteRemovedImages(

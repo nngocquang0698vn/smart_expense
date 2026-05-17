@@ -1,18 +1,17 @@
 import "package:flutter/material.dart";
 
 export "design_system/app_button_styles.dart";
+export "design_system/app_breakpoints.dart";
 export "design_system/app_colors.dart";
+export "design_system/app_durations.dart";
 export "design_system/app_elevation.dart";
 export "design_system/app_radius.dart";
+export "design_system/app_shadows.dart";
 export "design_system/app_spacing.dart";
 export "design_system/app_tinted_surface.dart";
 export "design_system/app_typography.dart";
 
 import "design_system/app_spacing.dart";
-
-abstract final class AppBreakpoints {
-  static const double desktop = 1000;
-}
 
 abstract final class AppInsets {
   static const double screenH = AppSpacing.md;
