@@ -3,6 +3,7 @@ import "dart:ui" as ui;
 import "package:flutter/services.dart";
 
 import "../core/audio_storage_helper.dart";
+import "../features/categories/application/category_selection_resolver.dart";
 import "../features/image_attachment/data/image_storage_service.dart";
 import "../features/image_attachment/domain/image_attachment_model.dart";
 import "../features/voice_note/data/audio_storage_service.dart";
@@ -66,8 +67,20 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
 
   // ── Category lookup ───────────────────────────────────────────────────────
   final cats = await repo.categories();
-  final catMap = {for (final c in cats) c.name: c.id};
-  String cat(String name) => catMap[name] ?? catMap.values.first;
+  final categoryLookup = CategoryNameLookup(cats);
+  String cat(String name, {required bool isIncome}) {
+    final id = categoryLookup.idFor(
+      name: name,
+      isIncome: isIncome,
+      fallbackName: "Khác",
+    );
+    if (id == null) {
+      throw StateError(
+        "Không tìm thấy danh mục demo cho ${isIncome ? "thu" : "chi"}: $name",
+      );
+    }
+    return id;
+  }
 
   // ── Helper: add a fully-reconciled transaction ────────────────────────────
   Future<void> add({
@@ -80,11 +93,16 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     bool audio = false,
     bool image = false,
   }) async {
+    if (!audio && !image) {
+      throw ArgumentError(
+        "Pending demo transaction must include audio or image: $title",
+      );
+    }
     await repo.addQuick(
       title: title,
       amountVnd: amount,
       isIncome: isIncome,
-      categoryId: cat(category),
+      categoryId: cat(category, isIncome: isIncome),
       at: date,
       pending: false,
       complete: true,
@@ -110,7 +128,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
       title: title,
       amountVnd: amount,
       isIncome: isIncome,
-      categoryId: cat(category),
+      categoryId: cat(category, isIncome: isIncome),
       at: date,
       pending: true,
       complete: amount > 0,
@@ -1025,6 +1043,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Di chuyển",
     isIncome: false,
     date: recent(2),
+    image: true,
     note: "Cần xác nhận lại",
   );
   await addPending(
@@ -1033,6 +1052,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Cà phê",
     isIncome: false,
     date: recent(5),
+    image: true,
   );
   await addPending(
     title: "Mua sắm",
@@ -1040,6 +1060,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Mua sắm",
     isIncome: false,
     date: recent(7),
+    audio: true,
     note: "Chưa nhớ số tiền",
   );
   await addPending(
@@ -1048,6 +1069,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Khác",
     isIncome: false,
     date: recent(9),
+    audio: true,
     note: "Cần bổ sung thông tin",
   );
 }

@@ -6,6 +6,7 @@ import "../data/date_filter.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
+import "../features/home/application/home_controller.dart";
 import "../utils/tx_grouping.dart";
 import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "../widgets/date_filter_sheet.dart";
@@ -31,110 +32,40 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  DateFilterSelection _filter = const DateFilterSelection(
-    preset: DateFilterPreset.thisMonth,
-  );
-
+  late final HomeController _controller;
   final _scroll = ScrollController();
-  final List<TransactionModel> _historyLoaded = [];
-  int _historyOffset = 0;
-  bool _loadingMore = false;
-  bool _allLoaded = false;
-
-  Map<String, int>? _summary;
-  List<TransactionModel>? _pendingAll;
-  List<CategoryModel>? _categories;
-  bool _topLoading = true;
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
-    widget.repo.addListener(_onRepo);
+    _controller = HomeController(widget.repo)..bootstrap();
     _scroll.addListener(_onScroll);
-    _bootstrap();
   }
 
   @override
   void dispose() {
-    widget.repo.removeListener(_onRepo);
+    _controller.dispose();
     _scroll.dispose();
     super.dispose();
   }
 
   // ── Data loading ──────────────────────────────────────────────────────────
 
-  Future<void> _bootstrap() =>
-      Future.wait([_refreshTop(), _reloadHistory(reset: true)]);
-
-  void _onRepo() {
-    _refreshTop();
-    _reloadHistory(reset: true);
-  }
-
-  Future<void> _refreshTop() async {
-    setState(() => _topLoading = true);
-    final results = await Future.wait([
-      widget.repo.homeSummary(_filter),
-      widget.repo.pendingAll(_filter),
-      widget.repo.categories(),
-    ]);
-    if (!mounted) return;
-    setState(() {
-      _summary = results[0] as Map<String, int>;
-      _pendingAll = results[1] as List<TransactionModel>;
-      _categories = results[2] as List<CategoryModel>;
-      _topLoading = false;
-    });
-  }
-
-  Future<void> _reloadHistory({required bool reset}) async {
-    if (reset) {
-      setState(() {
-        _historyOffset = 0;
-        _historyLoaded.clear();
-        _allLoaded = false;
-      });
-    }
-    await _loadMore();
-  }
-
-  Future<void> _loadMore() async {
-    if (_loadingMore || _allLoaded) return;
-    setState(() => _loadingMore = true);
-    final batch = await widget.repo.historyPage(
-      filter: _filter,
-      offset: _historyOffset,
-      limit: AppPageSizes.historyPage,
-    );
-    if (!mounted) return;
-    setState(() {
-      _loadingMore = false;
-      if (batch.isEmpty) {
-        _allLoaded = true;
-      } else {
-        _historyLoaded.addAll(batch);
-        _historyOffset += batch.length;
-        if (batch.length < AppPageSizes.historyPage) _allLoaded = true;
-      }
-    });
-  }
-
   void _onScroll() {
-    if (_allLoaded || _loadingMore) return;
+    final viewModel = _controller.viewModel;
+    if (viewModel.allLoaded || viewModel.loadingMore) return;
     if (_scroll.position.pixels >
         _scroll.position.maxScrollExtent - AppPageSizes.scrollLoadThreshold) {
-      _loadMore();
+      _controller.loadMore();
     }
   }
 
   Future<void> _pickFilter() async {
-    final next = await showDateFilterSheet(context, _filter);
+    final next = await showDateFilterSheet(context, _controller.filter);
     if (next != null && mounted) {
-      setState(() => _filter = next);
-      await _refreshTop();
-      await _reloadHistory(reset: true);
+      await _controller.updateFilter(next);
     }
   }
 
@@ -172,34 +103,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_topLoading && _summary == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        final viewModel = _controller.viewModel;
+        if (viewModel.initialLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    final summary = _summary ?? const {"income": 0, "expense": 0};
-    final pendingAll = _pendingAll ?? const [];
-    final cats = _categories ?? const [];
-    final catMap = {for (final c in cats) c.id: c};
-    final income = summary["income"] ?? 0;
-    final expense = summary["expense"] ?? 0;
-    final isDesktop =
-        MediaQuery.sizeOf(context).width >= AppBreakpoints.desktop;
-
-    return isDesktop
-        ? _buildDesktop(
-            context,
-            income: income,
-            expense: expense,
-            pendingAll: pendingAll,
-            catMap: catMap,
-          )
-        : _buildMobile(
-            context,
-            income: income,
-            expense: expense,
-            pendingAll: pendingAll,
-            catMap: catMap,
-          );
+        final isDesktop =
+            MediaQuery.sizeOf(context).width >= AppBreakpoints.desktop;
+        return isDesktop
+            ? _buildDesktop(
+                context,
+                income: viewModel.summary.income,
+                expense: viewModel.summary.expense,
+                pendingAll: viewModel.pending,
+                catMap: viewModel.categoryMap,
+              )
+            : _buildMobile(
+                context,
+                income: viewModel.summary.income,
+                expense: viewModel.summary.expense,
+                pendingAll: viewModel.pending,
+                catMap: viewModel.categoryMap,
+              );
+      },
+    );
   }
 
   // ── Desktop layout ────────────────────────────────────────────────────────
@@ -215,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _DesktopHeader(
-          filter: _filter,
+          filter: _controller.filter,
           income: income,
           expense: expense,
           onFilterTap: _pickFilter,
@@ -229,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 flex: 4,
                 child: RefreshIndicator(
-                  onRefresh: _refreshTop,
+                  onRefresh: _controller.refreshTop,
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(
                       0,
@@ -295,12 +225,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             AppStrings.historyTitle,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          if (_historyLoaded.isNotEmpty) ...[
+                          if (_controller.viewModel.history.isNotEmpty) ...[
                             const SizedBox(width: 6),
                             HistoryCountBadge(
                               label: _fmtCount(
-                                _historyLoaded.length,
-                                hasMore: !_allLoaded,
+                                _controller.viewModel.history.length,
+                                hasMore: !_controller.viewModel.allLoaded,
                               ),
                             ),
                           ],
@@ -308,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     ..._historyWidgets(catMap),
-                    if (_loadingMore)
+                    if (_controller.viewModel.loadingMore)
                       const Padding(
                         padding: EdgeInsets.all(12),
                         child: Center(child: CircularProgressIndicator()),
@@ -336,8 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        await _refreshTop();
-        await _reloadHistory(reset: true);
+        await _controller.refresh();
       },
       child: CustomScrollView(
         controller: _scroll,
@@ -349,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
               TextButton.icon(
                 onPressed: _pickFilter,
                 icon: const Icon(Icons.filter_alt_outlined),
-                label: Text(_filter.label()),
+                label: Text(_controller.filter.label()),
               ),
             ],
           ),
@@ -423,12 +352,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     AppStrings.historyTitle,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  if (_historyLoaded.isNotEmpty) ...[
+                  if (_controller.viewModel.history.isNotEmpty) ...[
                     const SizedBox(width: 6),
                     HistoryCountBadge(
                       label: _fmtCount(
-                        _historyLoaded.length,
-                        hasMore: !_allLoaded,
+                        _controller.viewModel.history.length,
+                        hasMore: !_controller.viewModel.allLoaded,
                       ),
                     ),
                   ],
@@ -437,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           ..._historySlivers(catMap),
-          if (_loadingMore)
+          if (_controller.viewModel.loadingMore)
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.all(16),
@@ -455,8 +384,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // ── History renderers ─────────────────────────────────────────────────────
 
   Iterable<Widget> _historyWidgets(Map<String, CategoryModel> catMap) {
-    final buckets = groupByDay(_historyLoaded);
-    if (buckets.isEmpty && !_loadingMore) {
+    final viewModel = _controller.viewModel;
+    final buckets = groupByDay(viewModel.history);
+    if (buckets.isEmpty && !viewModel.loadingMore) {
       return [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppInsets.screenH),
@@ -483,8 +413,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Iterable<Widget> _historySlivers(Map<String, CategoryModel> catMap) {
-    final buckets = groupByDay(_historyLoaded);
-    if (buckets.isEmpty && !_loadingMore) {
+    final viewModel = _controller.viewModel;
+    final buckets = groupByDay(viewModel.history);
+    if (buckets.isEmpty && !viewModel.loadingMore) {
       return [
         const SliverToBoxAdapter(
           child: Padding(

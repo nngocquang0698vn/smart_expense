@@ -9,6 +9,7 @@ import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
+import "../features/categories/application/category_selection_resolver.dart";
 import "../features/image_attachment/data/image_picker_service.dart";
 import "../features/image_attachment/data/image_storage_service.dart";
 import "../features/image_attachment/domain/image_attachment_model.dart";
@@ -72,6 +73,7 @@ class _EditorBodyState extends State<_EditorBody> {
   final _imagePicker = ImagePickerService();
   final _imageStorage = ImageStorageService();
   final _draftResolver = const TransactionDraftResolver();
+  final _categorySelection = const CategorySelectionResolver();
 
   // Snapshots for dirty detection
   late String _initTitle;
@@ -207,12 +209,13 @@ class _EditorBodyState extends State<_EditorBody> {
 
   Future<void> _saveTransaction(List<CategoryModel> cats) async {
     final amount = _amount.value;
-    final matchingCategories = cats
-        .where((category) => category.isIncome == _income)
-        .toList();
-    final fallbackCategoryId = matchingCategories.isNotEmpty
-        ? matchingCategories.first.id
-        : (cats.isNotEmpty ? cats.first.id : null);
+    final matchingCategories = _categorySelection.enabledForSide(
+      cats,
+      isIncome: _income,
+    );
+    final fallbackCategoryId = _categorySelection.fallbackId(
+      matchingCategories,
+    );
     final draft = _draftResolver.resolve(
       TransactionSaveDraft(
         rawTitle: _titleCtrl.text,
@@ -307,9 +310,7 @@ class _EditorBodyState extends State<_EditorBody> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<CategoryModel>>(
-      future: widget.repo.categories().then(
-        (list) => list.where((c) => c.enabled).toList(),
-      ),
+      future: widget.repo.categories(),
       builder: (context, snap) {
         if (!snap.hasData) {
           return const Padding(
@@ -318,9 +319,14 @@ class _EditorBodyState extends State<_EditorBody> {
           );
         }
         final cats = snap.data!;
-        _categoryId ??= cats
-            .firstWhere((c) => c.isIncome == _income, orElse: () => cats.first)
-            .id;
+        final categoryItems = _categorySelection.enabledForSide(
+          cats,
+          isIncome: _income,
+        );
+        final dropdownValue = _categorySelection.selectedValueOrNull(
+          selectedId: _categoryId,
+          items: categoryItems,
+        );
 
         final hasImages = _images.isNotEmpty;
         final finance = context.financeColors;
@@ -382,12 +388,11 @@ class _EditorBodyState extends State<_EditorBody> {
                     onSelectionChanged: (s) {
                       setState(() {
                         _income = s.first;
-                        _categoryId = cats
-                            .firstWhere(
-                              (c) => c.isIncome == _income,
-                              orElse: () => cats.first,
-                            )
-                            .id;
+                        final nextItems = _categorySelection.enabledForSide(
+                          cats,
+                          isIncome: _income,
+                        );
+                        _categoryId = _categorySelection.fallbackId(nextItems);
                       });
                     },
                   ),
@@ -401,9 +406,8 @@ class _EditorBodyState extends State<_EditorBody> {
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: finance.fieldText),
                   // ignore: deprecated_member_use
-                  value: _categoryId,
-                  items: cats
-                      .where((c) => c.isIncome == _income)
+                  value: dropdownValue,
+                  items: categoryItems
                       .map(
                         (c) => DropdownMenuItem(
                           value: c.id,
