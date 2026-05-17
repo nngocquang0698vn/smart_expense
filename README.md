@@ -35,7 +35,7 @@ Liệt kê thiết bị: `flutter devices`
 **Web (release, PWA offline-first):**
 
 ```bash
-flutter build web --release --pwa-strategy=offline-first
+flutter build web --release --pwa-strategy=none
 ```
 
 Kết quả: thư mục `build/web` (triển khai lên static host). File `web/_redirects` được copy sang `build/web` để SPA fallback trên Cloudflare Pages.
@@ -63,7 +63,7 @@ Mở DevTools → Application: kiểm tra manifest, service worker, icons.
 Workflow: [`.github/workflows/deploy-cloudflare-pages.yml`](.github/workflows/deploy-cloudflare-pages.yml)
 
 - Trigger: push nhánh `main` hoặc `workflow_dispatch`.
-- Chạy: `flutter analyze`, `flutter test`, `flutter build web --release --pwa-strategy=offline-first`, deploy `build/web`.
+- Chạy: `flutter analyze`, `flutter test`, `flutter build web --release --pwa-strategy=none`, deploy `build/web`.
 
 **GitHub Secrets (Settings → Secrets and variables → Actions):**
 
@@ -72,13 +72,22 @@ Workflow: [`.github/workflows/deploy-cloudflare-pages.yml`](.github/workflows/de
 | `CLOUDFLARE_API_TOKEN` | API token có quyền Cloudflare Pages |
 | `CLOUDFLARE_ACCOUNT_ID` | Account ID Cloudflare |
 
-**GitHub Variables:**
+**GitHub Variables (bắt buộc — nếu thiếu deploy sẽ lỗi `Must specify a project name`):**
 
 | Variable | Mô tả |
 |----------|--------|
-| `CLOUDFLARE_PROJECT_NAME` | Tên project Pages (vd. `smart-expense`) |
+| `CLOUDFLARE_PROJECT_NAME` | Tên project Pages trên Cloudflare (vd. `smart-expense`) |
 
-Tạo project Pages trên Cloudflare trước lần deploy đầu (hoặc để Wrangler tạo nếu account cho phép).
+Cách thêm variable:
+
+1. GitHub repo → **Settings** → **Secrets and variables** → **Actions**
+2. Tab **Variables** → **New repository variable**
+3. Name: `CLOUDFLARE_PROJECT_NAME`
+4. Value: tên project trong [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → project của bạn (phải khớp chính xác, không có khoảng trắng thừa)
+
+Tạo project Pages trên Cloudflare trước lần deploy đầu (hoặc để Wrangler tạo project cùng tên khi deploy lần đầu nếu account cho phép).
+
+**Lưu ý CI:** Workflow dùng `flutter build web --release --pwa-strategy=none` (Flutter service worker mặc định tắt; PWA manifest/icons vẫn từ `web/manifest.json`).
 
 **APK debug:**
 

@@ -30,7 +30,31 @@ jobs:
         run: flutter test
 
       - name: Build Web
-        run: flutter build web --release --pwa-strategy=offline-first
+        run: flutter build web --release --pwa-strategy=none
+
+      - name: Validate Cloudflare configuration
+        env:
+          CF_PROJECT: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          missing=0
+          if [ -z "$CF_PROJECT" ]; then
+            echo "::error::Repository variable CLOUDFLARE_PROJECT_NAME is empty or not set."
+            echo "Set it at: Settings → Secrets and variables → Actions → Variables"
+            echo "Example value: smart-expense (must match your Cloudflare Pages project name)"
+            missing=1
+          fi
+          if [ -z "$CF_TOKEN" ]; then
+            echo "::error::Secret CLOUDFLARE_API_TOKEN is not set."
+            missing=1
+          fi
+          if [ -z "$CF_ACCOUNT" ]; then
+            echo "::error::Secret CLOUDFLARE_ACCOUNT_ID is not set."
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+          echo "Cloudflare project: $CF_PROJECT"
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
