@@ -72,6 +72,15 @@ abstract final class AppStrings {
 
   static const String category = "Hạng mục";
   static const String note = "Ghi chú";
+  static const String noteOptional = "Ghi chú (tuỳ chọn)";
+  static const String titleOptional = "Tiêu đề (tuỳ chọn)";
+  static const String quickEntryTap = "Nhập nhanh";
+  static const String quickEntryVoice = "Ghi âm giao dịch";
+  static const String quickEntryReceipt = "Ảnh hoá đơn";
+  static const String pendingSubtitleWithMedia =
+      "Có audio/ảnh — nên bật để đối soát sau.";
+  static const String pendingSubtitleDefault =
+      "Bật để chuyển vào danh sách đối soát.";
   static const String transactionDate = "Ngày giao dịch";
   static const String transactionTitle = "Tên giao dịch";
   static const String amount = "Số tiền (VND)";

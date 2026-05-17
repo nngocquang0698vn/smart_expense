@@ -3,7 +3,7 @@ import "package:flutter/material.dart" show DateTimeRange;
 import "../../../core/date_format.dart";
 
 import "../../../data/date_filter.dart";
-import "../../../data/ledger_repository.dart";
+import "../../../features/transactions/domain/repositories/ledger_repository.dart";
 import "../../../data/models/category_model.dart";
 import "report_view_model.dart";
 

@@ -1,13 +1,13 @@
 import "package:flutter/material.dart";
 
-export "design_system/app_breakpoints.dart";
-export "design_system/app_colors.dart";
-export "design_system/app_durations.dart";
-export "design_system/app_radius.dart";
-export "design_system/app_spacing.dart";
-export "design_system/app_typography.dart";
+export "tokens/app_breakpoints.dart";
+export "tokens/app_colors.dart";
+export "tokens/app_durations.dart";
+export "tokens/app_radius.dart";
+export "tokens/app_spacing.dart";
+export "tokens/app_typography.dart";
 
-import "design_system/app_spacing.dart";
+import "tokens/app_spacing.dart";
 
 abstract final class AppInsets {
   static const double screenH = AppSpacing.md;

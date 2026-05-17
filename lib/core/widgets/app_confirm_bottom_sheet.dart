@@ -1,0 +1,101 @@
+import "package:flutter/material.dart";
+
+import "../constants.dart";
+import "../strings.dart";
+import "app_primary_button.dart";
+import "app_secondary_button.dart";
+
+class AppConfirmBottomSheet extends StatelessWidget {
+  const AppConfirmBottomSheet({
+    super.key,
+    required this.title,
+    required this.message,
+    this.confirmLabel = AppStrings.confirm,
+    this.cancelLabel = AppStrings.cancel,
+    this.isDestructive = false,
+  });
+
+  final String title;
+  final String message;
+  final String confirmLabel;
+  final String cancelLabel;
+  final bool isDestructive;
+
+  static Future<bool> show(
+    BuildContext context, {
+    required String title,
+    required String message,
+    String confirmLabel = AppStrings.confirm,
+    String cancelLabel = AppStrings.cancel,
+    bool isDestructive = false,
+  }) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) => AppConfirmBottomSheet(
+        title: title,
+        message: message,
+        confirmLabel: confirmLabel,
+        cancelLabel: cancelLabel,
+        isDestructive: isDestructive,
+      ),
+    );
+    return result == true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Icon(
+              isDestructive
+                  ? Icons.warning_amber_rounded
+                  : Icons.verified_user_outlined,
+              color: isDestructive ? cs.error : cs.primary,
+              size: 36,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppPrimaryButton(
+              label: confirmLabel,
+              onPressed: () => Navigator.pop(context, true),
+              icon: isDestructive ? Icons.delete_outline : Icons.check,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppSecondaryButton(
+              label: cancelLabel,
+              onPressed: () => Navigator.pop(context, false),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

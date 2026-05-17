@@ -3,7 +3,7 @@ import "package:flutter/material.dart";
 import "../../../../core/constants.dart";
 import "../../../../core/date_format.dart";
 import "../../../../core/strings.dart";
-import "../../../../theme/app_finance_colors.dart";
+import "../../../../core/theme/app_finance_colors.dart";
 
 enum TransactionDatePickerStyle { card, listTile }
 
@@ -52,7 +52,7 @@ class TransactionDatePickerField extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.input),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         side: BorderSide(color: finance.fieldBorder),
       ),
       tileColor: finance.fieldFill,

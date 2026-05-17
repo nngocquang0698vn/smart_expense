@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 
 import "../../../../core/constants.dart";
 import "../../../../core/strings.dart";
-import "../../../../theme/app_finance_colors.dart";
+import "../../../../core/theme/app_finance_colors.dart";
 
 class TransactionTypeToggle extends StatelessWidget {
   const TransactionTypeToggle({
@@ -24,7 +24,7 @@ class TransactionTypeToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppRadius.container),
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
         color: finance.fieldFill,
         border: Border.all(color: finance.fieldBorder),
       ),

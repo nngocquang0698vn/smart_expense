@@ -38,7 +38,7 @@ enum AppThemePreference {
 /// Immutable snapshot of the user's theme preferences.
 class ThemeSettings {
   const ThemeSettings({
-    this.seedColor = AppColors.brand,
+    this.seedColor = AppColors.brandGreen,
     this.useColoredSurfaces = true,
     this.enableAccentColors = false,
     this.themePreference = AppThemePreference.light,
@@ -57,7 +57,7 @@ class ThemeSettings {
   /// Accent applied to [ColorScheme] and chrome — always brand when
   /// [enableAccentColors] is off.
   Color get effectiveSeedColor =>
-      enableAccentColors ? seedColor : AppColors.brand;
+      enableAccentColors ? seedColor : AppColors.brandGreen;
 
   /// Surfaces follow the seed tint when coloured backgrounds are on.
   bool get effectiveColoredSurfaces => useColoredSurfaces;
@@ -87,9 +87,9 @@ class ThemeSettings {
     try {
       final m = json.decode(raw) as Map<String, dynamic>;
       final storedSeed = Color(
-        m["seedColor"] as int? ?? AppColors.brand.toARGB32(),
+        m["seedColor"] as int? ?? AppColors.brandGreen.toARGB32(),
       );
-      final hadCustomSeed = storedSeed != AppColors.brand;
+      final hadCustomSeed = storedSeed != AppColors.brandGreen;
       return ThemeSettings(
         seedColor: storedSeed,
         useColoredSurfaces: m["useColoredSurfaces"] as bool? ?? true,

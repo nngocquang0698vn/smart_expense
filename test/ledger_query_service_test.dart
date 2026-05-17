@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/features/transactions/domain/services/ledger_query_service.dart";
-import "package:smart_expense/shared/core/date_range.dart";
+import "package:smart_expense/core/date_range.dart";
 
 void main() {
   const service = LedgerQueryService();

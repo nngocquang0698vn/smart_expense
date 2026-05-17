@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/shared/widgets/app_empty_state.dart";
+import "package:smart_expense/core/widgets/app_empty_state.dart";
 
 void main() {
   testWidgets("AppEmptyState shows message and optional action", (tester) async {

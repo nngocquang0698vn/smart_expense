@@ -1,5 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/data/ledger_repository.dart";
+import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/data/models/category_model.dart";
 import "package:smart_expense/features/categories/application/category_editor_policy.dart";
 

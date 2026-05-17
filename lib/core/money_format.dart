@@ -1,5 +1,7 @@
 import "package:intl/intl.dart";
 
+// Uses en_US only for comma thousand separators (1,250,000), not app locale.
+// Vietnamese vi_VN would group with dots (1.250.000).
 final _displayFormatter = NumberFormat("#,###", "en_US");
 
 /// Comma-grouped VND amount without symbol (e.g. `1,250,000`).

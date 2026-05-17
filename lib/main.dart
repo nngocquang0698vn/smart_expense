@@ -5,7 +5,7 @@ import "package:shared_preferences/shared_preferences.dart";
 import "app/smart_expense_root.dart";
 import "core/theme_notifier.dart";
 import "data/app_database.dart";
-import "data/ledger_repository.dart";
+import "data/sembast_ledger_repository.dart";
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +13,7 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final db = await AppDatabase.open();
-  final repo = LedgerRepository(db);
+  final repo = SembastLedgerRepository(db);
   await repo.ensureDefaults();
 
   runApp(SmartExpenseRoot(repo: repo, themeNotifier: ThemeNotifier(prefs)));

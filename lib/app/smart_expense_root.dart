@@ -3,12 +3,12 @@ import "package:flutter/material.dart";
 import "../core/constants.dart";
 import "../core/strings.dart";
 import "../core/theme_notifier.dart";
-import "../data/ledger_repository.dart";
-import "../repo_scope.dart";
-import "../screens/main_shell.dart";
-import "../screens/onboarding_screen.dart";
-import "../shared/widgets/app_loading_state.dart";
-import "../theme/app_theme.dart";
+import "../features/transactions/domain/repositories/ledger_repository.dart";
+import "main_shell.dart";
+import "repo_scope.dart";
+import "../features/settings/presentation/onboarding_screen.dart";
+import "../core/widgets/app_loading_state.dart";
+import "../core/theme/app_theme.dart";
 
 class SmartExpenseRoot extends StatefulWidget {
   const SmartExpenseRoot({

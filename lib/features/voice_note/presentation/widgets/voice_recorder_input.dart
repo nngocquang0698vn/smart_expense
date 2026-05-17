@@ -4,7 +4,7 @@ import "../../../../core/constants.dart";
 import "../../domain/audio_attachment_model.dart";
 import "../../domain/voice_recording_status.dart";
 import "../controllers/voice_recorder_controller.dart";
-import "../../../../shared/widgets/app_discard_dialog.dart";
+import "../../../../core/widgets/app_discard_dialog.dart";
 import "voice_note_preview.dart";
 
 class VoiceRecorderInput extends StatefulWidget {
@@ -123,7 +123,7 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
         return DecoratedBox(
           decoration: BoxDecoration(
             color: cs.surfaceContainerHighest.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(AppRadius.container),
+            borderRadius: BorderRadius.circular(AppRadius.xxl),
             border: Border.all(color: cs.outlineVariant),
           ),
           child: Padding(

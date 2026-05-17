@@ -1,4 +1,4 @@
-import "../../../../shared/core/date_range.dart";
+import "../../../../core/date_range.dart";
 import "../entities/finance_totals.dart";
 import "../entities/ledger_transaction.dart";
 

@@ -1,5 +1,5 @@
 import "../../../core/strings.dart";
-import "../../../data/ledger_repository.dart";
+import "../../../features/transactions/domain/repositories/ledger_repository.dart";
 import "../../../data/models/category_model.dart";
 
 class CategoryDraft {

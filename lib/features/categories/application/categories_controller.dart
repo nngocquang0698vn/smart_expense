@@ -1,6 +1,6 @@
 import "package:flutter/foundation.dart";
 
-import "../../../data/ledger_repository.dart";
+import "../../../features/transactions/domain/repositories/ledger_repository.dart";
 import "../../../data/models/category_model.dart";
 import "categories_view_model.dart";
 import "category_editor_policy.dart";
