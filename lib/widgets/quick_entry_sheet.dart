@@ -12,6 +12,7 @@ import "../features/image_attachment/data/image_picker_service.dart";
 import "../features/image_attachment/data/image_storage_service.dart";
 import "../features/image_attachment/domain/image_attachment_model.dart";
 import "../features/image_attachment/presentation/widgets/image_attachment_list.dart";
+import "../features/transactions/application/transaction_draft_validator.dart";
 import "../features/voice_note/domain/audio_attachment_model.dart";
 import "../shared/widgets/app_voice_note_section.dart";
 import "../theme/app_finance_colors.dart";
@@ -69,6 +70,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
   final _images = <ImageAttachmentModel>[];
   final _imagePicker = ImagePickerService();
   final _imageStorage = ImageStorageService();
+  final _draftResolver = const TransactionDraftResolver();
 
   bool get _hasMedia => _audio != null || _images.isNotEmpty;
 
@@ -167,9 +169,9 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       });
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Không thể lưu ảnh. Vui lòng thử lại.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(AppStrings.imageSaveFailed)));
     }
   }
 
@@ -187,39 +189,38 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
   // ── Save logic ────────────────────────────────────────────────────────────
 
   Future<void> _save(List<CategoryModel> cats) async {
-    final title = _titleCtrl.text.trim().isEmpty
-        ? (_income ? "Thu nhập nhanh" : "Chi tiêu nhanh")
-        : _titleCtrl.text.trim();
-
     final amount = _amount.value;
-
-    if (!_pending && amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập số tiền hợp lệ.")),
-      );
-      return;
-    }
-
     final matched = cats.where((c) => c.isIncome == _income).toList();
     final catId = _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
-    if (!_pending && catId == null) {
+
+    final draft = _draftResolver.resolve(
+      TransactionSaveDraft(
+        rawTitle: _titleCtrl.text,
+        fallbackTitle: _income
+            ? AppStrings.quickIncomeTitle
+            : AppStrings.quickExpenseTitle,
+        amountVnd: amount,
+        pending: _pending,
+        selectedCategoryId: _categoryId,
+        fallbackCategoryId: catId,
+      ),
+    );
+    final message = _firstDraftErrorMessage(draft.errors);
+    if (message != null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Vui lòng chọn danh mục.")));
+      ).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
 
-    final isInfoComplete = amount > 0 && catId != null;
-    final effectiveComplete = _pending ? isInfoComplete : true;
-
     await widget.repo.addQuick(
-      title: title,
+      title: draft.title,
       amountVnd: amount,
       isIncome: _income,
-      categoryId: catId ?? (matched.isNotEmpty ? matched.first.id : ""),
+      categoryId: draft.categoryId ?? "",
       at: _date,
       pending: _pending,
-      complete: effectiveComplete,
+      complete: draft.complete,
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
       audio: _audio,
       images: _images,
@@ -230,10 +231,24 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _pending ? "Đã lưu vào danh sách chờ đối soát." : "Đã lưu giao dịch.",
+          _pending
+              ? AppStrings.savePendingSuccess
+              : AppStrings.saveTransactionSuccess,
         ),
       ),
     );
+  }
+
+  String? _firstDraftErrorMessage(
+    List<TransactionDraftValidationError> errors,
+  ) {
+    if (errors.contains(TransactionDraftValidationError.amountRequired)) {
+      return AppStrings.amountRequired;
+    }
+    if (errors.contains(TransactionDraftValidationError.categoryRequired)) {
+      return AppStrings.categoryRequired;
+    }
+    return null;
   }
 
   // ── Main build ─────────────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ abstract final class AppStrings {
   static const String appName = "Smart Ledger";
   static const String genericError = "Đã có lỗi xảy ra. Vui lòng thử lại.";
   static const String loading = "Đang tải dữ liệu...";
+  static const String imageSaveFailed = "Không thể lưu ảnh. Vui lòng thử lại.";
   static const String delete = "Xoá";
   static const String discard = "Huỷ thay đổi";
   static const String continueEditing = "Tiếp tục chỉnh sửa";
@@ -76,6 +77,13 @@ abstract final class AppStrings {
   static const String deleteTransaction = "Xoá giao dịch";
   static const String addTransaction = "Thêm giao dịch";
   static const String editTransaction = "Sửa giao dịch";
+  static const String quickExpenseTitle = "Chi tiêu nhanh";
+  static const String quickIncomeTitle = "Thu nhập nhanh";
+  static const String savePendingSuccess = "Đã lưu vào danh sách chờ đối soát.";
+  static const String saveTransactionSuccess = "Đã lưu giao dịch.";
+  static const String amountRequired = "Vui lòng nhập số tiền hợp lệ.";
+  static const String categoryRequired = "Vui lòng chọn danh mục.";
+  static const String titleRequired = "Vui lòng nhập tên giao dịch.";
 
   // ── Media / recording ─────────────────────────────────────────────────────
 

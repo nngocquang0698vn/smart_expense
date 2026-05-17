@@ -39,4 +39,56 @@ void main() {
     expect(validator.validate(draft), isEmpty);
     expect(validator.isComplete(draft), isTrue);
   });
+
+  group("TransactionDraftResolver", () {
+    const resolver = TransactionDraftResolver();
+
+    test("uses fallback title and category for quick confirmed expense", () {
+      final result = resolver.resolve(
+        const TransactionSaveDraft(
+          rawTitle: "",
+          fallbackTitle: "Chi tiêu nhanh",
+          amountVnd: 50000,
+          pending: false,
+          selectedCategoryId: null,
+          fallbackCategoryId: "food",
+        ),
+      );
+
+      expect(result.isValid, isTrue);
+      expect(result.title, "Chi tiêu nhanh");
+      expect(result.categoryId, "food");
+      expect(result.complete, isTrue);
+    });
+
+    test("requires title when editing a full transaction", () {
+      final result = resolver.resolve(
+        const TransactionSaveDraft(
+          rawTitle: " ",
+          amountVnd: 50000,
+          pending: false,
+          selectedCategoryId: "food",
+          fallbackCategoryId: null,
+          requireTitle: true,
+        ),
+      );
+
+      expect(result.errors, [TransactionDraftValidationError.titleRequired]);
+    });
+
+    test("marks pending draft incomplete without amount and category", () {
+      final result = resolver.resolve(
+        const TransactionSaveDraft(
+          rawTitle: "Ảnh hoá đơn",
+          amountVnd: 0,
+          pending: true,
+          selectedCategoryId: null,
+          fallbackCategoryId: null,
+        ),
+      );
+
+      expect(result.isValid, isTrue);
+      expect(result.complete, isFalse);
+    });
+  });
 }

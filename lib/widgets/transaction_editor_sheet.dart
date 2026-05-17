@@ -13,6 +13,7 @@ import "../features/image_attachment/data/image_picker_service.dart";
 import "../features/image_attachment/data/image_storage_service.dart";
 import "../features/image_attachment/domain/image_attachment_model.dart";
 import "../features/image_attachment/presentation/widgets/image_attachment_list.dart";
+import "../features/transactions/application/transaction_draft_validator.dart";
 import "../features/voice_note/domain/audio_attachment_model.dart";
 import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "../shared/widgets/app_voice_note_section.dart";
@@ -70,6 +71,7 @@ class _EditorBodyState extends State<_EditorBody> {
   final _images = <ImageAttachmentModel>[];
   final _imagePicker = ImagePickerService();
   final _imageStorage = ImageStorageService();
+  final _draftResolver = const TransactionDraftResolver();
 
   // Snapshots for dirty detection
   late String _initTitle;
@@ -185,9 +187,9 @@ class _EditorBodyState extends State<_EditorBody> {
       });
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Không thể lưu ảnh. Vui lòng thử lại.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(AppStrings.imageSaveFailed)));
     }
   }
 
@@ -204,42 +206,41 @@ class _EditorBodyState extends State<_EditorBody> {
   }
 
   Future<void> _saveTransaction(List<CategoryModel> cats) async {
-    final title = _titleCtrl.text.trim();
-    if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập tên giao dịch.")),
-      );
-      return;
-    }
-
     final amount = _amount.value;
-
-    if (!_pending && amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập số tiền hợp lệ.")),
-      );
+    final matchingCategories = cats
+        .where((category) => category.isIncome == _income)
+        .toList();
+    final fallbackCategoryId = matchingCategories.isNotEmpty
+        ? matchingCategories.first.id
+        : (cats.isNotEmpty ? cats.first.id : null);
+    final draft = _draftResolver.resolve(
+      TransactionSaveDraft(
+        rawTitle: _titleCtrl.text,
+        amountVnd: amount,
+        pending: _pending,
+        selectedCategoryId: _categoryId,
+        fallbackCategoryId: fallbackCategoryId,
+        requireTitle: true,
+      ),
+    );
+    final message = _firstDraftErrorMessage(draft.errors);
+    if (message != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
-
-    final catId =
-        _categoryId ??
-        cats
-            .firstWhere((c) => c.isIncome == _income, orElse: () => cats.first)
-            .id;
-
-    final isInfoComplete = amount > 0;
-    final effectiveComplete = _pending ? isInfoComplete : true;
 
     final e = widget.existing;
     if (e == null) {
       await widget.repo.addQuick(
-        title: title,
+        title: draft.title,
         amountVnd: amount,
         isIncome: _income,
-        categoryId: catId,
+        categoryId: draft.categoryId ?? "",
         at: _date,
         pending: _pending,
-        complete: effectiveComplete,
+        complete: draft.complete,
         note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
         audio: _audio,
         images: _images,
@@ -247,13 +248,13 @@ class _EditorBodyState extends State<_EditorBody> {
     } else {
       await widget.repo.putTransaction(
         e.copyWith(
-          title: title,
+          title: draft.title,
           amountVnd: amount,
           isIncome: _income,
-          categoryId: catId,
+          categoryId: draft.categoryId ?? e.categoryId,
           occurredAt: _date,
           pending: _pending,
-          complete: effectiveComplete,
+          complete: draft.complete,
           note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
           audio: _audio,
           images: _images,
@@ -266,10 +267,27 @@ class _EditorBodyState extends State<_EditorBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _pending ? "Đã lưu vào danh sách chờ đối soát." : "Đã lưu giao dịch.",
+          _pending
+              ? AppStrings.savePendingSuccess
+              : AppStrings.saveTransactionSuccess,
         ),
       ),
     );
+  }
+
+  String? _firstDraftErrorMessage(
+    List<TransactionDraftValidationError> errors,
+  ) {
+    if (errors.contains(TransactionDraftValidationError.titleRequired)) {
+      return AppStrings.titleRequired;
+    }
+    if (errors.contains(TransactionDraftValidationError.amountRequired)) {
+      return AppStrings.amountRequired;
+    }
+    if (errors.contains(TransactionDraftValidationError.categoryRequired)) {
+      return AppStrings.categoryRequired;
+    }
+    return null;
   }
 
   Future<void> _delete() async {
