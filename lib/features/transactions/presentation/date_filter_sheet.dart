@@ -1,5 +1,8 @@
 import "package:flutter/material.dart";
 
+import "../../../core/strings.dart";
+import "../../../core/widgets/app_date_picker.dart";
+import "../../../core/widgets/app_date_range_picker.dart";
 import "../../../data/date_filter.dart";
 
 Future<DateFilterSelection?> showDateFilterSheet(
@@ -34,8 +37,8 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
 
   Future<void> _pickMonth() async {
     final now = DateTime.now();
-    final d = await showDatePicker(
-      context: context,
+    final d = await showAppDatePicker(
+      context,
       initialDate: sel.month ?? now,
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 1, 12),
@@ -57,7 +60,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
       context: context,
       builder: (c) {
         return AlertDialog(
-          title: const Text("Chọn năm"),
+          title: const Text(AppStrings.pickYearTitle),
           content: SizedBox(
             width: 280,
             height: 260,
@@ -83,11 +86,11 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
 
   Future<void> _pickCustom() async {
     final now = DateTime.now();
-    final range = await showDateRangePicker(
-      context: context,
+    final range = await showAppDateRangePicker(
+      context,
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 1, 12, 31),
-      initialDateRange:
+      initialRange:
           sel.custom ??
           DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
@@ -129,7 +132,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                "Bộ lọc thời gian",
+                AppStrings.dateFilterTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
@@ -195,7 +198,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.pickMonth,
-                    title: "Theo tháng…",
+                    title: AppStrings.dateFilterPickMonth,
                     subtitle: sel.preset == DateFilterPreset.pickMonth
                         ? sel.label()
                         : null,
@@ -203,7 +206,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.pickYear,
-                    title: "Theo năm…",
+                    title: AppStrings.dateFilterPickYear,
                     subtitle: sel.preset == DateFilterPreset.pickYear
                         ? sel.label()
                         : null,
@@ -211,7 +214,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.custom,
-                    title: "Khoảng ngày tuỳ chọn…",
+                    title: AppStrings.dateFilterCustomRange,
                     subtitle: sel.preset == DateFilterPreset.custom
                         ? sel.label()
                         : null,
@@ -224,7 +227,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: FilledButton(
                 onPressed: () => Navigator.pop(context, sel),
-                child: const Text("Áp dụng"),
+                child: const Text(AppStrings.apply),
               ),
             ),
           ],

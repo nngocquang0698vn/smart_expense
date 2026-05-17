@@ -18,7 +18,7 @@ import "../../image_attachment/domain/image_attachment_model.dart";
 import "../../voice_note/domain/audio_attachment_model.dart";
 import "../application/transaction_draft_validator.dart";
 import "../domain/repositories/ledger_repository.dart";
-import "widgets/transaction_date_picker_field.dart";
+import "../../../core/widgets/app_date_picker.dart";
 import "widgets/transaction_entry_form.dart";
 import "widgets/transaction_sheet_shell.dart";
 
@@ -324,7 +324,7 @@ class _EditorBodyState extends State<_EditorBody> {
                     _categoryId = _categorySelection.fallbackId(nextItems);
                   },
                   date: _date,
-                  dateStyle: TransactionDatePickerStyle.listTile,
+                  dateStyle: AppDatePickerStyle.listTile,
                   onDateChanged: (d) => setState(() => _date = d),
                   pending: _pending,
                   onPendingChanged: (v) => setState(() => _pending = v),

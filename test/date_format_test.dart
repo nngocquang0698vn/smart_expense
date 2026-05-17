@@ -24,4 +24,18 @@ void main() {
   test("formatShellTime uses HH:mm", () {
     expect(formatShellTime(sample), "14:30");
   });
+
+  test("formatTransactionDateLong uses tháng not thg abbreviation", () {
+    expect(formatTransactionDateLong(sample), "17 tháng 5, 2026");
+    expect(formatTransactionDateLong(sample), isNot(contains("thg")));
+  });
+
+  test("formatDayHeader uses weekday and tháng", () {
+    expect(formatDayHeader(sample), contains("tháng"));
+    expect(formatDayHeader(sample), isNot(contains("thg")));
+  });
+
+  test("formatDayShort uses tháng", () {
+    expect(formatDayShort(sample), "17 tháng 5");
+  });
 }

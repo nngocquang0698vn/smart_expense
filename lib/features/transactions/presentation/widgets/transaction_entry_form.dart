@@ -6,7 +6,7 @@ import "../../../../core/strings.dart";
 import "../../../../core/widgets/app_text_field.dart";
 import "../../../../core/widgets/form_amount_field.dart";
 import "../../../image_attachment/domain/image_attachment_model.dart";
-import "transaction_date_picker_field.dart";
+import "../../../../core/widgets/app_date_picker.dart";
 import "transaction_image_attachments.dart";
 import "transaction_type_toggle.dart";
 
@@ -32,7 +32,7 @@ class TransactionEntryForm extends StatelessWidget {
     this.mediaSections = const [],
     this.onSideChanged,
     this.showSelectedIcon = true,
-    this.dateStyle = TransactionDatePickerStyle.card,
+    this.dateStyle = AppDatePickerStyle.card,
     this.pendingSubtitle,
     this.amountAlwaysShowKeypad = false,
     this.amountAutofocus = false,
@@ -49,7 +49,7 @@ class TransactionEntryForm extends StatelessWidget {
   final bool showSelectedIcon;
   final DateTime date;
   final ValueChanged<DateTime> onDateChanged;
-  final TransactionDatePickerStyle dateStyle;
+  final AppDatePickerStyle dateStyle;
   final bool pending;
   final ValueChanged<bool> onPendingChanged;
   final String? pendingSubtitle;
@@ -97,7 +97,7 @@ class TransactionEntryForm extends StatelessWidget {
         if (!typeToggleFirst) ...[toggle, const SizedBox(height: 12)],
         categorySection,
         const SizedBox(height: 12),
-        TransactionDatePickerField(
+        AppDatePicker(
           date: date,
           style: dateStyle,
           onDateChanged: onDateChanged,

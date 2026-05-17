@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_localizations/flutter_localizations.dart";
 
 import "../core/constants.dart";
 import "../core/strings.dart";
@@ -51,6 +52,13 @@ class _SmartExpenseRootState extends State<SmartExpenseRoot> {
             final settings = widget.themeNotifier.settings;
             return MaterialApp(
               title: AppStrings.appName,
+              locale: const Locale("vi", "VN"),
+              supportedLocales: const [
+                Locale("vi", "VN"),
+                Locale("en", "US"),
+              ],
+              localizationsDelegates:
+                  GlobalMaterialLocalizations.delegates,
               debugShowCheckedModeBanner: false,
               theme: AppTheme.build(settings, brightness: Brightness.light),
               darkTheme: AppTheme.build(settings, brightness: Brightness.dark),

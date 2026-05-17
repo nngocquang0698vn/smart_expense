@@ -82,6 +82,15 @@ abstract final class AppStrings {
   static const String pendingSubtitleDefault =
       "Bật để chuyển vào danh sách đối soát.";
   static const String transactionDate = "Ngày giao dịch";
+  static const String datePickerNotSelected = "Chưa chọn ngày";
+  static const String dateRangeTitle = "Chọn khoảng ngày";
+  static const String dateRangeNotSelected = "Chưa chọn khoảng ngày";
+  static const String dateRangeClear = "Xóa";
+  static const String dateFilterTitle = "Bộ lọc thời gian";
+  static const String dateFilterPickMonth = "Theo tháng…";
+  static const String dateFilterPickYear = "Theo năm…";
+  static const String dateFilterCustomRange = "Khoảng ngày tuỳ chọn…";
+  static const String pickYearTitle = "Chọn năm";
   static const String transactionTitle = "Tên giao dịch";
   static const String amount = "Số tiền (VND)";
 

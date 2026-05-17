@@ -1,6 +1,7 @@
 import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
 import "../../../core/date_format.dart";
+import "../../../core/widgets/app_date_range_picker.dart";
 import "../../../core/formatters/money.dart";
 import "../../../core/strings.dart";
 import "../../../core/widgets/page_header_sliver.dart";
@@ -51,11 +52,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Future<void> _pickCustomRange() async {
     final now = DateTime.now();
-    final r = await showDateRangePicker(
-      context: context,
+    final r = await showAppDateRangePicker(
+      context,
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 1, 12, 31),
-      initialDateRange:
+      initialRange:
           _controller.customRange ??
           DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
