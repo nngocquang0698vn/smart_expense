@@ -65,19 +65,38 @@ Workflow: [`.github/workflows/deploy-cloudflare-pages.yml`](.github/workflows/de
 - Trigger: push nhánh `main` hoặc `workflow_dispatch`.
 - Chạy: `flutter analyze`, `flutter test`, `flutter build web --release --pwa-strategy=none`, deploy `build/web`.
 
-**GitHub Secrets (Settings → Secrets and variables → Actions → Secrets):**
+**GitHub Secrets** (tab Secrets):
 
 | Secret | Mô tả |
 |--------|--------|
-| `CLOUDFLARE_API_TOKEN` | API token có quyền Cloudflare Pages |
-| `CLOUDFLARE_ACCOUNT_ID` | Account ID Cloudflare |
-| `CLOUDFLARE_PROJECT_NAME` | Tên project Pages trên Cloudflare (vd. `smart-expense`) |
+| `CLOUDFLARE_API_TOKEN` | API token có quyền **Account → Cloudflare Pages → Edit** |
+| `CLOUDFLARE_ACCOUNT_ID` | Account ID (Dashboard → Overview) |
 
-Tên project lấy từ [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → project của bạn (phải khớp chính xác).
+**GitHub Variable** (tab Variables — không phải Secrets):
 
-**Lưu ý:** GitHub tách **Secrets** và **Variables** — workflow đọc `CLOUDFLARE_PROJECT_NAME` từ **Secrets** trước, hoặc **Variables** nếu bạn đặt ở tab Variables thay vì Secrets.
+| Variable | Mô tả |
+|----------|--------|
+| `CLOUDFLARE_PROJECT_NAME` | Tên project Pages **trùng khớp** Cloudflare (vd. `smartexpense`) |
 
-Tạo project Pages trên Cloudflare trước lần deploy đầu (hoặc để Wrangler tạo project cùng tên khi deploy lần đầu nếu account cho phép).
+Workflow ưu tiên **Variables**; chỉ dùng Secret cùng tên nếu Variable chưa có.
+
+**Lỗi `Project not found`:** thường do nhầm **Worker** với **Pages**.
+
+| Loại | URL Dashboard (ví dụ) | CI dùng |
+|------|------------------------|---------|
+| **Worker** | `.../workers/services/view/smartexpense/...` | Không — Flutter web static không deploy bằng `pages deploy` |
+| **Pages** | `.../pages/view/smartexpense` hoặc mục **Pages** trong sidebar | Đúng — `wrangler pages deploy build/web` |
+
+**Tạo đúng Cloudflare Pages (lần đầu):**
+
+1. [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages**
+2. **Create application** → chọn tab **Pages** (không chọn Workers)
+3. **Create a project** → tên: `smartexpense` (khớp Variable GitHub)
+4. Có thể chọn **Direct Upload** (CI sẽ upload `build/web` qua Wrangler; không bắt buộc connect Git)
+
+Sau khi có **Pages** project `smartexpense`, re-run workflow GitHub.
+
+Xóa Secret trùng tên `CLOUDFLARE_PROJECT_NAME` (nếu còn); chỉ giữ **Variable** = `smartexpense`.
 
 **Lưu ý CI:** Workflow dùng `flutter build web --release --pwa-strategy=none` (Flutter service worker mặc định tắt; PWA manifest/icons vẫn từ `web/manifest.json`).
 

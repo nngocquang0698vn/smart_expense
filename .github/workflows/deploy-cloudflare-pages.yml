@@ -9,6 +9,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      # Variables tab ưu tiên; fallback Secrets nếu bạn đặt ở đó.
+      CF_PROJECT_NAME: ${{ vars.CLOUDFLARE_PROJECT_NAME || secrets.CLOUDFLARE_PROJECT_NAME }}
 
     steps:
       - name: Checkout
@@ -34,17 +37,15 @@ jobs:
 
       - name: Validate Cloudflare configuration
         env:
-          CF_PROJECT: ${{ secrets.CLOUDFLARE_PROJECT_NAME || vars.CLOUDFLARE_PROJECT_NAME }}
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           missing=0
-          if [ -z "$CF_PROJECT" ]; then
+          if [ -z "$CF_PROJECT_NAME" ]; then
             echo "::error::CLOUDFLARE_PROJECT_NAME is empty or not set."
-            echo "Add it under Settings → Secrets and variables → Actions:"
-            echo "  - Secrets (recommended): CLOUDFLARE_PROJECT_NAME"
-            echo "  - or Variables: CLOUDFLARE_PROJECT_NAME"
-            echo "Example value: smart-expense (must match your Cloudflare Pages project name)"
+            echo "Add under Settings → Secrets and variables → Actions → Variables"
+            echo "  Name: CLOUDFLARE_PROJECT_NAME"
+            echo "  Value: exact Cloudflare Pages project name (e.g. smartexpense)"
             missing=1
           fi
           if [ -z "$CF_TOKEN" ]; then
@@ -56,11 +57,28 @@ jobs:
             missing=1
           fi
           if [ "$missing" -ne 0 ]; then exit 1; fi
-          echo "Cloudflare project: $CF_PROJECT"
+          echo "Will deploy to Cloudflare Pages project: $CF_PROJECT_NAME"
+          echo "If deploy fails with 'Project not found': you need a Cloudflare PAGES project"
+          echo "(not a Worker). Dashboard → Workers & Pages → Create → Pages tab."
+
+      - name: Ensure Cloudflare Pages project exists
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set +e
+          npx wrangler@3.90.0 pages project create "$CF_PROJECT_NAME"
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            echo "Created Pages project: $CF_PROJECT_NAME"
+          else
+            echo "Pages project '$CF_PROJECT_NAME' may already exist (continuing deploy)."
+          fi
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy build/web --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME || vars.CLOUDFLARE_PROJECT_NAME }}
+          command: pages deploy build/web --project-name=${{ env.CF_PROJECT_NAME }} --commit-dirty=true
