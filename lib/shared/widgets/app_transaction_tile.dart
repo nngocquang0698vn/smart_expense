@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 
 import "../../core/constants.dart";
-import "app_banking_card.dart";
+import "app_finance_card.dart";
 
 class AppTransactionTile extends StatelessWidget {
   const AppTransactionTile({
@@ -25,7 +25,7 @@ class AppTransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBankingCard(
+    return AppFinanceCard(
       margin: AppInsets.cardMargin,
       padding: AppInsets.cardPadding,
       onTap: onTap,

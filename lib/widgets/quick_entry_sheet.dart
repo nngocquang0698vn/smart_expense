@@ -1,21 +1,24 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
-import "package:intl/intl.dart";
-
 import "../core/amount_input.dart";
-import "../core/constants.dart";
+import "../core/date_format.dart";
 import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../features/image_attachment/data/image_picker_service.dart";
 import "../features/image_attachment/data/image_storage_service.dart";
 import "../features/image_attachment/domain/image_attachment_model.dart";
-import "../features/image_attachment/presentation/widgets/image_attachment_list.dart";
 import "../features/transactions/application/transaction_draft_validator.dart";
+import "../features/transactions/presentation/widgets/transaction_category_chips.dart";
+import "../features/transactions/presentation/widgets/transaction_date_picker_field.dart";
+import "../features/transactions/presentation/widgets/transaction_image_attachments.dart";
+import "../features/transactions/presentation/widgets/transaction_sheet_shell.dart";
+import "../features/transactions/presentation/widgets/transaction_type_toggle.dart";
 import "../features/voice_note/domain/audio_attachment_model.dart";
+import "../shared/widgets/app_discard_dialog.dart";
+import "../shared/widgets/app_primary_button.dart";
 import "../shared/widgets/app_voice_note_section.dart";
-import "../theme/app_finance_colors.dart";
 import "app_text_field.dart";
 import "form_amount_field.dart";
 
@@ -26,17 +29,9 @@ Future<void> showQuickEntrySheet(
   LedgerRepository repo, {
   QuickEntryMode mode = QuickEntryMode.tap,
 }) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: false,
-    isDismissible: false,
-    enableDrag: false,
-    useSafeArea: true,
-    builder: (ctx) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-      child: _QuickEntryBody(repo: repo, mode: mode),
-    ),
+  return showTransactionFormSheet(
+    context,
+    child: _QuickEntryBody(repo: repo, mode: mode),
   );
 }
 
@@ -90,11 +85,11 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     _pending = widget.mode != QuickEntryMode.tap;
 
     if (widget.mode == QuickEntryMode.voice) {
-      final ts = DateFormat("dd/MM HH:mm").format(DateTime.now());
+      final ts = formatQuickEntryTimestamp(DateTime.now());
       _titleCtrl.text = "Ghi âm giao dịch - $ts";
       _amount.setValue(0);
     } else if (widget.mode == QuickEntryMode.receipt) {
-      final ts = DateFormat("dd/MM HH:mm").format(DateTime.now());
+      final ts = formatQuickEntryTimestamp(DateTime.now());
       _titleCtrl.text = "Ảnh hoá đơn - $ts";
       _amount.setValue(0);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -129,29 +124,8 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       if (mounted) Navigator.pop(context);
       return;
     }
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Huỷ nhập liệu?"),
-        content: const Text(
-          "Mọi thay đổi chưa lưu sẽ bị mất. Bạn có chắc chắn muốn đóng không?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Tiếp tục nhập"),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(AppStrings.cancel),
-          ),
-        ],
-      ),
-    );
-    if (discard == true) {
+    final discard = await showDiscardEntryDialog(context);
+    if (discard) {
       await _deleteImages(_images);
       if (mounted) Navigator.pop(context);
     }
@@ -205,7 +179,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
         fallbackCategoryId: catId,
       ),
     );
-    final message = _firstDraftErrorMessage(draft.errors);
+    final message = TransactionDraftValidator.firstUserMessage(draft.errors);
     if (message != null) {
       ScaffoldMessenger.of(
         context,
@@ -237,18 +211,6 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
         ),
       ),
     );
-  }
-
-  String? _firstDraftErrorMessage(
-    List<TransactionDraftValidationError> errors,
-  ) {
-    if (errors.contains(TransactionDraftValidationError.amountRequired)) {
-      return AppStrings.amountRequired;
-    }
-    if (errors.contains(TransactionDraftValidationError.categoryRequired)) {
-      return AppStrings.categoryRequired;
-    }
-    return null;
   }
 
   // ── Main build ─────────────────────────────────────────────────────────────
@@ -283,56 +245,18 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ── Header with close button ──────────────────────────────
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        sheetTitle,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: _handleClose,
-                      icon: const Icon(Icons.close),
-                      tooltip: AppStrings.close,
-                    ),
-                  ],
+                TransactionSheetHeader(
+                  title: sheetTitle,
+                  onClose: _handleClose,
                 ),
                 const SizedBox(height: 12),
-
-                // ── Income / Expense toggle ────────────────────────────────
-                Builder(
-                  builder: (context) {
-                    final finance = context.financeColors;
-                    return Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          AppRadius.container,
-                        ),
-                        color: finance.fieldFill,
-                        border: Border.all(color: finance.fieldBorder),
-                      ),
-                      child: SegmentedButton<bool>(
-                        showSelectedIcon: false,
-                        segments: const [
-                          ButtonSegment(
-                            value: false,
-                            label: Text(AppStrings.expense),
-                          ),
-                          ButtonSegment(
-                            value: true,
-                            label: Text(AppStrings.income),
-                          ),
-                        ],
-                        selected: {_income},
-                        onSelectionChanged: (v) => setState(() {
-                          _income = v.first;
-                          _categoryId = null;
-                        }),
-                      ),
-                    );
-                  },
+                TransactionTypeToggle(
+                  isIncome: _income,
+                  showSelectedIcon: false,
+                  onChanged: (income) => setState(() {
+                    _income = income;
+                    _categoryId = null;
+                  }),
                 ),
                 const SizedBox(height: 14),
 
@@ -367,120 +291,26 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 // ── Category chips (compact, shows all categories) ────────
                 Text("Danh mục", style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
-                Builder(
-                  builder: (ctx) {
-                    final cs = Theme.of(ctx).colorScheme;
-                    return Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: cats.where((c) => c.isIncome == _income).map((
-                        cat,
-                      ) {
-                        final active = cat.id == _categoryId;
-                        return GestureDetector(
-                          onTap: () => setState(() => _categoryId = cat.id),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: active
-                                  ? cs.primary
-                                  : context.financeColors.fieldFill,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: active
-                                    ? cs.primary
-                                    : context.financeColors.fieldBorder,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  cat.icon,
-                                  size: 16,
-                                  color: active ? cs.onPrimary : cat.color,
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  cat.name,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: active ? cs.onPrimary : cs.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
+                TransactionCategoryChips(
+                  categories: cats,
+                  isIncome: _income,
+                  selectedId: _categoryId,
+                  onSelected: (id) => setState(() => _categoryId = id),
                 ),
                 const SizedBox(height: 14),
 
                 // ── Date picker ───────────────────────────────────────────
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.calendar_today_rounded),
-                    title: Text(DateFormat("dd/MM/yyyy").format(_date)),
-                    subtitle: const Text(AppStrings.transactionDate),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _date,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                      );
-                      if (picked != null) setState(() => _date = picked);
-                    },
-                  ),
+                TransactionDatePickerField(
+                  date: _date,
+                  onDateChanged: (d) => setState(() => _date = d),
                 ),
                 const SizedBox(height: 10),
-
-                // ── Attachment row ────────────────────────────────────────
-                Row(
-                  children: [
-                    if (_showCamera) ...[
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _pickImage(ImageSource.camera),
-                          icon: const Icon(
-                            Icons.photo_camera_outlined,
-                            size: 16,
-                          ),
-                          label: const Text(AppStrings.takePhoto),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _pickImage(ImageSource.gallery),
-                        icon: const Icon(
-                          Icons.photo_library_outlined,
-                          size: 16,
-                        ),
-                        label: const Text(AppStrings.pickPhoto),
-                      ),
-                    ),
-                  ],
+                TransactionImageAttachments(
+                  images: _images,
+                  showCamera: _showCamera,
+                  onPick: _pickImage,
+                  onDelete: _removeImage,
                 ),
-
-                // ── Image thumbnails ──────────────────────────────────────
-                if (_images.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  ImageAttachmentList(
-                    images: _images,
-                    onDelete: _removeImage,
-                    height: 80,
-                  ),
-                ],
 
                 const SizedBox(height: 12),
 
@@ -507,13 +337,10 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 const SizedBox(height: 12),
 
                 // ── Action buttons ────────────────────────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => _save(cats),
-                    icon: const Icon(Icons.save_rounded, size: 20),
-                    label: const Text(AppStrings.saveTransaction),
-                  ),
+                AppPrimaryButton(
+                  label: AppStrings.saveTransaction,
+                  icon: Icons.save_rounded,
+                  onPressed: () => _save(cats),
                 ),
               ],
             ),

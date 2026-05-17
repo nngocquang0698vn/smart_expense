@@ -10,7 +10,7 @@ import "../features/home/application/home_controller.dart";
 import "../utils/tx_grouping.dart";
 import "../shared/widgets/app_confirm_bottom_sheet.dart";
 import "../widgets/date_filter_sheet.dart";
-import "../widgets/empty_state.dart";
+import "../shared/widgets/app_empty_state.dart";
 import "../widgets/money.dart";
 import "../widgets/page_header_sliver.dart";
 import "../widgets/summary_card.dart";
@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       if (pendingAll.isEmpty)
-                        EmptyState(message: AppStrings.noPendingShort)
+                        AppEmptyState(message: AppStrings.noPendingShort)
                       else ...[
                         _PendingSubheader(items: pendingAll),
                         ...pendingAll.map(

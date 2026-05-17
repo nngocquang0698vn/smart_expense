@@ -52,6 +52,7 @@ void main() {
   group("parseAmountDigits", () {
     test("strips non-digits", () {
       expect(parseAmountDigits("1,234,567"), 1234567);
+      expect(parseAmountDigits("1.234.567"), 1234567);
     });
   });
 }

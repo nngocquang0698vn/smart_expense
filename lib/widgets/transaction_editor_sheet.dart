@@ -1,10 +1,6 @@
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
-import "package:intl/intl.dart";
-
 import "../core/amount_input.dart";
-import "../core/constants.dart";
 import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
@@ -13,10 +9,15 @@ import "../features/categories/application/category_selection_resolver.dart";
 import "../features/image_attachment/data/image_picker_service.dart";
 import "../features/image_attachment/data/image_storage_service.dart";
 import "../features/image_attachment/domain/image_attachment_model.dart";
-import "../features/image_attachment/presentation/widgets/image_attachment_list.dart";
 import "../features/transactions/application/transaction_draft_validator.dart";
+import "../features/transactions/presentation/widgets/transaction_date_picker_field.dart";
+import "../features/transactions/presentation/widgets/transaction_image_attachments.dart";
+import "../features/transactions/presentation/widgets/transaction_sheet_shell.dart";
+import "../features/transactions/presentation/widgets/transaction_type_toggle.dart";
 import "../features/voice_note/domain/audio_attachment_model.dart";
 import "../shared/widgets/app_confirm_bottom_sheet.dart";
+import "../shared/widgets/app_discard_dialog.dart";
+import "../shared/widgets/app_primary_button.dart";
 import "../shared/widgets/app_voice_note_section.dart";
 import "../theme/app_finance_colors.dart";
 import "app_text_field.dart";
@@ -28,19 +29,12 @@ Future<void> showTransactionEditor(
   TransactionModel? existing,
   bool defaultPending = false,
 }) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
-    showDragHandle: false,
-    builder: (ctx) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-      child: _EditorBody(
-        repo: repo,
-        existing: existing,
-        defaultPending: defaultPending,
-      ),
+  return showTransactionFormSheet(
+    context,
+    child: _EditorBody(
+      repo: repo,
+      existing: existing,
+      defaultPending: defaultPending,
     ),
   );
 }
@@ -147,29 +141,8 @@ class _EditorBodyState extends State<_EditorBody> {
       if (mounted) Navigator.pop(context);
       return;
     }
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Huỷ thay đổi?"),
-        content: const Text(
-          "Mọi thay đổi chưa lưu sẽ bị mất. Bạn có chắc chắn muốn đóng không?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Tiếp tục chỉnh sửa"),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Huỷ thay đổi"),
-          ),
-        ],
-      ),
-    );
-    if (discard == true) {
+    final discard = await showDiscardEditDialog(context);
+    if (discard) {
       await _deleteNewImages();
       if (mounted) Navigator.pop(context);
     }
@@ -226,7 +199,10 @@ class _EditorBodyState extends State<_EditorBody> {
         requireTitle: true,
       ),
     );
-    final message = _firstDraftErrorMessage(draft.errors);
+    final message = TransactionDraftValidator.firstUserMessage(
+      draft.errors,
+      includeTitle: true,
+    );
     if (message != null) {
       ScaffoldMessenger.of(
         context,
@@ -278,21 +254,6 @@ class _EditorBodyState extends State<_EditorBody> {
     );
   }
 
-  String? _firstDraftErrorMessage(
-    List<TransactionDraftValidationError> errors,
-  ) {
-    if (errors.contains(TransactionDraftValidationError.titleRequired)) {
-      return AppStrings.titleRequired;
-    }
-    if (errors.contains(TransactionDraftValidationError.amountRequired)) {
-      return AppStrings.amountRequired;
-    }
-    if (errors.contains(TransactionDraftValidationError.categoryRequired)) {
-      return AppStrings.categoryRequired;
-    }
-    return null;
-  }
-
   Future<void> _delete() async {
     final confirmed = await AppConfirmBottomSheet.show(
       context,
@@ -328,7 +289,6 @@ class _EditorBodyState extends State<_EditorBody> {
           items: categoryItems,
         );
 
-        final hasImages = _images.isNotEmpty;
         final finance = context.financeColors;
 
         return SafeArea(
@@ -338,22 +298,11 @@ class _EditorBodyState extends State<_EditorBody> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Header row with close button
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.existing == null
-                            ? AppStrings.addTransaction
-                            : AppStrings.editTransaction,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: _handleClose,
-                      icon: const Icon(Icons.close),
-                      tooltip: AppStrings.close,
-                    ),
-                  ],
+                TransactionSheetHeader(
+                  title: widget.existing == null
+                      ? AppStrings.addTransaction
+                      : AppStrings.editTransaction,
+                  onClose: _handleClose,
                 ),
                 const SizedBox(height: 14),
 
@@ -366,36 +315,16 @@ class _EditorBodyState extends State<_EditorBody> {
                 FormAmountField(controller: _amount),
                 const SizedBox(height: 12),
 
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadius.container),
-                    color: finance.fieldFill,
-                    border: Border.all(color: finance.fieldBorder),
-                  ),
-                  child: SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(
-                        value: false,
-                        label: Text(AppStrings.expense),
-                      ),
-                      ButtonSegment(
-                        value: true,
-                        label: Text(AppStrings.income),
-                      ),
-                    ],
-                    selected: {_income},
-                    onSelectionChanged: (s) {
-                      setState(() {
-                        _income = s.first;
-                        final nextItems = _categorySelection.enabledForSide(
-                          cats,
-                          isIncome: _income,
-                        );
-                        _categoryId = _categorySelection.fallbackId(nextItems);
-                      });
-                    },
-                  ),
+                TransactionTypeToggle(
+                  isIncome: _income,
+                  onChanged: (income) => setState(() => _income = income),
+                  onSideChanged: () {
+                    final nextItems = _categorySelection.enabledForSide(
+                      cats,
+                      isIncome: _income,
+                    );
+                    _categoryId = _categorySelection.fallbackId(nextItems);
+                  },
                 ),
                 const SizedBox(height: 12),
 
@@ -432,31 +361,10 @@ class _EditorBodyState extends State<_EditorBody> {
                 const SizedBox(height: 12),
 
                 // Date picker
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.input),
-                    side: BorderSide(color: finance.fieldBorder),
-                  ),
-                  tileColor: finance.fieldFill,
-                  title: const Text(AppStrings.transactionDate),
-                  subtitle: Text(DateFormat.yMMMd("vi").format(_date)),
-                  trailing: Icon(
-                    Icons.calendar_month,
-                    color: finance.textMuted,
-                  ),
-                  onTap: () async {
-                    final d = await showDatePicker(
-                      context: context,
-                      initialDate: _date,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(DateTime.now().year + 1, 12, 31),
-                    );
-                    if (d != null) setState(() => _date = d);
-                  },
+                TransactionDatePickerField(
+                  date: _date,
+                  style: TransactionDatePickerStyle.listTile,
+                  onDateChanged: (d) => setState(() => _date = d),
                 ),
 
                 // Pending toggle — free to toggle for all transaction types
@@ -488,54 +396,20 @@ class _EditorBodyState extends State<_EditorBody> {
                 ),
 
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    if (!kIsWeb) ...[
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _pickImage(ImageSource.camera),
-                          icon: const Icon(
-                            Icons.photo_camera_outlined,
-                            size: 16,
-                          ),
-                          label: const Text(AppStrings.takePhoto),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _pickImage(ImageSource.gallery),
-                        icon: const Icon(
-                          Icons.photo_library_outlined,
-                          size: 16,
-                        ),
-                        label: const Text(AppStrings.pickPhoto),
-                      ),
-                    ),
-                  ],
+                TransactionImageAttachments(
+                  images: _images,
+                  onPick: _pickImage,
+                  onDelete: _removeImage,
+                  thumbnailHeight: 96,
                 ),
-
-                // Image thumbnails
-                if (hasImages) ...[
-                  const SizedBox(height: 8),
-                  ImageAttachmentList(
-                    images: _images,
-                    onDelete: _removeImage,
-                    height: 96,
-                  ),
-                ],
 
                 const SizedBox(height: 20),
 
                 // ── Action buttons ───────────────────────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => _saveTransaction(cats),
-                    icon: const Icon(Icons.save_rounded, size: 20),
-                    label: const Text(AppStrings.save),
-                  ),
+                AppPrimaryButton(
+                  label: AppStrings.save,
+                  icon: Icons.save_rounded,
+                  onPressed: () => _saveTransaction(cats),
                 ),
 
                 // Delete (only for existing transactions)

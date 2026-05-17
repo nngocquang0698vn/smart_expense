@@ -2,8 +2,8 @@ import "package:flutter/material.dart";
 
 import "../../core/constants.dart";
 
-class AppBankingCard extends StatelessWidget {
-  const AppBankingCard({
+class AppFinanceCard extends StatelessWidget {
+  const AppFinanceCard({
     super.key,
     required this.child,
     this.padding = AppSpacing.card,

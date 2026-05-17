@@ -4,6 +4,7 @@ import "../../../../core/constants.dart";
 import "../../domain/audio_attachment_model.dart";
 import "../../domain/voice_recording_status.dart";
 import "../controllers/voice_recorder_controller.dart";
+import "../../../../shared/widgets/app_discard_dialog.dart";
 import "voice_note_preview.dart";
 
 class VoiceRecorderInput extends StatefulWidget {
@@ -94,28 +95,8 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
   }
 
   Future<void> _confirmDelete() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Xoá ghi âm?"),
-        content: const Text("Bản ghi này sẽ bị xoá khỏi giao dịch hiện tại."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Giữ lại"),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Xoá ghi âm"),
-          ),
-        ],
-      ),
-    );
-    if (ok == true) {
+    final ok = await showDeleteVoiceNoteDialog(context);
+    if (ok) {
       _remove();
       _showMessage("Đã xoá ghi âm.");
     }

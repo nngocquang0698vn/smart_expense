@@ -353,9 +353,9 @@ handleAddFab
 
 4 trang giới thiệu → trang cuối nhập tên → `setUserName` + `setOnboarded(true)`.
 
-### 8.9 Màn nhập nhanh full-screen (`quick_entry_screen.dart`)
+### 8.9 Nhập nhanh qua bottom sheet (`quick_entry_sheet.dart`)
 
-Luồng nhiều bước (`amount` → `details` → `media` → `notePending`) — dùng khi điều hướng riêng (không qua sheet chính của FAB). Logic lưu tương tự `quick_entry_sheet`.
+FAB → `add_options_sheet` → `showQuickEntrySheet` với `QuickEntryMode` (`tap` / `voice` / `receipt`). Form một trang: số tiền, danh mục, ngày, ghi chú, ảnh, ghi âm, cờ chờ xác nhận. Lưu qua `TransactionDraftResolver` + `repo.addQuick`.
 
 ---
 

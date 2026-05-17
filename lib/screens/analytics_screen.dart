@@ -1,6 +1,6 @@
 import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
-import "package:intl/intl.dart";
+import "../core/date_format.dart";
 
 import "../core/strings.dart";
 import "../theme/app_finance_colors.dart";
@@ -9,7 +9,9 @@ import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../features/reports/application/report_controller.dart";
 import "../features/reports/application/report_view_model.dart";
+import "../shared/widgets/app_empty_state.dart";
 import "../widgets/money.dart";
+import "../widgets/summary_card.dart";
 import "../widgets/page_header_sliver.dart";
 
 class AnalyticsScreen extends StatefulWidget {
@@ -65,8 +67,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   String _periodLabel() {
     if (_period == AnalyticsPeriod.custom && _custom != null) {
-      final fmt = DateFormat("dd/MM", "vi");
-      return "${fmt.format(_custom!.start)} – ${fmt.format(_custom!.end)}";
+      return "${formatReportAxis(_custom!.start)} – ${formatReportAxis(_custom!.end)}";
     }
     return _period.labelVi;
   }
@@ -134,26 +135,38 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 : Row(
                     children: [
                       Expanded(
-                        child: _AnalysisSummaryCard(
+                        child: SummaryCard(
                           label: AppStrings.income,
-                          amount: income,
-                          isIncome: true,
+                          child: MoneyText(
+                            income,
+                            isIncome: true,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _AnalysisSummaryCard(
+                        child: SummaryCard(
                           label: AppStrings.expense,
-                          amount: expense,
-                          isIncome: false,
+                          child: MoneyText(
+                            expense,
+                            isIncome: false,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _AnalysisSummaryCard(
+                        child: SummaryCard(
                           label: AppStrings.reportBalance,
-                          amount: net,
-                          isIncome: net >= 0,
+                          child: MoneyText(
+                            net.abs(),
+                            isIncome: net >= 0,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ),
                     ],
@@ -384,7 +397,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const Divider(height: 1),
                 Expanded(
                   child: list.isEmpty
-                      ? const Center(child: Text(AppStrings.noTransactions))
+                      ? const Center(
+                          child: AppEmptyState(
+                            message: AppStrings.noTransactions,
+                          ),
+                        )
                       : ListView.builder(
                           controller: scrollController,
                           itemCount: list.length,
@@ -392,12 +409,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             final t = list[i];
                             return ListTile(
                               title: Text(t.title),
-                              subtitle: Text(
-                                DateFormat(
-                                  "dd/MM/yyyy",
-                                  "vi",
-                                ).format(t.occurredAt),
-                              ),
+                              subtitle: Text(formatTransactionDate(t.occurredAt)),
                               trailing: MoneyText(
                                 t.amountVnd,
                                 isIncome: t.isIncome,
@@ -418,46 +430,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 // Widgets
 // ─────────────────────────────────────────────────────────────────────────────
-
-/// Summary card matching the home screen's _SummaryCard style.
-class _AnalysisSummaryCard extends StatelessWidget {
-  const _AnalysisSummaryCard({
-    required this.label,
-    required this.amount,
-    required this.isIncome,
-  });
-
-  final String label;
-  final int amount;
-  final bool isIncome;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: MoneyText(
-                amount.abs(),
-                isIncome: isIncome,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _ToggleTab extends StatelessWidget {
   const _ToggleTab({

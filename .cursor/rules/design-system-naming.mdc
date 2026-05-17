@@ -1,0 +1,13 @@
+---
+description: Design system naming for expense tracker UI components
+globs: lib/**/*.dart
+alwaysApply: false
+---
+
+# Design system naming
+
+This app is a **personal expense tracker**, not a banking app.
+
+- Do **not** use `Banking` in class names, file names, or public APIs (e.g. avoid `AppBankingCard`).
+- Prefer domain-aligned names: `AppFinanceCard`, `AppFinanceColors`, `Transaction*`, `Ledger*`.
+- UI may be fintech-inspired visually; naming must reflect expense/ledger domain.

@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
-import "package:intl/intl.dart";
-
 import "../core/constants.dart";
+import "../core/date_format.dart";
 import "../core/strings.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
@@ -70,7 +69,7 @@ class TxRow extends StatelessWidget {
               ),
             ),
           Text(
-            DateFormat.MMMd("vi").format(t.occurredAt),
+            formatDayShort(t.occurredAt),
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: finance.textMuted),
@@ -165,7 +164,7 @@ class TxDayHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            DateFormat.yMMMEd("vi").format(day),
+            formatDayHeader(day),
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: AppTypography.bold),

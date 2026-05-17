@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 
 import "../core/constants.dart";
-import "../shared/widgets/app_banking_card.dart";
+import "../shared/widgets/app_finance_card.dart";
 
 class SummaryCard extends StatelessWidget {
   const SummaryCard({super.key, required this.label, required this.child});
@@ -11,7 +11,7 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBankingCard(
+    return AppFinanceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -1,6 +1,6 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" show DateTimeRange;
-import "package:intl/intl.dart";
+import "../../../core/date_format.dart";
 
 import "../../../data/date_filter.dart";
 import "../../../data/ledger_repository.dart";
@@ -70,8 +70,7 @@ class ReportController extends ChangeNotifier {
 
   String periodLabel() {
     if (period == AnalyticsPeriod.custom && customRange != null) {
-      final formatter = DateFormat("dd/MM", "vi");
-      return "${formatter.format(customRange!.start)} - ${formatter.format(customRange!.end)}";
+      return "${formatReportAxis(customRange!.start)} - ${formatReportAxis(customRange!.end)}";
     }
     return period.labelVi;
   }

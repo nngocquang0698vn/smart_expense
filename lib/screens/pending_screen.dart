@@ -6,6 +6,7 @@ import "../data/ledger_repository.dart";
 import "../data/models/transaction_model.dart";
 import "../features/pending/application/pending_controller.dart";
 import "../shared/widgets/app_confirm_bottom_sheet.dart";
+import "../shared/widgets/app_empty_state.dart";
 import "../utils/tx_grouping.dart";
 import "../widgets/date_filter_sheet.dart";
 import "../widgets/page_header_sliver.dart";
@@ -92,7 +93,9 @@ class _PendingScreenState extends State<PendingScreen> {
             if (viewModel.isEmpty)
               const SliverFillRemaining(
                 hasScrollBody: false,
-                child: Center(child: Text(AppStrings.noPending)),
+                child: Center(
+                  child: AppEmptyState(message: AppStrings.noPending),
+                ),
               )
             else ...[
               for (final bucket in buckets) ...[

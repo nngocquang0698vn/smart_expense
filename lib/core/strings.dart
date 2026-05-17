@@ -17,6 +17,18 @@ abstract final class AppStrings {
   static const String delete = "Xoá";
   static const String discard = "Huỷ thay đổi";
   static const String continueEditing = "Tiếp tục chỉnh sửa";
+  static const String discardEntryTitle = "Huỷ nhập liệu?";
+  static const String discardEntryMessage =
+      "Mọi thay đổi chưa lưu sẽ bị mất. Bạn có chắc chắn muốn đóng không?";
+  static const String continueEntry = "Tiếp tục nhập";
+  static const String discardEditTitle = "Huỷ thay đổi?";
+  static const String discardEditMessage =
+      "Mọi thay đổi chưa lưu sẽ bị mất. Bạn có chắc chắn muốn đóng không?";
+  static const String deleteVoiceNoteTitle = "Xoá ghi âm?";
+  static const String deleteVoiceNoteMessage =
+      "Bản ghi này sẽ bị xoá khỏi giao dịch hiện tại.";
+  static const String keepVoiceNote = "Giữ lại";
+  static const String deleteVoiceNote = "Xoá ghi âm";
   static const String confirmPendingTitle = "Xác nhận giao dịch?";
   static const String confirmPendingMessage =
       "Giao dịch này sẽ được chuyển khỏi danh sách chờ đối soát.";

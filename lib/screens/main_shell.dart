@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:intl/intl.dart";
+import "../core/date_format.dart";
 
 import "../core/constants.dart";
 import "../core/strings.dart";
@@ -195,8 +195,8 @@ class _Sidebar extends StatelessWidget {
     final chrome =
         Theme.of(context).extension<AppChromeTheme>() ??
         AppChromeTheme.fromSeed(cs.primary, Theme.of(context).brightness);
-    final timeText = DateFormat("HH:mm", "vi").format(now);
-    final dateText = DateFormat("EEEE, d MMM y", "vi").format(now);
+    final timeText = formatShellTime(now);
+    final dateText = formatShellDate(now);
 
     return Container(
       width: 288,

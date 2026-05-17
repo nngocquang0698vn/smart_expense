@@ -1,4 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:smart_expense/core/strings.dart";
 import "package:smart_expense/features/transactions/application/transaction_draft_validator.dart";
 
 void main() {
@@ -38,6 +39,35 @@ void main() {
 
     expect(validator.validate(draft), isEmpty);
     expect(validator.isComplete(draft), isTrue);
+  });
+
+  group("firstUserMessage", () {
+    test("returns null when errors empty", () {
+      expect(
+        TransactionDraftValidator.firstUserMessage(const []),
+        isNull,
+      );
+    });
+
+    test("prioritizes amount over category", () {
+      expect(
+        TransactionDraftValidator.firstUserMessage(const [
+          TransactionDraftValidationError.categoryRequired,
+          TransactionDraftValidationError.amountRequired,
+        ]),
+        AppStrings.amountRequired,
+      );
+    });
+
+    test("includes title when requested", () {
+      expect(
+        TransactionDraftValidator.firstUserMessage(
+          const [TransactionDraftValidationError.titleRequired],
+          includeTitle: true,
+        ),
+        AppStrings.titleRequired,
+      );
+    });
   });
 
   group("TransactionDraftResolver", () {
