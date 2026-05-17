@@ -34,14 +34,16 @@ jobs:
 
       - name: Validate Cloudflare configuration
         env:
-          CF_PROJECT: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
+          CF_PROJECT: ${{ secrets.CLOUDFLARE_PROJECT_NAME || vars.CLOUDFLARE_PROJECT_NAME }}
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           missing=0
           if [ -z "$CF_PROJECT" ]; then
-            echo "::error::Repository variable CLOUDFLARE_PROJECT_NAME is empty or not set."
-            echo "Set it at: Settings → Secrets and variables → Actions → Variables"
+            echo "::error::CLOUDFLARE_PROJECT_NAME is empty or not set."
+            echo "Add it under Settings → Secrets and variables → Actions:"
+            echo "  - Secrets (recommended): CLOUDFLARE_PROJECT_NAME"
+            echo "  - or Variables: CLOUDFLARE_PROJECT_NAME"
             echo "Example value: smart-expense (must match your Cloudflare Pages project name)"
             missing=1
           fi
@@ -61,4 +63,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy build/web --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }}
+          command: pages deploy build/web --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME || vars.CLOUDFLARE_PROJECT_NAME }}

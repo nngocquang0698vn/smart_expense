@@ -65,25 +65,17 @@ Workflow: [`.github/workflows/deploy-cloudflare-pages.yml`](.github/workflows/de
 - Trigger: push nhánh `main` hoặc `workflow_dispatch`.
 - Chạy: `flutter analyze`, `flutter test`, `flutter build web --release --pwa-strategy=none`, deploy `build/web`.
 
-**GitHub Secrets (Settings → Secrets and variables → Actions):**
+**GitHub Secrets (Settings → Secrets and variables → Actions → Secrets):**
 
 | Secret | Mô tả |
 |--------|--------|
 | `CLOUDFLARE_API_TOKEN` | API token có quyền Cloudflare Pages |
 | `CLOUDFLARE_ACCOUNT_ID` | Account ID Cloudflare |
-
-**GitHub Variables (bắt buộc — nếu thiếu deploy sẽ lỗi `Must specify a project name`):**
-
-| Variable | Mô tả |
-|----------|--------|
 | `CLOUDFLARE_PROJECT_NAME` | Tên project Pages trên Cloudflare (vd. `smart-expense`) |
 
-Cách thêm variable:
+Tên project lấy từ [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → project của bạn (phải khớp chính xác).
 
-1. GitHub repo → **Settings** → **Secrets and variables** → **Actions**
-2. Tab **Variables** → **New repository variable**
-3. Name: `CLOUDFLARE_PROJECT_NAME`
-4. Value: tên project trong [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → project của bạn (phải khớp chính xác, không có khoảng trắng thừa)
+**Lưu ý:** GitHub tách **Secrets** và **Variables** — workflow đọc `CLOUDFLARE_PROJECT_NAME` từ **Secrets** trước, hoặc **Variables** nếu bạn đặt ở tab Variables thay vì Secrets.
 
 Tạo project Pages trên Cloudflare trước lần deploy đầu (hoặc để Wrangler tạo project cùng tên khi deploy lần đầu nếu account cho phép).
 
