@@ -1,19 +1,24 @@
-import "dart:convert";
-
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:image_picker/image_picker.dart";
 import "package:intl/intl.dart";
 
 import "../core/amount_input.dart";
-import "../shared/widgets/app_voice_note_section.dart";
 import "../core/constants.dart";
 import "../core/strings.dart";
-import "../theme/app_finance_colors.dart";
-import "../shared/widgets/app_confirm_bottom_sheet.dart";
-import "app_text_field.dart";
-import "form_amount_field.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
 import "../data/models/transaction_model.dart";
+import "../features/image_attachment/data/image_picker_service.dart";
+import "../features/image_attachment/data/image_storage_service.dart";
+import "../features/image_attachment/domain/image_attachment_model.dart";
+import "../features/image_attachment/presentation/widgets/image_attachment_list.dart";
+import "../features/voice_note/domain/audio_attachment_model.dart";
+import "../shared/widgets/app_confirm_bottom_sheet.dart";
+import "../shared/widgets/app_voice_note_section.dart";
+import "../theme/app_finance_colors.dart";
+import "app_text_field.dart";
+import "form_amount_field.dart";
 
 Future<void> showTransactionEditor(
   BuildContext context,
@@ -61,7 +66,10 @@ class _EditorBodyState extends State<_EditorBody> {
   String? _categoryId;
   late DateTime _date;
   late bool _pending;
-  String? _audioBase64;
+  AudioAttachmentModel? _audio;
+  final _images = <ImageAttachmentModel>[];
+  final _imagePicker = ImagePickerService();
+  final _imageStorage = ImageStorageService();
 
   // Snapshots for dirty detection
   late String _initTitle;
@@ -71,7 +79,8 @@ class _EditorBodyState extends State<_EditorBody> {
   late String? _initCategoryId;
   late DateTime _initDate;
   late bool _initPending;
-  late String? _initAudioBase64;
+  late AudioAttachmentModel? _initAudio;
+  late Set<String> _initImageIds;
 
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
@@ -81,7 +90,8 @@ class _EditorBodyState extends State<_EditorBody> {
       _categoryId != _initCategoryId ||
       _date != _initDate ||
       _pending != _initPending ||
-      _audioBase64 != _initAudioBase64;
+      _audio?.id != _initAudio?.id ||
+      !_setEquals(_images.map((image) => image.id).toSet(), _initImageIds);
 
   @override
   void initState() {
@@ -95,12 +105,13 @@ class _EditorBodyState extends State<_EditorBody> {
       _categoryId = e.categoryId;
       _date = e.occurredAt;
       _pending = e.pending;
-      _audioBase64 = e.audioBase64;
+      _audio = e.audio;
+      _images.addAll(e.images);
     } else {
       _income = false;
       _date = DateTime.now();
       _pending = widget.defaultPending;
-      _audioBase64 = null;
+      _audio = null;
     }
     // Snapshot initial values for dirty check
     _initTitle = _titleCtrl.text;
@@ -110,7 +121,8 @@ class _EditorBodyState extends State<_EditorBody> {
     _initCategoryId = _categoryId;
     _initDate = _date;
     _initPending = _pending;
-    _initAudioBase64 = _audioBase64;
+    _initAudio = _audio;
+    _initImageIds = _images.map((image) => image.id).toSet();
 
     // Rebuild on text changes so dirty flag updates
     _titleCtrl.addListener(() => setState(() {}));
@@ -153,7 +165,42 @@ class _EditorBodyState extends State<_EditorBody> {
         ],
       ),
     );
-    if (discard == true && mounted) Navigator.pop(context);
+    if (discard == true) {
+      await _deleteNewImages();
+      if (mounted) Navigator.pop(context);
+    }
+  }
+
+  bool _setEquals(Set<String> a, Set<String> b) {
+    return a.length == b.length && a.containsAll(b);
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picked = await _imagePicker.pick(source);
+      if (picked == null || !mounted) return;
+      setState(() {
+        _images.add(picked.image);
+        _pending = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Không thể lưu ảnh. Vui lòng thử lại.")),
+      );
+    }
+  }
+
+  void _removeImage(ImageAttachmentModel image) {
+    setState(() => _images.removeWhere((item) => item.id == image.id));
+  }
+
+  Future<void> _deleteNewImages() async {
+    for (final image in _images) {
+      if (!_initImageIds.contains(image.id)) {
+        await _imageStorage.delete(image);
+      }
+    }
   }
 
   Future<void> _saveTransaction(List<CategoryModel> cats) async {
@@ -194,7 +241,8 @@ class _EditorBodyState extends State<_EditorBody> {
         pending: _pending,
         complete: effectiveComplete,
         note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-        audioBase64: _audioBase64,
+        audio: _audio,
+        images: _images,
       );
     } else {
       await widget.repo.putTransaction(
@@ -207,7 +255,8 @@ class _EditorBodyState extends State<_EditorBody> {
           pending: _pending,
           complete: effectiveComplete,
           note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-          audioBase64: _audioBase64,
+          audio: _audio,
+          images: _images,
         ),
       );
     }
@@ -255,7 +304,7 @@ class _EditorBodyState extends State<_EditorBody> {
             .firstWhere((c) => c.isIncome == _income, orElse: () => cats.first)
             .id;
 
-        final hasImages = widget.existing?.imageBase64List.isNotEmpty ?? false;
+        final hasImages = _images.isNotEmpty;
         final finance = context.financeColors;
 
         return SafeArea(
@@ -408,39 +457,50 @@ class _EditorBodyState extends State<_EditorBody> {
 
                 const SizedBox(height: 12),
                 AppVoiceNoteSection(
-                  audioBase64: _audioBase64,
+                  audio: _audio,
                   showWhenEmpty: true,
-                  onChanged: (audioBase64) => setState(() {
-                    _audioBase64 = audioBase64;
-                    if (audioBase64 != null) _pending = true;
+                  onChanged: (audio) => setState(() {
+                    _audio = audio;
+                    if (audio != null) _pending = true;
                   }),
+                ),
+
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    if (!kIsWeb) ...[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _pickImage(ImageSource.camera),
+                          icon: const Icon(
+                            Icons.photo_camera_outlined,
+                            size: 16,
+                          ),
+                          label: const Text(AppStrings.takePhoto),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pickImage(ImageSource.gallery),
+                        icon: const Icon(
+                          Icons.photo_library_outlined,
+                          size: 16,
+                        ),
+                        label: const Text(AppStrings.pickPhoto),
+                      ),
+                    ),
+                  ],
                 ),
 
                 // Image thumbnails
                 if (hasImages) ...[
                   const SizedBox(height: 8),
-                  SizedBox(
+                  ImageAttachmentList(
+                    images: _images,
+                    onDelete: _removeImage,
                     height: 96,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: widget.existing!.imageBase64List.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(width: 8),
-                      itemBuilder: (context, i) {
-                        final bytes = base64Decode(
-                          widget.existing!.imageBase64List[i],
-                        );
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.memory(
-                            bytes,
-                            width: 96,
-                            height: 96,
-                            fit: BoxFit.cover,
-                          ),
-                        );
-                      },
-                    ),
                   ),
                 ],
 

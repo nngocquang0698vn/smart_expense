@@ -1,13 +1,4 @@
-import "dart:convert";
-import "dart:typed_data";
-
 abstract final class AudioStorageHelper {
-  static String bytesToBase64(List<int> bytes) => base64Encode(bytes);
-
-  static Uint8List bytesFromBase64(String audioBase64) {
-    return Uint8List.fromList(base64Decode(audioBase64));
-  }
-
   static String extensionForBytes(List<int> bytes) {
     if (isWav(bytes)) return ".wav";
     if (isWebm(bytes)) return ".webm";

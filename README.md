@@ -60,5 +60,5 @@ APK: `build/app/outputs/flutter-apk/app-debug.apk`
 
 - App có màn **Nhập nhanh** gồm: Thu/Chi, số tiền, ngày, danh mục phổ biến, ghi chú, nút mic ghi âm, đính kèm chụp/chọn ảnh, và toggle `Cần đối soát`.
 - Nếu giao dịch có audio hoặc ảnh đính kèm thì app tự ép `Cần đối soát = true`.
-- Ảnh và audio được lưu **offline trong Sembast** theo dạng Base64 (`imageBase64List`, `audioBase64`) gắn trực tiếp vào bản ghi giao dịch.
+- Ảnh và audio lưu offline riêng: Web dùng IndexedDB binary, Android dùng file trong app documents; transaction chỉ giữ metadata/reference.
 - Bản này **không tích hợp OCR** và **không tích hợp speech-to-text** (đúng theo requirement).

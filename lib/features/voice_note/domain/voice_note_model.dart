@@ -1,11 +1,8 @@
-class VoiceNoteModel {
-  const VoiceNoteModel({
-    required this.audioBase64,
-    required this.duration,
-    this.localPath,
-  });
+import "audio_attachment_model.dart";
 
-  final String audioBase64;
+class VoiceNoteModel {
+  const VoiceNoteModel({required this.audio, required this.duration});
+
+  final AudioAttachmentModel audio;
   final Duration duration;
-  final String? localPath;
 }

@@ -1,5 +1,3 @@
-import "dart:convert";
-
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
@@ -9,6 +7,11 @@ import "../core/amount_input.dart";
 import "../core/constants.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
+import "../features/image_attachment/data/image_picker_service.dart";
+import "../features/image_attachment/data/image_storage_service.dart";
+import "../features/image_attachment/domain/image_attachment_model.dart";
+import "../features/image_attachment/presentation/widgets/image_attachment_list.dart";
+import "../features/voice_note/domain/audio_attachment_model.dart";
 import "../shared/widgets/app_voice_note_section.dart";
 import "../theme/app_finance_colors.dart";
 import "../widgets/app_text_field.dart";
@@ -36,14 +39,15 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   final _titleCtrl = TextEditingController();
   final _amount = AmountInputController();
   final _noteCtrl = TextEditingController();
-  final _picker = ImagePicker();
+  final _imagePicker = ImagePickerService();
+  final _imageStorage = ImageStorageService();
 
   bool _income = false;
   bool _pending = false;
   DateTime _date = DateTime.now();
   String? _categoryId;
-  String? _audioBase64;
-  final List<String> _imageBase64List = [];
+  AudioAttachmentModel? _audio;
+  final List<ImageAttachmentModel> _images = [];
   _EntryStep _step = _EntryStep.amount;
 
   bool get _isLaptop {
@@ -51,14 +55,14 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     return kIsWeb || width >= 1000;
   }
 
-  bool get _hasMedia => _audioBase64 != null || _imageBase64List.isNotEmpty;
+  bool get _hasMedia => _audio != null || _images.isNotEmpty;
 
   bool get _isDirty =>
       _titleCtrl.text.trim().isNotEmpty ||
       _amount.value > 0 ||
       _noteCtrl.text.trim().isNotEmpty ||
-      _audioBase64 != null ||
-      _imageBase64List.isNotEmpty;
+      _audio != null ||
+      _images.isNotEmpty;
 
   @override
   void initState() {
@@ -105,6 +109,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         ],
       ),
     );
+    if (ok == true) {
+      await _deleteImages(_images);
+    }
     return ok == true;
   }
 
@@ -115,13 +122,30 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final file = await _picker.pickImage(source: source, imageQuality: 80);
-    if (file == null) return;
-    final bytes = await file.readAsBytes();
-    setState(() {
-      _imageBase64List.add(base64Encode(bytes));
-      _pending = true;
-    });
+    try {
+      final picked = await _imagePicker.pick(source);
+      if (picked == null || !mounted) return;
+      setState(() {
+        _images.add(picked.image);
+        _pending = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Không thể lưu ảnh. Vui lòng thử lại.")),
+      );
+    }
+  }
+
+  Future<void> _removeImage(ImageAttachmentModel image) async {
+    setState(() => _images.removeWhere((item) => item.id == image.id));
+    await _imageStorage.delete(image);
+  }
+
+  Future<void> _deleteImages(List<ImageAttachmentModel> images) async {
+    for (final image in images) {
+      await _imageStorage.delete(image);
+    }
   }
 
   bool _next(List<CategoryModel> all) {
@@ -151,7 +175,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         return true;
       case _EntryStep.media:
         if (widget.startMode == QuickEntryStartMode.receipt &&
-            _imageBase64List.isEmpty) {
+            _images.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Bạn cần ảnh hoá đơn để tiếp tục.")),
           );
@@ -183,8 +207,8 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
       pending: _pending,
       complete: !_pending,
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-      audioBase64: _audioBase64,
-      imageBase64List: _imageBase64List,
+      audio: _audio,
+      images: _images,
     );
     if (!mounted) return;
     Navigator.pop(context);
@@ -194,7 +218,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
   }
 
   Future<void> _saveVoiceOnly(List<CategoryModel> all) async {
-    if (_audioBase64 == null) {
+    if (_audio == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Bạn cần ghi âm trước khi xác nhận.")),
       );
@@ -208,7 +232,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
       categoryId: expense.id,
       pending: true,
       complete: false,
-      audioBase64: _audioBase64,
+      audio: _audio,
     );
     if (!mounted) return;
     Navigator.pop(context);
@@ -387,10 +411,10 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
           ),
           const SizedBox(height: 10),
           AppVoiceNoteSection(
-            audioBase64: _audioBase64,
-            onChanged: (b64) => setState(() {
-              _audioBase64 = b64;
-              if (b64 != null) _pending = true;
+            audio: _audio,
+            onChanged: (audio) => setState(() {
+              _audio = audio;
+              if (audio != null) _pending = true;
             }),
             maxRecordDuration: const Duration(minutes: 3),
           ),
@@ -415,6 +439,10 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
               ),
             ],
           ),
+          if (_images.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ImageAttachmentList(images: _images, onDelete: _removeImage),
+          ],
         ],
       );
     } else if (_step == _EntryStep.notePending) {
@@ -438,13 +466,8 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
           _row("Loại", _income ? "Thu nhập" : "Chi tiêu"),
           _row("Số tiền", "₫ ${_amount.displayText}"),
           _row("Ngày", DateFormat("dd/MM/yyyy").format(_date)),
-          _row("Audio", _audioBase64 != null ? "Có" : "Không"),
-          _row(
-            "Ảnh",
-            _imageBase64List.isEmpty
-                ? "Không"
-                : "${_imageBase64List.length} ảnh",
-          ),
+          _row("Audio", _audio != null ? "Có" : "Không"),
+          _row("Ảnh", _images.isEmpty ? "Không" : "${_images.length} ảnh"),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text("Cần đối soát"),
@@ -550,11 +573,11 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                   child: Align(
                     alignment: Alignment.center,
                     child: AppVoiceNoteSection(
-                      audioBase64: _audioBase64,
+                      audio: _audio,
                       autoStartRecording: true,
-                      onChanged: (b64) => setState(() {
-                        _audioBase64 = b64;
-                        if (b64 != null) _pending = true;
+                      onChanged: (audio) => setState(() {
+                        _audio = audio;
+                        if (audio != null) _pending = true;
                       }),
                     ),
                   ),

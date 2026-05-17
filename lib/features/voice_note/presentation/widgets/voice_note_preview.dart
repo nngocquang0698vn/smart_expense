@@ -1,11 +1,12 @@
 import "package:flutter/material.dart";
 
+import "../../domain/audio_attachment_model.dart";
 import "voice_note_player.dart";
 
 class VoiceNotePreview extends StatelessWidget {
   const VoiceNotePreview({
     super.key,
-    required this.audioBase64,
+    required this.audio,
     required this.showActions,
     required this.onShowActions,
     required this.onHideActions,
@@ -14,7 +15,7 @@ class VoiceNotePreview extends StatelessWidget {
     this.onError,
   });
 
-  final String audioBase64;
+  final AudioAttachmentModel audio;
   final bool showActions;
   final VoidCallback onShowActions;
   final VoidCallback onHideActions;
@@ -33,7 +34,7 @@ class VoiceNotePreview extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            VoiceNotePlayer(audioBase64: audioBase64, onError: onError),
+            VoiceNotePlayer(audio: audio, onError: onError),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 160),
               child: showActions

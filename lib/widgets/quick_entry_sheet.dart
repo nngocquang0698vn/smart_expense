@@ -1,5 +1,3 @@
-import "dart:convert";
-
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
@@ -10,6 +8,11 @@ import "../core/constants.dart";
 import "../core/strings.dart";
 import "../data/ledger_repository.dart";
 import "../data/models/category_model.dart";
+import "../features/image_attachment/data/image_picker_service.dart";
+import "../features/image_attachment/data/image_storage_service.dart";
+import "../features/image_attachment/domain/image_attachment_model.dart";
+import "../features/image_attachment/presentation/widgets/image_attachment_list.dart";
+import "../features/voice_note/domain/audio_attachment_model.dart";
 import "../shared/widgets/app_voice_note_section.dart";
 import "../theme/app_finance_colors.dart";
 import "app_text_field.dart";
@@ -60,13 +63,14 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
   late String _initTitle;
   late int _initAmount;
 
-  String? _audioBase64;
+  AudioAttachmentModel? _audio;
 
   // Images
-  final _imageBase64List = <String>[];
-  final _picker = ImagePicker();
+  final _images = <ImageAttachmentModel>[];
+  final _imagePicker = ImagePickerService();
+  final _imageStorage = ImageStorageService();
 
-  bool get _hasMedia => _audioBase64 != null || _imageBase64List.isNotEmpty;
+  bool get _hasMedia => _audio != null || _images.isNotEmpty;
 
   // Camera available on native platforms only
   bool get _showCamera => !kIsWeb;
@@ -75,8 +79,8 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       _titleCtrl.text != _initTitle ||
       _amount.value != _initAmount ||
       _noteCtrl.text.isNotEmpty ||
-      _audioBase64 != null ||
-      _imageBase64List.isNotEmpty;
+      _audio != null ||
+      _images.isNotEmpty;
 
   @override
   void initState() {
@@ -145,20 +149,39 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
         ],
       ),
     );
-    if (discard == true && mounted) Navigator.pop(context);
+    if (discard == true) {
+      await _deleteImages(_images);
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   // ── Image picking ──────────────────────────────────────────────────────────
 
   Future<void> _pickImage(ImageSource source) async {
-    final file = await _picker.pickImage(source: source, imageQuality: 80);
-    if (file == null) return;
-    final bytes = await file.readAsBytes();
-    if (!mounted) return;
-    setState(() {
-      _imageBase64List.add(base64Encode(bytes));
-      _pending = true;
-    });
+    try {
+      final picked = await _imagePicker.pick(source);
+      if (picked == null || !mounted) return;
+      setState(() {
+        _images.add(picked.image);
+        _pending = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Không thể lưu ảnh. Vui lòng thử lại.")),
+      );
+    }
+  }
+
+  Future<void> _removeImage(ImageAttachmentModel image) async {
+    setState(() => _images.removeWhere((item) => item.id == image.id));
+    await _imageStorage.delete(image);
+  }
+
+  Future<void> _deleteImages(List<ImageAttachmentModel> images) async {
+    for (final image in images) {
+      await _imageStorage.delete(image);
+    }
   }
 
   // ── Save logic ────────────────────────────────────────────────────────────
@@ -198,8 +221,8 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       pending: _pending,
       complete: effectiveComplete,
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-      audioBase64: _audioBase64,
-      imageBase64List: _imageBase64List,
+      audio: _audio,
+      images: _images,
     );
 
     if (!mounted) return;
@@ -314,14 +337,13 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 const SizedBox(height: 14),
 
                 // ── Audio section ─────────────────────────────────────────
-                if (widget.mode == QuickEntryMode.voice ||
-                    _audioBase64 != null) ...[
+                if (widget.mode == QuickEntryMode.voice || _audio != null) ...[
                   AppVoiceNoteSection(
-                    audioBase64: _audioBase64,
+                    audio: _audio,
                     autoStartRecording: widget.mode == QuickEntryMode.voice,
-                    onChanged: (b64) => setState(() {
-                      _audioBase64 = b64;
-                      if (b64 != null) _pending = true;
+                    onChanged: (audio) => setState(() {
+                      _audio = audio;
+                      if (audio != null) _pending = true;
                     }),
                   ),
                   const SizedBox(height: 14),
@@ -436,51 +458,12 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 ),
 
                 // ── Image thumbnails ──────────────────────────────────────
-                if (_imageBase64List.isNotEmpty) ...[
+                if (_images.isNotEmpty) ...[
                   const SizedBox(height: 10),
-                  SizedBox(
+                  ImageAttachmentList(
+                    images: _images,
+                    onDelete: _removeImage,
                     height: 80,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _imageBase64List.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(width: 8),
-                      itemBuilder: (context, i) => Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.memory(
-                              base64Decode(_imageBase64List[i]),
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            top: 2,
-                            right: 2,
-                            child: GestureDetector(
-                              onTap: () =>
-                                  setState(() => _imageBase64List.removeAt(i)),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.scrim.withValues(alpha: 0.62),
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: const EdgeInsets.all(2),
-                                child: Icon(
-                                  Icons.close,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ],
 

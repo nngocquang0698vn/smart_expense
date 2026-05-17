@@ -3,6 +3,7 @@ import "dart:async";
 import "package:flutter/foundation.dart";
 
 import "../../data/voice_recorder_service.dart";
+import "../../domain/audio_attachment_model.dart";
 import "../../domain/voice_note_model.dart";
 import "../../domain/voice_recording_status.dart";
 
@@ -97,12 +98,8 @@ class VoiceRecorderController extends ChangeNotifier {
     }
   }
 
-  void useExisting(String audioBase64) {
-    if (audioBase64.isEmpty) return;
-    voiceNote = VoiceNoteModel(
-      audioBase64: audioBase64,
-      duration: Duration.zero,
-    );
+  void useExisting(AudioAttachmentModel audio) {
+    voiceNote = VoiceNoteModel(audio: audio, duration: audio.duration);
     status = VoiceRecordingStatus.preview;
     errorMessage = null;
     notifyListeners();

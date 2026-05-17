@@ -1,15 +1,19 @@
 import "dart:async";
-import "dart:convert";
 
 import "package:just_audio/just_audio.dart";
 
 import "../../../core/audio_storage_helper.dart";
+import "../domain/audio_attachment_model.dart";
+import "audio_storage_service.dart";
 import "voice_playback_source_service.dart";
 
 class VoicePlayerService {
-  VoicePlayerService({AudioPlayer? player}) : _player = player ?? AudioPlayer();
+  VoicePlayerService({AudioPlayer? player, AudioStorageService? storage})
+    : _player = player ?? AudioPlayer(),
+      _storage = storage ?? AudioStorageService();
 
   final AudioPlayer _player;
+  final AudioStorageService _storage;
   VoicePlaybackSource? _source;
 
   Stream<PlayerState> get playerStateStream => _player.playerStateStream;
@@ -19,8 +23,8 @@ class VoicePlayerService {
   Duration? get duration => _player.duration;
   bool get playing => _player.playing;
 
-  Future<void> loadBase64(String audioBase64) async {
-    final bytes = base64Decode(audioBase64);
+  Future<void> load(AudioAttachmentModel audio) async {
+    final bytes = await _storage.read(audio);
     if (bytes.isEmpty) {
       throw StateError("File ghi âm đang trống.");
     }
@@ -41,6 +45,7 @@ class VoicePlayerService {
 
   Future<void> play() => _player.play();
   Future<void> pause() => _player.pause();
+  Future<void> stop() => _player.stop();
   Future<void> seek(Duration position) => _player.seek(position);
 
   Future<void> dispose() async {

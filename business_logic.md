@@ -110,8 +110,8 @@ main()
 | `pending` | `bool` | `true` = chờ đối soát (chưa vào lịch sử/tổng đã xác nhận) |
 | `complete` | `bool` | Gợi ý “đủ thông tin để xác nhận một chạm” (amount + category) |
 | `note` | `String?` | Ghi chú |
-| `audioBase64` | `String?` | Ghi âm WAV base64 |
-| `imageBase64List` | `List<String>` | Ảnh đính kèm (base64) |
+| `audio` | `Map?` | Metadata/reference audio local (`id`, `path`, `durationMs`, `createdAt`, `mimeType`, `extension`, `fileSize`) |
+| `images` | `List<Map>` | Metadata/reference ảnh local (`id`, `path`, `mimeType`, `extension`, `fileSize`, `width`, `height`, `createdAt`) |
 
 **Trạng thái giao dịch (logic nghiệp vụ)**
 

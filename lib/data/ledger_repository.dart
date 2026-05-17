@@ -2,6 +2,10 @@ import "package:flutter/material.dart";
 import "package:sembast/sembast.dart";
 import "package:uuid/uuid.dart";
 
+import "../features/image_attachment/data/image_storage_service.dart";
+import "../features/image_attachment/domain/image_attachment_model.dart";
+import "../features/voice_note/data/audio_storage_service.dart";
+import "../features/voice_note/domain/audio_attachment_model.dart";
 import "date_filter.dart";
 import "models/category_model.dart";
 import "models/transaction_model.dart";
@@ -10,6 +14,8 @@ class LedgerRepository extends ChangeNotifier {
   LedgerRepository(this._db);
 
   final Database _db;
+  final AudioStorageService _audioStorage = AudioStorageService();
+  final ImageStorageService _imageStorage = ImageStorageService();
   final _uuid = const Uuid();
 
   static final _meta = stringMapStoreFactory.store("meta");
@@ -280,17 +286,33 @@ class LedgerRepository extends ChangeNotifier {
   }
 
   Future<void> putTransaction(TransactionModel t) async {
+    final raw = await _transactions.record(t.id).get(_db);
+    final previous = raw == null ? null : TransactionModel.fromMap(t.id, raw);
     await _transactions.record(t.id).put(_db, t.toMap());
+    final previousAudio = previous?.audio;
+    if (previousAudio != null && previousAudio.id != t.audio?.id) {
+      await _audioStorage.delete(previousAudio);
+    }
+    await _deleteRemovedImages(previous?.images ?? const [], t.images);
     notifyListeners();
   }
 
   Future<void> deleteTransaction(String id) async {
+    final raw = await _transactions.record(id).get(_db);
+    final t = raw == null ? null : TransactionModel.fromMap(id, raw);
     await _transactions.record(id).delete(_db);
+    await _audioStorage.delete(t?.audio);
+    await _deleteImages(t?.images ?? const []);
     notifyListeners();
   }
 
   Future<void> clearAllTransactions() async {
+    final all = await allTransactions();
     await _transactions.delete(_db);
+    for (final t in all) {
+      await _audioStorage.delete(t.audio);
+      await _deleteImages(t.images);
+    }
     notifyListeners();
   }
 
@@ -310,8 +332,8 @@ class LedgerRepository extends ChangeNotifier {
     bool pending = false,
     bool complete = true,
     String? note,
-    String? audioBase64,
-    List<String> imageBase64List = const [],
+    AudioAttachmentModel? audio,
+    List<ImageAttachmentModel> images = const [],
   }) async {
     final t = TransactionModel(
       id: _uuid.v4(),
@@ -323,8 +345,8 @@ class LedgerRepository extends ChangeNotifier {
       pending: pending,
       complete: complete,
       note: note,
-      audioBase64: audioBase64,
-      imageBase64List: imageBase64List,
+      audio: audio,
+      images: images,
     );
     await putTransaction(t);
     return t;
@@ -404,5 +426,20 @@ class LedgerRepository extends ChangeNotifier {
         range,
       ).where((t) => !t.pending && t.categoryId == categoryId).toList()
       ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+  }
+
+  Future<void> _deleteRemovedImages(
+    List<ImageAttachmentModel> previous,
+    List<ImageAttachmentModel> next,
+  ) async {
+    final nextIds = next.map((image) => image.id).toSet();
+    final removed = previous.where((image) => !nextIds.contains(image.id));
+    await _deleteImages(removed);
+  }
+
+  Future<void> _deleteImages(Iterable<ImageAttachmentModel> images) async {
+    for (final image in images) {
+      await _imageStorage.delete(image);
+    }
   }
 }

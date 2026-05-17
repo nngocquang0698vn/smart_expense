@@ -1,3 +1,6 @@
+import "../../features/image_attachment/domain/image_attachment_model.dart";
+import "../../features/voice_note/domain/audio_attachment_model.dart";
+
 class TransactionModel {
   const TransactionModel({
     required this.id,
@@ -9,8 +12,8 @@ class TransactionModel {
     required this.pending,
     required this.complete,
     this.note,
-    this.audioBase64,
-    this.imageBase64List = const [],
+    this.audio,
+    this.images = const [],
   });
 
   final String id;
@@ -22,8 +25,11 @@ class TransactionModel {
   final bool pending;
   final bool complete;
   final String? note;
-  final String? audioBase64;
-  final List<String> imageBase64List;
+  final AudioAttachmentModel? audio;
+  final List<ImageAttachmentModel> images;
+
+  bool get hasAudio => audio != null;
+  bool get hasImages => images.isNotEmpty;
 
   Map<String, Object?> toMap() => {
     "title": title,
@@ -34,8 +40,8 @@ class TransactionModel {
     "pending": pending,
     "complete": complete,
     "note": note,
-    "audioBase64": audioBase64,
-    "imageBase64List": imageBase64List,
+    "audio": audio?.toMap(),
+    "images": images.map((image) => image.toMap()).toList(),
   };
 
   static TransactionModel fromMap(String id, Map<String, Object?> map) {
@@ -55,9 +61,13 @@ class TransactionModel {
       pending: map["pending"]! as bool,
       complete: map["complete"]! as bool,
       note: map["note"] as String?,
-      audioBase64: map["audioBase64"] as String?,
-      imageBase64List:
-          (map["imageBase64List"] as List?)?.cast<String>() ?? const [],
+      audio: AudioAttachmentModel.fromMap(map["audio"]),
+      images:
+          (map["images"] as List?)
+              ?.map(ImageAttachmentModel.fromMap)
+              .whereType<ImageAttachmentModel>()
+              .toList() ??
+          const [],
     );
   }
 
@@ -72,8 +82,8 @@ class TransactionModel {
     bool? pending,
     bool? complete,
     Object? note = _unset,
-    Object? audioBase64 = _unset,
-    List<String>? imageBase64List,
+    Object? audio = _unset,
+    List<ImageAttachmentModel>? images,
   }) {
     return TransactionModel(
       id: id,
@@ -85,10 +95,8 @@ class TransactionModel {
       pending: pending ?? this.pending,
       complete: complete ?? this.complete,
       note: note == _unset ? this.note : note as String?,
-      audioBase64: audioBase64 == _unset
-          ? this.audioBase64
-          : audioBase64 as String?,
-      imageBase64List: imageBase64List ?? this.imageBase64List,
+      audio: audio == _unset ? this.audio : audio as AudioAttachmentModel?,
+      images: images ?? this.images,
     );
   }
 }

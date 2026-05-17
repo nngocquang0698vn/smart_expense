@@ -1,17 +1,21 @@
 import "dart:async";
-import "dart:convert";
 
 import "package:record/record.dart";
 
+import "../../../core/audio_storage_helper.dart";
 import "../domain/voice_note_model.dart";
+import "audio_storage_service.dart";
 import "voice_note_file_service.dart";
 
 class VoiceRecorderService {
-  VoiceRecorderService({AudioRecorder? recorder})
-    : _recorder = recorder ?? AudioRecorder();
+  VoiceRecorderService({AudioRecorder? recorder, AudioStorageService? storage})
+    : _recorder = recorder ?? AudioRecorder(),
+      _storage = storage ?? AudioStorageService();
 
   final AudioRecorder _recorder;
+  final AudioStorageService _storage;
   RecordConfig? _config;
+  String? _extension;
   DateTime? _startedAt;
   Duration _recordedBeforePause = Duration.zero;
 
@@ -27,6 +31,7 @@ class VoiceRecorderService {
 
     final encoder = await _bestEncoder();
     final extension = _extensionForEncoder(encoder);
+    _extension = extension;
     final path = await VoiceNoteFileService.temporaryRecordingPath(extension);
     _config = RecordConfig(
       encoder: encoder,
@@ -74,11 +79,13 @@ class VoiceRecorderService {
       throw StateError("Bản ghi đang trống. Vui lòng ghi lại.");
     }
 
-    return VoiceNoteModel(
-      audioBase64: base64Encode(bytes),
+    final audio = await _storage.saveRecording(
+      bytes: bytes,
       duration: duration,
-      localPath: path,
+      mimeType: AudioStorageHelper.contentTypeForBytes(bytes),
+      extension: _extension ?? AudioStorageHelper.extensionForBytes(bytes),
     );
+    return VoiceNoteModel(audio: audio, duration: duration);
   }
 
   Duration get elapsed {

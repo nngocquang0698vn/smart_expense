@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 
 import "../../../../core/constants.dart";
+import "../../domain/audio_attachment_model.dart";
 import "../../domain/voice_recording_status.dart";
 import "../controllers/voice_recorder_controller.dart";
 import "voice_note_preview.dart";
@@ -8,15 +9,15 @@ import "voice_note_preview.dart";
 class VoiceRecorderInput extends StatefulWidget {
   const VoiceRecorderInput({
     super.key,
-    this.audioBase64,
+    this.audio,
     required this.onChanged,
     this.autoStartRecording = false,
     this.showWhenEmpty = true,
     this.maxRecordDuration = const Duration(minutes: 3),
   });
 
-  final String? audioBase64;
-  final ValueChanged<String?> onChanged;
+  final AudioAttachmentModel? audio;
+  final ValueChanged<AudioAttachmentModel?> onChanged;
   final bool autoStartRecording;
   final bool showWhenEmpty;
   final Duration maxRecordDuration;
@@ -36,8 +37,8 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
     _controller = VoiceRecorderController(
       maxDuration: widget.maxRecordDuration,
     );
-    if ((widget.audioBase64 ?? "").isNotEmpty) {
-      _controller.useExisting(widget.audioBase64!);
+    if (widget.audio != null) {
+      _controller.useExisting(widget.audio!);
     }
     if (widget.autoStartRecording) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _autoStart());
@@ -47,14 +48,13 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
   @override
   void didUpdateWidget(covariant VoiceRecorderInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.audioBase64 != widget.audioBase64 &&
-        (widget.audioBase64 ?? "").isNotEmpty) {
-      _controller.useExisting(widget.audioBase64!);
+    if (oldWidget.audio?.id != widget.audio?.id && widget.audio != null) {
+      _controller.useExisting(widget.audio!);
     }
   }
 
   Future<void> _autoStart() async {
-    if (_autoStarted || !mounted || (widget.audioBase64 ?? "").isNotEmpty) {
+    if (_autoStarted || !mounted || widget.audio != null) {
       return;
     }
     _autoStarted = true;
@@ -82,7 +82,7 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
   Future<void> _finish() async {
     final note = await _controller.finish();
     if (note != null) {
-      widget.onChanged(note.audioBase64);
+      widget.onChanged(note.audio);
       setState(() => _showPreviewActions = true);
     }
   }
@@ -131,7 +131,7 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
     final note = _controller.voiceNote;
     if (note == null) return;
     _controller.confirm();
-    widget.onChanged(note.audioBase64);
+    widget.onChanged(note.audio);
     _showMessage("Đã chọn ghi âm này.");
   }
 
@@ -143,7 +143,7 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
       builder: (context, _) {
         if (!widget.showWhenEmpty &&
             _controller.status == VoiceRecordingStatus.idle &&
-            (_controller.voiceNote?.audioBase64 ?? "").isEmpty) {
+            _controller.voiceNote == null) {
           return const SizedBox.shrink();
         }
 
@@ -191,7 +191,7 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
     if (note != null) {
       return VoiceNotePreview(
         key: const ValueKey("preview"),
-        audioBase64: note.audioBase64,
+        audio: note.audio,
         showActions: _showPreviewActions,
         onShowActions: () => setState(() => _showPreviewActions = true),
         onHideActions: () {

@@ -1,7 +1,12 @@
-import "dart:convert";
+import "dart:ui" as ui;
 
 import "package:flutter/services.dart";
 
+import "../core/audio_storage_helper.dart";
+import "../features/image_attachment/data/image_storage_service.dart";
+import "../features/image_attachment/domain/image_attachment_model.dart";
+import "../features/voice_note/data/audio_storage_service.dart";
+import "../features/voice_note/domain/audio_attachment_model.dart";
 import "ledger_repository.dart";
 
 /// Clears all transactions, sets the username to "Johny Nguyễn", and seeds
@@ -34,10 +39,30 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
 
   // ── Load demo media assets ────────────────────────────────────────────────
   final audioBytes = await rootBundle.load("assets/demo/audio_demo.mp3");
-  final audioB64 = base64Encode(audioBytes.buffer.asUint8List());
+  final audioData = audioBytes.buffer.asUint8List();
+  final audioStorage = AudioStorageService();
+  Future<AudioAttachmentModel> demoAudio() {
+    return audioStorage.saveRecording(
+      bytes: audioData,
+      duration: const Duration(seconds: 8),
+      mimeType: AudioStorageHelper.contentTypeForBytes(audioData),
+      extension: AudioStorageHelper.extensionForBytes(audioData),
+    );
+  }
 
   final imageBytes = await rootBundle.load("assets/demo/bill_demo.jpg");
-  final imageB64 = base64Encode(imageBytes.buffer.asUint8List());
+  final imageData = imageBytes.buffer.asUint8List();
+  final imageSize = await _imageSize(imageData);
+  final imageStorage = ImageStorageService();
+  Future<ImageAttachmentModel> demoImage() {
+    return imageStorage.save(
+      bytes: imageData,
+      mimeType: "image/jpeg",
+      extension: ".jpg",
+      width: imageSize.width,
+      height: imageSize.height,
+    );
+  }
 
   // ── Category lookup ───────────────────────────────────────────────────────
   final cats = await repo.categories();
@@ -52,8 +77,8 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     required String category,
     required DateTime date,
     String? note,
-    String? audio,
-    List<String> images = const [],
+    bool audio = false,
+    bool image = false,
   }) async {
     await repo.addQuick(
       title: title,
@@ -64,8 +89,8 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
       pending: false,
       complete: true,
       note: note,
-      audioBase64: audio,
-      imageBase64List: images,
+      audio: audio ? await demoAudio() : null,
+      images: image ? [await demoImage()] : const [],
     );
   }
 
@@ -78,8 +103,8 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     required bool isIncome,
     required DateTime date,
     String? note,
-    String? audio,
-    List<String> images = const [],
+    bool audio = false,
+    bool image = false,
   }) async {
     await repo.addQuick(
       title: title,
@@ -90,8 +115,8 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
       pending: true,
       complete: amount > 0,
       note: note,
-      audioBase64: audio,
-      imageBase64List: images,
+      audio: audio ? await demoAudio() : null,
+      images: image ? [await demoImage()] : const [],
     );
   }
 
@@ -106,7 +131,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Hoá đơn",
     date: d(2026, 2, 1),
     note: "Phòng trọ Q.Bình Thạnh",
-    images: [imageB64],
+    image: true,
   );
   await add(
     title: "Học tiếng Anh",
@@ -151,7 +176,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Hoá đơn",
     date: d(2026, 2, 8),
-    images: [imageB64],
+    image: true,
   );
   await add(
     title: "Cà phê chiều đồng nghiệp",
@@ -319,7 +344,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Sức khoẻ",
     date: d(2026, 2, 24),
-    images: [imageB64],
+    image: true,
   );
   await add(
     title: "Grab đi làm",
@@ -376,7 +401,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Hoá đơn",
     date: d(2026, 3, 1),
     note: "Phòng trọ Q.Bình Thạnh",
-    images: [imageB64],
+    image: true,
   );
   await add(
     title: "Học tiếng Anh",
@@ -385,7 +410,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Công việc",
     date: d(2026, 3, 3),
     note: "ILA tháng 3",
-    audio: audioB64,
+    audio: true,
   );
   await add(
     title: "Lương tháng 3",
@@ -421,7 +446,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Hoá đơn",
     date: d(2026, 3, 8),
-    images: [imageB64],
+    image: true,
   );
   await add(
     title: "Đặt sách lập trình",
@@ -537,7 +562,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Ăn uống",
     date: d(2026, 3, 19),
-    audio: audioB64,
+    audio: true,
   );
   await add(
     title: "Cà phê",
@@ -589,7 +614,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Du lịch",
     date: d(2026, 3, 24),
     note: "Vé xe + khách sạn + ăn uống 2 ngày",
-    audio: audioB64,
+    audio: true,
   );
   await add(
     title: "Mua đồ lưu niệm Đà Lạt",
@@ -648,7 +673,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Sức khoẻ",
     date: d(2026, 3, 31),
-    images: [imageB64],
+    image: true,
   );
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -662,7 +687,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Hoá đơn",
     date: d(2026, 4, 1),
     note: "Phòng trọ Q.Bình Thạnh",
-    images: [imageB64],
+    image: true,
   );
   await add(
     title: "Học tiếng Anh",
@@ -671,7 +696,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Công việc",
     date: d(2026, 4, 3),
     note: "ILA tháng 4 – quyết tâm học đều hơn",
-    audio: audioB64,
+    audio: true,
   );
   await add(
     title: "Lương tháng 4",
@@ -702,7 +727,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Hoá đơn",
     date: d(2026, 4, 8),
-    images: [imageB64],
+    image: true,
   );
   await add(
     title: "Cơm trưa bình dân",
@@ -865,7 +890,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Hoá đơn",
     date: d(2026, 5, 1),
     note: "Phòng trọ Q.Bình Thạnh",
-    images: [imageB64],
+    image: true,
   );
   await add(
     title: "Học tiếng Anh",
@@ -874,7 +899,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Công việc",
     date: d(2026, 5, 2),
     note: "ILA tháng 5",
-    audio: audioB64,
+    audio: true,
   );
   await add(
     title: "Tạp hoá đầu tháng",
@@ -944,7 +969,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Ăn uống",
     isIncome: false,
     date: recent(0),
-    audio: audioB64,
+    audio: true,
     note: "Ghi chú chi tiêu hôm nay",
   );
   await addPending(
@@ -953,7 +978,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Di chuyển",
     isIncome: false,
     date: recent(3),
-    audio: audioB64,
+    audio: true,
   );
   await addPending(
     title: "Ghi âm giao dịch ${_ts(recent(6))}",
@@ -961,7 +986,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Cà phê",
     isIncome: false,
     date: recent(6),
-    audio: audioB64,
+    audio: true,
     note: "Cần xác nhận số tiền",
   );
 
@@ -972,7 +997,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Tạp hoá",
     isIncome: false,
     date: recent(1),
-    images: [imageB64],
+    image: true,
     note: "Siêu thị Vinmart",
   );
   await addPending(
@@ -981,7 +1006,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Ăn uống",
     isIncome: false,
     date: recent(4),
-    images: [imageB64],
+    image: true,
   );
   await addPending(
     title: "Ảnh hoá đơn ${_ts(recent(8))}",
@@ -989,7 +1014,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Sức khoẻ",
     isIncome: false,
     date: recent(8),
-    images: [imageB64],
+    image: true,
     note: "Hoá đơn bệnh viện – chưa xác nhận số tiền",
   );
 
@@ -1034,4 +1059,14 @@ String _ts(DateTime dt) {
   final h = dt.hour.toString().padLeft(2, "0");
   final min = dt.minute.toString().padLeft(2, "0");
   return "$d/$m $h:$min";
+}
+
+Future<({int width, int height})> _imageSize(Uint8List bytes) async {
+  final codec = await ui.instantiateImageCodec(bytes);
+  final frame = await codec.getNextFrame();
+  final image = frame.image;
+  final size = (width: image.width, height: image.height);
+  image.dispose();
+  codec.dispose();
+  return size;
 }

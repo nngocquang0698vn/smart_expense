@@ -4,16 +4,17 @@ import "package:flutter/material.dart";
 import "package:just_audio/just_audio.dart";
 
 import "../../data/voice_player_service.dart";
+import "../../domain/audio_attachment_model.dart";
 
 class VoiceNotePlayer extends StatefulWidget {
   const VoiceNotePlayer({
     super.key,
-    required this.audioBase64,
+    required this.audio,
     this.onError,
     this.compact = false,
   });
 
-  final String audioBase64;
+  final AudioAttachmentModel audio;
   final ValueChanged<String>? onError;
   final bool compact;
 
@@ -41,7 +42,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
   @override
   void didUpdateWidget(covariant VoiceNotePlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.audioBase64 != widget.audioBase64) {
+    if (oldWidget.audio.id != widget.audio.id) {
       unawaited(_load());
     }
   }
@@ -80,7 +81,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
       _playing = false;
     });
     try {
-      await _player.loadBase64(widget.audioBase64);
+      await _player.load(widget.audio);
     } catch (_) {
       _error = "Không thể phát ghi âm này.";
       widget.onError?.call(_error!);
@@ -110,6 +111,12 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
       milliseconds: (_duration.inMilliseconds * value).round(),
     );
     await _player.seek(target);
+  }
+
+  Future<void> _stop() async {
+    if (_loading || _error != null) return;
+    await _player.stop();
+    await _player.seek(Duration.zero);
   }
 
   @override
@@ -155,6 +162,11 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : Icon(_playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+        ),
+        IconButton(
+          onPressed: _loading || _position == Duration.zero ? null : _stop,
+          tooltip: "Dừng",
+          icon: const Icon(Icons.stop_rounded),
         ),
         const SizedBox(width: 8),
         Expanded(

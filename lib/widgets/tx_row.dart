@@ -36,8 +36,8 @@ class TxRow extends StatelessWidget {
     final color = disabled
         ? cs.onSurfaceVariant
         : (cat?.color ?? cs.onSurfaceVariant);
-    final hasAudio = (t.audioBase64 ?? "").isNotEmpty;
-    final hasImages = t.imageBase64List.isNotEmpty;
+    final hasAudio = t.hasAudio;
+    final hasImages = t.hasImages;
 
     return AppTransactionTile(
       onTap: onTap,
