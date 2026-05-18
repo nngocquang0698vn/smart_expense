@@ -1,5 +1,5 @@
-import "../../../data/models/transaction_model.dart";
-import "../domain/entities/ledger_transaction.dart";
+import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 
 extension TransactionModelMapper on TransactionModel {
   LedgerTransaction toEntity() {

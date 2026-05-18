@@ -1,29 +1,28 @@
 import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
-import "../../../core/date_format.dart";
-import "../../../core/widgets/app_date_range_picker.dart";
-import "../../../core/formatters/money.dart";
-import "../../../core/strings.dart";
-import "../../../core/widgets/page_header_sliver.dart";
-import "../../../core/widgets/summary_card.dart";
-import "../../../data/date_filter.dart";
-import "../../../data/models/category_model.dart";
-import "../../../core/widgets/app_empty_state.dart";
-import "../../../core/theme/app_finance_colors.dart";
-import "../../transactions/domain/repositories/ledger_repository.dart";
-import "../application/report_controller.dart";
-import "../application/report_view_model.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:smart_expense/app/providers.dart";
+import "package:smart_expense/core/utils/date_format.dart";
+import "package:smart_expense/shared/components/app_date_range_picker.dart";
+import "package:smart_expense/core/utils/formatters/money.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/shared/components/page_header_sliver.dart";
+import "package:smart_expense/shared/components/summary_card.dart";
+import "package:smart_expense/features/transactions/data/date_filter.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/shared/components/app_empty_state.dart";
+import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart";
+import "package:smart_expense/features/reports/application/report_controller.dart";
+import "package:smart_expense/features/reports/application/report_view_model.dart";
 
-class AnalyticsScreen extends StatefulWidget {
-  const AnalyticsScreen({super.key, required this.repo});
-
-  final LedgerRepository repo;
+class AnalyticsScreen extends ConsumerStatefulWidget {
+  const AnalyticsScreen({super.key});
 
   @override
-  State<AnalyticsScreen> createState() => _AnalyticsScreenState();
+  ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen> {
+class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   late final ReportController _controller;
   int _touchedIndex = -1;
 
@@ -34,7 +33,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = ReportController(widget.repo)..load();
+    _controller = ReportController(ref.read(ledgerRepositoryProvider))..load();
     _controller.addListener(_resetTouchedSlice);
   }
 
@@ -86,7 +85,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     return CustomScrollView(
       slivers: [
-        const PageHeaderSliver(title: AppStrings.reportTitle),
+        PageHeaderSliver(title: context.l10n.reportTitle),
 
         // ── Period chips ──────────────────────────────────────────────────
         SliverToBoxAdapter(
@@ -136,7 +135,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     children: [
                       Expanded(
                         child: SummaryCard(
-                          label: AppStrings.income,
+                          label: context.l10n.income,
                           child: MoneyText(
                             income,
                             isIncome: true,
@@ -148,7 +147,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: SummaryCard(
-                          label: AppStrings.expense,
+                          label: context.l10n.expense,
                           child: MoneyText(
                             expense,
                             isIncome: false,
@@ -160,7 +159,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: SummaryCard(
-                          label: AppStrings.reportBalance,
+                          label: context.l10n.reportBalance,
                           child: MoneyText(
                             net.abs(),
                             isIncome: net >= 0,
@@ -184,7 +183,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               children: [
                 Expanded(
                   child: _ToggleTab(
-                    label: AppStrings.expense,
+                    label: context.l10n.expense,
                     icon: Icons.arrow_downward_rounded,
                     selected: !incomeSide,
                     color: context.financeColors.expenseAmount,
@@ -196,7 +195,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _ToggleTab(
-                    label: AppStrings.income,
+                    label: context.l10n.income,
                     icon: Icons.arrow_upward_rounded,
                     selected: incomeSide,
                     color: context.financeColors.incomeAmount,
@@ -226,7 +225,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppStrings.noDataForPeriod,
+                    context.l10n.noDataForPeriod,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                     ),
@@ -288,8 +287,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           : _DonutCenterIdle(
                               key: const ValueKey("idle"),
                               label: incomeSide
-                                  ? AppStrings.income
-                                  : AppStrings.expense,
+                                  ? context.l10n.income
+                                  : context.l10n.expense,
                               total: sumSlice,
                               count: slices.length,
                               isIncome: incomeSide,
@@ -308,7 +307,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                "${AppStrings.reportByCategory} · ${incomeSide ? AppStrings.income : AppStrings.expense}",
+                "${context.l10n.reportByCategory} · ${incomeSide ? context.l10n.income : context.l10n.expense}",
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: cs.onSurfaceVariant,
                   letterSpacing: 0.3,
@@ -368,11 +367,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Future<void> _openCategoryDrillDown(String categoryId, String name) async {
-    final list = await widget.repo.transactionsForCategory(
-      categoryId: categoryId,
-      period: _period,
-      custom: _custom,
-    );
+    final list = await ref
+        .read(ledgerRepositoryProvider)
+        .transactionsForCategory(
+          categoryId: categoryId,
+          period: _period,
+          custom: _custom,
+        );
     if (!mounted) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -397,9 +398,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const Divider(height: 1),
                 Expanded(
                   child: list.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: AppEmptyState(
-                            message: AppStrings.noTransactions,
+                            message: context.l10n.noTransactions,
                           ),
                         )
                       : ListView.builder(
@@ -409,7 +410,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             final t = list[i];
                             return ListTile(
                               title: Text(t.title),
-                              subtitle: Text(formatTransactionDate(t.occurredAt)),
+                              subtitle: Text(
+                                formatTransactionDate(t.occurredAt),
+                              ),
                               trailing: MoneyText(
                                 t.amountVnd,
                                 isIncome: t.isIncome,
@@ -516,7 +519,7 @@ class _DonutCenterIdle extends StatelessWidget {
           ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         Text(
-          "$count hạng mục",
+          "$count ${context.l10n.categoryNoun}",
           style: Theme.of(
             context,
           ).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),

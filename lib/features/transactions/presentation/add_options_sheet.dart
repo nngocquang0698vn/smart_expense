@@ -1,10 +1,10 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
-import "../../../core/constants.dart";
-import "../../../core/strings.dart";
-import "../domain/repositories/ledger_repository.dart";
-import "quick_entry_sheet.dart";
+import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
+import "package:smart_expense/features/transactions/presentation/quick_entry_sheet.dart";
 
 Future<void> handleAddFab(BuildContext context, LedgerRepository repo) async {
   final choice = await _showAddOptionsSheet(context);
@@ -31,7 +31,7 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
               Row(
                 children: [
                   Text(
-                    "Thêm nhanh",
+                    ctx.l10n.quickTransactionTitle,
                     style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -46,8 +46,8 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
               const SizedBox(height: 8),
               _OptionCard(
                 icon: Icons.touch_app,
-                title: "Chạm để nhập",
-                subtitle: "Nhập liệu cực nhanh với một lần chạm",
+                title: ctx.l10n.quickEntryTap,
+                subtitle: ctx.l10n.quickEntryTapSubtitle,
                 background: cs.primary,
                 foreground: cs.onPrimary,
                 onTap: () => Navigator.pop(ctx, QuickEntryMode.tap),
@@ -55,8 +55,8 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
               const SizedBox(height: 10),
               _OptionCard(
                 icon: Icons.mic,
-                title: AppStrings.record,
-                subtitle: "Ghi nhanh một bản ghi âm để đối soát sau",
+                title: ctx.l10n.record,
+                subtitle: ctx.l10n.quickEntryVoiceSubtitle,
                 background: cs.primaryContainer,
                 foreground: cs.onPrimaryContainer,
                 onTap: () => Navigator.pop(ctx, QuickEntryMode.voice),
@@ -67,10 +67,12 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
                 icon: kIsWeb
                     ? Icons.photo_library_outlined
                     : Icons.photo_camera,
-                title: kIsWeb ? "Chọn ảnh hoá đơn" : "Chụp ảnh hoá đơn",
+                title: kIsWeb
+                    ? ctx.l10n.quickEntryReceiptPickTitle
+                    : ctx.l10n.quickEntryReceiptCaptureTitle,
                 subtitle: kIsWeb
-                    ? "Chọn ảnh từ máy để lưu hoá đơn đối soát"
-                    : "Lưu ảnh hoá đơn để đối soát sau",
+                    ? ctx.l10n.quickEntryReceiptPickSubtitle
+                    : ctx.l10n.quickEntryReceiptCaptureSubtitle,
                 background: cs.primaryContainer,
                 foreground: cs.onPrimaryContainer,
                 onTap: () => Navigator.pop(ctx, QuickEntryMode.receipt),

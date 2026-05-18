@@ -1,4 +1,4 @@
-import "../../../data/models/category_model.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
 
 class ReportCategorySlice {
   const ReportCategorySlice({

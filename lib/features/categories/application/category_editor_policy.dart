@@ -1,6 +1,9 @@
-import "../../../core/strings.dart";
-import "../../../features/transactions/domain/repositories/ledger_repository.dart";
-import "../../../data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
+
+enum CategoryValidationError { nameRequired }
+
+enum CategoryDeleteBlockReason { systemCategory, inUse }
 
 class CategoryDraft {
   const CategoryDraft({
@@ -31,16 +34,13 @@ class CategoryDraft {
 }
 
 class CategoryValidationResult {
-  const CategoryValidationResult._({
-    required this.draft,
-    required this.message,
-  });
+  const CategoryValidationResult._({required this.draft, required this.error});
 
   factory CategoryValidationResult.valid(CategoryDraft draft) {
-    return CategoryValidationResult._(draft: draft, message: null);
+    return CategoryValidationResult._(draft: draft, error: null);
   }
 
-  factory CategoryValidationResult.invalid(String message) {
+  factory CategoryValidationResult.invalid(CategoryValidationError error) {
     return CategoryValidationResult._(
       draft: const CategoryDraft(
         name: "",
@@ -48,29 +48,29 @@ class CategoryValidationResult {
         colorValue: 0,
         isIncome: false,
       ),
-      message: message,
+      error: error,
     );
   }
 
   final CategoryDraft draft;
-  final String? message;
+  final CategoryValidationError? error;
 
-  bool get isValid => message == null;
+  bool get isValid => error == null;
 }
 
 class CategoryDeleteDecision {
-  const CategoryDeleteDecision._({required this.allowed, this.message});
+  const CategoryDeleteDecision._({required this.allowed, this.reason});
 
   factory CategoryDeleteDecision.allow() {
     return const CategoryDeleteDecision._(allowed: true);
   }
 
-  factory CategoryDeleteDecision.deny(String message) {
-    return CategoryDeleteDecision._(allowed: false, message: message);
+  factory CategoryDeleteDecision.deny(CategoryDeleteBlockReason reason) {
+    return CategoryDeleteDecision._(allowed: false, reason: reason);
   }
 
   final bool allowed;
-  final String? message;
+  final CategoryDeleteBlockReason? reason;
 }
 
 class CategoryEditorPolicy {
@@ -88,7 +88,9 @@ class CategoryEditorPolicy {
   CategoryValidationResult validate(CategoryDraft draft) {
     final normalized = draft.copyWith(name: draft.name.trim());
     if (normalized.name.isEmpty) {
-      return CategoryValidationResult.invalid(AppStrings.categoryNameRequired);
+      return CategoryValidationResult.invalid(
+        CategoryValidationError.nameRequired,
+      );
     }
     return CategoryValidationResult.valid(normalized);
   }
@@ -98,10 +100,12 @@ class CategoryEditorPolicy {
     required bool inUse,
   }) {
     if (isSystemCategory(category)) {
-      return CategoryDeleteDecision.deny(AppStrings.categorySystemDeleteDenied);
+      return CategoryDeleteDecision.deny(
+        CategoryDeleteBlockReason.systemCategory,
+      );
     }
     if (inUse) {
-      return CategoryDeleteDecision.deny(AppStrings.categoryInUseDeleteDenied);
+      return CategoryDeleteDecision.deny(CategoryDeleteBlockReason.inUse);
     }
     return CategoryDeleteDecision.allow();
   }

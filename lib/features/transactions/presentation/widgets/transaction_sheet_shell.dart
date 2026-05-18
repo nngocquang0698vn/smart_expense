@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 
-import "../../../../core/strings.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
 
 Future<void> showTransactionFormSheet(
   BuildContext context, {
@@ -40,7 +40,7 @@ class TransactionSheetHeader extends StatelessWidget {
         IconButton(
           onPressed: onClose,
           icon: const Icon(Icons.close),
-          tooltip: AppStrings.close,
+          tooltip: context.l10n.close,
         ),
       ],
     );

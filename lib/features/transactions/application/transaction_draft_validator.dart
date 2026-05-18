@@ -1,5 +1,3 @@
-import "../../../core/strings.dart";
-
 enum TransactionDraftValidationError {
   titleRequired,
   amountRequired,
@@ -21,20 +19,20 @@ class TransactionDraft {
 class TransactionDraftValidator {
   const TransactionDraftValidator();
 
-  /// First validation message suitable for snackbars, in priority order.
-  static String? firstUserMessage(
+  /// First validation error suitable for snackbars, in priority order.
+  static TransactionDraftValidationError? firstUserError(
     List<TransactionDraftValidationError> errors, {
     bool includeTitle = false,
   }) {
     if (includeTitle &&
         errors.contains(TransactionDraftValidationError.titleRequired)) {
-      return AppStrings.titleRequired;
+      return TransactionDraftValidationError.titleRequired;
     }
     if (errors.contains(TransactionDraftValidationError.amountRequired)) {
-      return AppStrings.amountRequired;
+      return TransactionDraftValidationError.amountRequired;
     }
     if (errors.contains(TransactionDraftValidationError.categoryRequired)) {
-      return AppStrings.categoryRequired;
+      return TransactionDraftValidationError.categoryRequired;
     }
     return null;
   }

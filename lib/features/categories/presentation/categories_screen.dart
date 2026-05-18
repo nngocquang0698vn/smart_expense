@@ -1,36 +1,36 @@
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import "../../../core/constants.dart";
-import "../../../core/strings.dart";
-import "../../../data/models/category_model.dart";
-import "../../../core/widgets/app_confirm_bottom_sheet.dart";
-import "../../../core/widgets/app_empty_state.dart";
-import "../../../core/widgets/app_finance_card.dart";
-import "../../../core/widgets/app_icon_button.dart";
-import "../../../core/widgets/app_loading_state.dart";
-import "../../../core/widgets/app_primary_button.dart";
-import "../../../core/widgets/app_scaffold.dart";
-import "../../../core/widgets/app_section_header.dart";
-import "../../transactions/domain/repositories/ledger_repository.dart";
-import "../application/categories_controller.dart";
-import "../application/category_editor_policy.dart";
+import "package:smart_expense/app/providers.dart";
+import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
+import "package:smart_expense/shared/components/app_empty_state.dart";
+import "package:smart_expense/shared/components/app_finance_card.dart";
+import "package:smart_expense/shared/components/app_icon_button.dart";
+import "package:smart_expense/shared/components/app_loading_state.dart";
+import "package:smart_expense/shared/components/app_primary_button.dart";
+import "package:smart_expense/shared/components/app_scaffold.dart";
+import "package:smart_expense/shared/components/app_section_header.dart";
+import "package:smart_expense/features/categories/application/categories_controller.dart";
+import "package:smart_expense/features/categories/application/category_editor_policy.dart";
 
-class CategoriesScreen extends StatefulWidget {
-  const CategoriesScreen({super.key, required this.repo});
-
-  final LedgerRepository repo;
+class CategoriesScreen extends ConsumerStatefulWidget {
+  const CategoriesScreen({super.key});
 
   @override
-  State<CategoriesScreen> createState() => _CategoriesScreenState();
+  ConsumerState<CategoriesScreen> createState() => _CategoriesScreenState();
 }
 
-class _CategoriesScreenState extends State<CategoriesScreen> {
+class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   late final CategoriesController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = CategoriesController(repo: widget.repo)..load();
+    _controller = CategoriesController(repo: ref.read(ledgerRepositoryProvider))
+      ..load();
   }
 
   @override
@@ -58,18 +58,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         final viewModel = _controller.viewModel;
 
         return AppScaffold(
-          title: AppStrings.category,
+          title: context.l10n.category,
           padding: EdgeInsets.zero,
           floatingActionButton: FloatingActionButton(
-            tooltip: AppStrings.addCategory,
+            tooltip: context.l10n.addCategory,
             onPressed: () => _openEditor(),
             child: const Icon(Icons.add),
           ),
           body: _controller.loading
-              ? const AppLoadingState(message: AppStrings.loading)
+              ? AppLoadingState(message: context.l10n.loading)
               : viewModel.isEmpty
-              ? const AppEmptyState(
-                  message: AppStrings.noCategories,
+              ? AppEmptyState(
+                  message: context.l10n.noCategories,
                   icon: Icons.category_outlined,
                 )
               : Center(
@@ -82,7 +82,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         bottom: AppInsets.listBottom,
                       ),
                       children: [
-                        AppSectionHeader(title: AppStrings.expense),
+                        AppSectionHeader(title: context.l10n.expense),
                         for (final category in viewModel.expense)
                           _CategoryTile(
                             category: category,
@@ -91,7 +91,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             onTap: () => _openEditor(existing: category),
                           ),
                         const SizedBox(height: AppSpacing.xs),
-                        AppSectionHeader(title: AppStrings.income),
+                        AppSectionHeader(title: context.l10n.income),
                         for (final category in viewModel.income)
                           _CategoryTile(
                             category: category,
@@ -126,10 +126,10 @@ class _CategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final subtitle = isSystem
-        ? AppStrings.categoryDefault
+        ? context.l10n.categoryDefault
         : category.enabled
         ? null
-        : AppStrings.categoryDisabled;
+        : context.l10n.categoryDisabled;
 
     return Opacity(
       opacity: category.enabled ? 1 : 0.48,
@@ -227,7 +227,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     setState(() => _saving = false);
 
     if (!result.isValid) {
-      _showMessage(result.message ?? AppStrings.genericError);
+      _showMessage(_categoryValidationMessage(result.error));
       return;
     }
     Navigator.of(context).pop();
@@ -240,15 +240,15 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     final decision = await widget.controller.canDelete(category);
     if (!mounted) return;
     if (!decision.allowed) {
-      _showMessage(decision.message ?? AppStrings.genericError);
+      _showMessage(_categoryDeleteMessage(decision.reason));
       return;
     }
 
     final confirmed = await AppConfirmBottomSheet.show(
       context,
-      title: AppStrings.deleteCategoryTitle,
+      title: context.l10n.deleteCategoryTitle,
       message: category.name,
-      confirmLabel: AppStrings.delete,
+      confirmLabel: context.l10n.delete,
       isDestructive: true,
     );
     if (!confirmed || !mounted) return;
@@ -261,6 +261,22 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _categoryValidationMessage(CategoryValidationError? error) {
+    return switch (error) {
+      CategoryValidationError.nameRequired => context.l10n.categoryNameRequired,
+      null => context.l10n.genericError,
+    };
+  }
+
+  String _categoryDeleteMessage(CategoryDeleteBlockReason? reason) {
+    return switch (reason) {
+      CategoryDeleteBlockReason.systemCategory =>
+        context.l10n.categorySystemDeleteDenied,
+      CategoryDeleteBlockReason.inUse => context.l10n.categoryInUseDeleteDenied,
+      null => context.l10n.genericError,
+    };
   }
 
   @override
@@ -288,7 +304,9 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      isEdit ? AppStrings.editCategory : AppStrings.newCategory,
+                      isEdit
+                          ? context.l10n.editCategory
+                          : context.l10n.newCategory,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -297,7 +315,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                   if (isEdit)
                     AppIconButton(
                       icon: Icons.delete_outline,
-                      tooltip: AppStrings.delete,
+                      tooltip: context.l10n.delete,
                       onPressed: _delete,
                     ),
                 ],
@@ -328,8 +346,8 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                   const SizedBox(height: AppSpacing.lg),
                   TextField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: AppStrings.categoryName,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.categoryName,
                       prefixIcon: Icon(Icons.edit_outlined),
                     ),
                     textCapitalization: TextCapitalization.sentences,
@@ -337,15 +355,15 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   SegmentedButton<bool>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: false,
-                        label: Text(AppStrings.expense),
+                        label: Text(context.l10n.expense),
                         icon: Icon(Icons.arrow_downward_rounded),
                       ),
                       ButtonSegment(
                         value: true,
-                        label: Text(AppStrings.income),
+                        label: Text(context.l10n.income),
                         icon: Icon(Icons.arrow_upward_rounded),
                       ),
                     ],
@@ -355,7 +373,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  _PickerLabel(label: AppStrings.categoryColor),
+                  _PickerLabel(label: context.l10n.categoryColor),
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.xs,
@@ -372,7 +390,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  _PickerLabel(label: AppStrings.categoryIcon),
+                  _PickerLabel(label: context.l10n.categoryIcon),
                   const SizedBox(height: AppSpacing.xs),
                   GridView.builder(
                     shrinkWrap: true,
@@ -399,7 +417,9 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   AppPrimaryButton(
-                    label: isEdit ? AppStrings.save : AppStrings.addCategory,
+                    label: isEdit
+                        ? context.l10n.save
+                        : context.l10n.addCategory,
                     icon: Icons.check,
                     isLoading: _saving,
                     onPressed: _save,

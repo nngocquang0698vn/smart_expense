@@ -1,8 +1,8 @@
 import "package:flutter/material.dart";
 
-import "../../../../core/constants.dart";
-import "../../../../core/strings.dart";
-import "../../../../core/theme/app_finance_colors.dart";
+import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart";
 
 class TransactionTypeToggle extends StatelessWidget {
   const TransactionTypeToggle({
@@ -30,9 +30,9 @@ class TransactionTypeToggle extends StatelessWidget {
       ),
       child: SegmentedButton<bool>(
         showSelectedIcon: showSelectedIcon,
-        segments: const [
-          ButtonSegment(value: false, label: Text(AppStrings.expense)),
-          ButtonSegment(value: true, label: Text(AppStrings.income)),
+        segments: [
+          ButtonSegment(value: false, label: Text(context.l10n.expense)),
+          ButtonSegment(value: true, label: Text(context.l10n.income)),
         ],
         selected: {isIncome},
         onSelectionChanged: (selection) {

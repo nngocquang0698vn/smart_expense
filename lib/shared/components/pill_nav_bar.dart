@@ -1,0 +1,102 @@
+import "package:flutter/material.dart";
+
+class PillNavItem {
+  const PillNavItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+}
+
+const _fabSlot = 2;
+
+class PillNavBar extends StatelessWidget {
+  const PillNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.items,
+    required this.onSelect,
+    required this.fab,
+  });
+
+  final int currentIndex;
+  final List<PillNavItem> items;
+  final ValueChanged<int> onSelect;
+  final Widget fab;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 6,
+      shadowColor: Colors.black26,
+      color: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 520),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: _itemsWithFab(),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _itemsWithFab() {
+    final children = <Widget>[];
+    for (var i = 0; i < items.length; i++) {
+      if (i == _fabSlot) {
+        children.add(fab);
+      }
+      children.add(
+        _NavIcon(
+          icon: items[i].icon,
+          selected: currentIndex == i,
+          onTap: () => onSelect(i),
+          tooltip: items[i].label,
+        ),
+      );
+    }
+    return children;
+  }
+}
+
+class _NavIcon extends StatelessWidget {
+  const _NavIcon({
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Icon(icon, color: selected ? cs.primary : cs.onSurfaceVariant),
+        ),
+      ),
+    );
+  }
+}

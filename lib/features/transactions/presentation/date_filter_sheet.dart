@@ -1,9 +1,9 @@
 import "package:flutter/material.dart";
 
-import "../../../core/strings.dart";
-import "../../../core/widgets/app_date_picker.dart";
-import "../../../core/widgets/app_date_range_picker.dart";
-import "../../../data/date_filter.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/shared/components/app_date_picker.dart";
+import "package:smart_expense/shared/components/app_date_range_picker.dart";
+import "package:smart_expense/features/transactions/data/date_filter.dart";
 
 Future<DateFilterSelection?> showDateFilterSheet(
   BuildContext context,
@@ -60,7 +60,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
       context: context,
       builder: (c) {
         return AlertDialog(
-          title: const Text(AppStrings.pickYearTitle),
+          title: Text(context.l10n.pickYearTitle),
           content: SizedBox(
             width: 280,
             height: 260,
@@ -132,7 +132,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                AppStrings.dateFilterTitle,
+                context.l10n.dateFilterTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
@@ -198,7 +198,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.pickMonth,
-                    title: AppStrings.dateFilterPickMonth,
+                    title: context.l10n.dateFilterPickMonth,
                     subtitle: sel.preset == DateFilterPreset.pickMonth
                         ? sel.label()
                         : null,
@@ -206,7 +206,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.pickYear,
-                    title: AppStrings.dateFilterPickYear,
+                    title: context.l10n.dateFilterPickYear,
                     subtitle: sel.preset == DateFilterPreset.pickYear
                         ? sel.label()
                         : null,
@@ -214,7 +214,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.custom,
-                    title: AppStrings.dateFilterCustomRange,
+                    title: context.l10n.dateFilterCustomRange,
                     subtitle: sel.preset == DateFilterPreset.custom
                         ? sel.label()
                         : null,
@@ -227,7 +227,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: FilledButton(
                 onPressed: () => Navigator.pop(context, sel),
-                child: const Text(AppStrings.apply),
+                child: Text(context.l10n.apply),
               ),
             ),
           ],
