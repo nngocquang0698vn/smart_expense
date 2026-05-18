@@ -1,5 +1,5 @@
-import "../../../data/models/category_model.dart";
-import "category_editor_policy.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/categories/application/category_editor_policy.dart";
 
 class CategoriesViewModel {
   CategoriesViewModel._({

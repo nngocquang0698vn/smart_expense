@@ -2,9 +2,9 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 
-import "../../../../core/strings.dart";
-import "../../../image_attachment/domain/image_attachment_model.dart";
-import "../../../image_attachment/presentation/widgets/image_attachment_list.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/attachments/image_attachment_list.dart";
 
 class TransactionImageAttachments extends StatelessWidget {
   const TransactionImageAttachments({
@@ -35,7 +35,7 @@ class TransactionImageAttachments extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => onPick(ImageSource.camera),
                   icon: const Icon(Icons.photo_camera_outlined, size: 16),
-                  label: const Text(AppStrings.takePhoto),
+                  label: Text(context.l10n.takePhoto),
                 ),
               ),
               const SizedBox(width: 8),
@@ -44,7 +44,7 @@ class TransactionImageAttachments extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => onPick(ImageSource.gallery),
                 icon: const Icon(Icons.photo_library_outlined, size: 16),
-                label: const Text(AppStrings.pickPhoto),
+                label: Text(context.l10n.pickPhoto),
               ),
             ),
           ],

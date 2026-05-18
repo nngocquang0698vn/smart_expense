@@ -1,10 +1,10 @@
 import "package:flutter/material.dart";
 
-import "../../../../data/date_filter.dart";
-import "../../../../data/models/category_model.dart";
-import "../../../../data/models/transaction_model.dart";
-import "../../../image_attachment/domain/image_attachment_model.dart";
-import "../../../voice_note/domain/audio_attachment_model.dart";
+import "package:smart_expense/features/transactions/data/date_filter.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 
 /// Contract for ledger persistence and queries.
 abstract class LedgerRepository extends ChangeNotifier {

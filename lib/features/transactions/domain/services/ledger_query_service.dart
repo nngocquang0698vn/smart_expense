@@ -1,6 +1,6 @@
-import "../../../../core/date_range.dart";
-import "../entities/finance_totals.dart";
-import "../entities/ledger_transaction.dart";
+import "package:smart_expense/core/utils/date_range.dart";
+import "package:smart_expense/features/transactions/domain/entities/finance_totals.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 
 class LedgerQueryService {
   const LedgerQueryService();

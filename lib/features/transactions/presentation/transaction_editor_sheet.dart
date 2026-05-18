@@ -1,26 +1,26 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
-import "../../../core/amount_input.dart";
-import "../../../core/strings.dart";
-import "../../../core/widgets/app_text_field.dart";
-import "../../../data/models/category_model.dart";
-import "../../../data/models/transaction_model.dart";
-import "../../../core/widgets/app_confirm_bottom_sheet.dart";
-import "../../../core/widgets/app_discard_dialog.dart";
-import "../../../core/widgets/app_primary_button.dart";
-import "../../../core/widgets/app_voice_note_section.dart";
-import "../../../core/theme/app_finance_colors.dart";
-import "../../categories/application/category_selection_resolver.dart";
-import "../../image_attachment/data/image_picker_service.dart";
-import "../../image_attachment/data/image_storage_service.dart";
-import "../../image_attachment/domain/image_attachment_model.dart";
-import "../../voice_note/domain/audio_attachment_model.dart";
-import "../application/transaction_draft_validator.dart";
-import "../domain/repositories/ledger_repository.dart";
-import "../../../core/widgets/app_date_picker.dart";
-import "widgets/transaction_entry_form.dart";
-import "widgets/transaction_sheet_shell.dart";
+import "package:smart_expense/core/utils/amount_input.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/shared/components/app_text_field.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
+import "package:smart_expense/shared/components/app_discard_dialog.dart";
+import "package:smart_expense/shared/components/app_primary_button.dart";
+import "package:smart_expense/shared/components/app_voice_note_section.dart";
+import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart";
+import "package:smart_expense/features/categories/application/category_selection_resolver.dart";
+import "package:smart_expense/features/transactions/data/attachments/image_picker_service.dart";
+import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
+import "package:smart_expense/features/transactions/application/transaction_draft_validator.dart";
+import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
+import "package:smart_expense/shared/components/app_date_picker.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_sheet_shell.dart";
 
 Future<void> showTransactionEditor(
   BuildContext context,
@@ -165,7 +165,7 @@ class _EditorBodyState extends State<_EditorBody> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.imageSaveFailed)));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.imageSaveFailed)));
     }
   }
 
@@ -200,14 +200,14 @@ class _EditorBodyState extends State<_EditorBody> {
         requireTitle: true,
       ),
     );
-    final message = TransactionDraftValidator.firstUserMessage(
+    final error = TransactionDraftValidator.firstUserError(
       draft.errors,
       includeTitle: true,
     );
-    if (message != null) {
+    if (error != null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ).showSnackBar(SnackBar(content: Text(_validationMessage(error))));
       return;
     }
 
@@ -248,8 +248,8 @@ class _EditorBodyState extends State<_EditorBody> {
       SnackBar(
         content: Text(
           _pending
-              ? AppStrings.savePendingSuccess
-              : AppStrings.saveTransactionSuccess,
+              ? context.l10n.savePendingSuccess
+              : context.l10n.saveTransactionSuccess,
         ),
       ),
     );
@@ -258,15 +258,26 @@ class _EditorBodyState extends State<_EditorBody> {
   Future<void> _delete() async {
     final confirmed = await AppConfirmBottomSheet.show(
       context,
-      title: AppStrings.deleteTransactionTitle,
-      message: AppStrings.deleteTransactionMessage,
-      confirmLabel: AppStrings.delete,
+      title: context.l10n.deleteTransactionTitle,
+      message: context.l10n.deleteTransactionMessage,
+      confirmLabel: context.l10n.delete,
       isDestructive: true,
     );
     if (!confirmed || !mounted) return;
     await widget.repo.deleteTransaction(widget.existing!.id);
     if (!mounted) return;
     Navigator.pop(context);
+  }
+
+  String _validationMessage(TransactionDraftValidationError error) {
+    return switch (error) {
+      TransactionDraftValidationError.titleRequired =>
+        context.l10n.titleRequired,
+      TransactionDraftValidationError.amountRequired =>
+        context.l10n.amountRequired,
+      TransactionDraftValidationError.categoryRequired =>
+        context.l10n.categoryRequired,
+    };
   }
 
   @override
@@ -301,8 +312,8 @@ class _EditorBodyState extends State<_EditorBody> {
                 // Header row with close button
                 TransactionSheetHeader(
                   title: widget.existing == null
-                      ? AppStrings.addTransaction
-                      : AppStrings.editTransaction,
+                      ? context.l10n.addTransaction
+                      : context.l10n.editTransaction,
                   onClose: _handleClose,
                 ),
                 const SizedBox(height: 14),
@@ -310,7 +321,7 @@ class _EditorBodyState extends State<_EditorBody> {
                 TransactionEntryForm(
                   titleField: AppTextField(
                     controller: _titleCtrl,
-                    labelText: AppStrings.transactionTitle,
+                    labelText: context.l10n.transactionTitle,
                   ),
                   amountController: _amount,
                   noteController: _noteCtrl,
@@ -346,9 +357,9 @@ class _EditorBodyState extends State<_EditorBody> {
                   ],
                   categorySection: DropdownButtonFormField<String>(
                     dropdownColor: finance.sheetBackground,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: finance.fieldText,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: finance.fieldText),
                     // ignore: deprecated_member_use
                     value: dropdownValue,
                     items: categoryItems
@@ -369,8 +380,8 @@ class _EditorBodyState extends State<_EditorBody> {
                         )
                         .toList(),
                     onChanged: (v) => setState(() => _categoryId = v),
-                    decoration: const InputDecoration(
-                      labelText: AppStrings.category,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.category,
                     ),
                   ),
                 ),
@@ -378,7 +389,7 @@ class _EditorBodyState extends State<_EditorBody> {
 
                 // ── Action buttons ───────────────────────────────────────
                 AppPrimaryButton(
-                  label: AppStrings.save,
+                  label: context.l10n.save,
                   icon: Icons.save_rounded,
                   onPressed: () => _saveTransaction(cats),
                 ),
@@ -393,7 +404,7 @@ class _EditorBodyState extends State<_EditorBody> {
                     ),
                     onPressed: _delete,
                     icon: const Icon(Icons.delete_outline, size: 18),
-                    label: const Text(AppStrings.deleteTransaction),
+                    label: Text(context.l10n.deleteTransaction),
                   ),
                 ],
               ],

@@ -1,43 +1,49 @@
 import "package:flutter/material.dart";
-import "../core/date_format.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:smart_expense/core/utils/date_format.dart";
 
-import "../core/constants.dart";
-import "../core/strings.dart";
-import "../core/widgets/fab_center.dart";
-import "../core/widgets/pill_nav_bar.dart";
-import "../core/widgets/pwa_install_banner_host.dart";
-import "../features/home/presentation/home_screen.dart";
-import "../features/pending/presentation/pending_screen.dart";
-import "../features/reports/presentation/analytics_screen.dart";
-import "../features/settings/presentation/profile_screen.dart";
-import "../features/transactions/presentation/add_options_sheet.dart";
-import "../core/theme/app_chrome_theme.dart";
-import "../core/theme/app_layout_theme.dart";
-import "repo_scope.dart";
+import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/shared/components/fab_center.dart";
+import "package:smart_expense/shared/components/pill_nav_bar.dart";
+import "package:smart_expense/shared/components/pwa_install_banner_host.dart";
+import "package:smart_expense/features/dashboard/presentation/dashboard_screen.dart";
+import "package:smart_expense/features/transactions/presentation/pending/pending_screen.dart";
+import "package:smart_expense/features/reports/presentation/analytics_screen.dart";
+import "package:smart_expense/features/settings/presentation/profile_screen.dart";
+import "package:smart_expense/features/transactions/presentation/add_options_sheet.dart";
+import "package:smart_expense/shared/design_system/theme/app_chrome_theme.dart";
+import "package:smart_expense/shared/design_system/theme/app_layout_theme.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/app/providers.dart";
 
 // Navigation item descriptor — keeps the desktop and mobile nav in sync.
 class _NavItem {
-  const _NavItem({required this.icon, required this.label});
+  const _NavItem({required this.icon, required this.labelOf});
 
   final IconData icon;
-  final String label;
+  final String Function(AppLocalizations l10n) labelOf;
 }
 
 const _navItems = [
-  _NavItem(icon: Icons.home_rounded, label: AppStrings.navHome),
-  _NavItem(icon: Icons.fact_check_rounded, label: AppStrings.navPending),
-  _NavItem(icon: Icons.pie_chart_rounded, label: AppStrings.navAnalytics),
-  _NavItem(icon: Icons.person_rounded, label: AppStrings.navProfile),
+  _NavItem(icon: Icons.home_rounded, labelOf: _homeLabel),
+  _NavItem(icon: Icons.fact_check_rounded, labelOf: _pendingLabel),
+  _NavItem(icon: Icons.pie_chart_rounded, labelOf: _analyticsLabel),
+  _NavItem(icon: Icons.person_rounded, labelOf: _profileLabel),
 ];
 
-class MainShell extends StatefulWidget {
+String _homeLabel(AppLocalizations l10n) => l10n.navHome;
+String _pendingLabel(AppLocalizations l10n) => l10n.navPending;
+String _analyticsLabel(AppLocalizations l10n) => l10n.navAnalytics;
+String _profileLabel(AppLocalizations l10n) => l10n.navProfile;
+
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> {
   int _page = 0;
 
   void _goPending() => setState(() => _page = 1);
@@ -46,27 +52,35 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final repo = RepoScope.of(context);
+    final repo = ref.watch(ledgerRepositoryProvider);
+    final l10n = context.l10n;
     final pages = [
-      HomeScreen(repo: repo, onOpenPendingTab: _goPending),
-      PendingScreen(repo: repo),
-      AnalyticsScreen(repo: repo),
-      ProfileScreen(repo: repo, onOpenPending: _goPending),
+      DashboardScreen(onOpenPendingTab: _goPending),
+      const PendingScreen(),
+      const AnalyticsScreen(),
+      ProfileScreen(onOpenPending: _goPending),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < AppBreakpoints.desktop;
+        final navItems = _navItems
+            .map(
+              (item) => PillNavItem(icon: item.icon, label: item.labelOf(l10n)),
+            )
+            .toList(growable: false);
         return isMobile
             ? _MobileShell(
                 page: _page,
                 pages: pages,
+                navItems: navItems,
                 onSelect: _selectPage,
                 onFab: () => handleAddFab(context, repo),
               )
             : _DesktopShell(
                 page: _page,
                 pages: pages,
+                navItems: navItems,
                 onSelect: _selectPage,
                 onFab: () => handleAddFab(context, repo),
               );
@@ -81,12 +95,14 @@ class _MobileShell extends StatelessWidget {
   const _MobileShell({
     required this.page,
     required this.pages,
+    required this.navItems,
     required this.onSelect,
     required this.onFab,
   });
 
   final int page;
   final List<Widget> pages;
+  final List<PillNavItem> navItems;
   final ValueChanged<int> onSelect;
   final VoidCallback onFab;
 
@@ -110,6 +126,7 @@ class _MobileShell extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(16, 0, 16, 12.0 + sysBtm),
           child: PillNavBar(
             currentIndex: page,
+            items: navItems,
             onSelect: onSelect,
             fab: FabCenter(onPressed: onFab),
           ),
@@ -125,12 +142,14 @@ class _DesktopShell extends StatelessWidget {
   const _DesktopShell({
     required this.page,
     required this.pages,
+    required this.navItems,
     required this.onSelect,
     required this.onFab,
   });
 
   final int page;
   final List<Widget> pages;
+  final List<PillNavItem> navItems;
   final ValueChanged<int> onSelect;
   final VoidCallback onFab;
 
@@ -151,7 +170,12 @@ class _DesktopShell extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Sidebar(now: now, selectedIndex: page, onSelect: onSelect),
+                _Sidebar(
+                  now: now,
+                  items: navItems,
+                  selectedIndex: page,
+                  onSelect: onSelect,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
@@ -188,11 +212,13 @@ class _DesktopShell extends StatelessWidget {
 class _Sidebar extends StatelessWidget {
   const _Sidebar({
     required this.now,
+    required this.items,
     required this.selectedIndex,
     required this.onSelect,
   });
 
   final DateTime now;
+  final List<PillNavItem> items;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
 
@@ -249,7 +275,7 @@ class _Sidebar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          ..._navItems.asMap().entries.map(
+          ...items.asMap().entries.map(
             (e) => _SidebarNavItem(
               icon: e.value.icon,
               label: e.value.label,

@@ -1,49 +1,47 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import "../../../core/constants.dart";
-import "../../../core/pwa/pwa_install_service.dart";
-import "../../../core/pwa/pwa_scope.dart";
-import "../../../core/strings.dart";
-import "../../../core/widgets/pwa_install_guide_sheet.dart";
-import "../../../core/theme_notifier.dart";
-import "../../../core/theme_presets.dart";
-import "../../../core/theme_settings.dart";
-import "../../../core/widgets/page_header_sliver.dart";
-import "../../dev/demo_seed.dart";
-import "../../../core/widgets/app_confirm_bottom_sheet.dart";
-import "../../categories/presentation/categories_screen.dart";
-import "../../transactions/domain/repositories/ledger_repository.dart";
-import "../../transactions/presentation/add_options_sheet.dart";
+import "package:smart_expense/app/providers.dart";
+import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_service.dart";
+import "package:smart_expense/core/utils/pwa/pwa_scope.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/shared/components/pwa_install_guide_sheet.dart";
+import "package:smart_expense/app/theme/theme_presets.dart";
+import "package:smart_expense/app/theme/theme_settings.dart";
+import "package:smart_expense/shared/components/page_header_sliver.dart";
+import "package:smart_expense/core/config/demo_seed.dart";
+import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
+import "package:smart_expense/features/categories/presentation/categories_screen.dart";
+import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
+import "package:smart_expense/features/transactions/presentation/add_options_sheet.dart";
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({
-    super.key,
-    required this.repo,
-    required this.onOpenPending,
-  });
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key, required this.onOpenPending});
 
-  final LedgerRepository repo;
   final VoidCallback onOpenPending;
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameCtrl = TextEditingController();
+  late final LedgerRepository _repo;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    widget.repo.addListener(_onRepo);
+    _repo = ref.read(ledgerRepositoryProvider);
+    _repo.addListener(_onRepo);
     _load();
   }
 
   @override
   void dispose() {
-    widget.repo.removeListener(_onRepo);
+    _repo.removeListener(_onRepo);
     _nameCtrl.dispose();
     super.dispose();
   }
@@ -51,7 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _onRepo() => _load();
 
   Future<void> _load() async {
-    final m = await widget.repo.getMeta();
+    final m = await _repo.getMeta();
     if (!mounted) return;
     setState(() {
       _nameCtrl.text = (m["userName"] as String?) ?? "";
@@ -60,20 +58,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveName() async {
-    await widget.repo.setUserName(_nameCtrl.text.trim());
+    await _repo.setUserName(_nameCtrl.text.trim());
     if (mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Đã lưu tên")));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.nameSaved)));
     }
   }
 
   Future<void> _populateJohny() async {
     final confirmed = await AppConfirmBottomSheet.show(
       context,
-      title: AppStrings.demoDataTitle,
-      message: AppStrings.demoDataMessage,
-      confirmLabel: "Nạp dữ liệu",
+      title: context.l10n.demoDataTitle,
+      message: context.l10n.demoDataMessage,
+      confirmLabel: context.l10n.demoDataConfirm,
       isDestructive: true,
     );
     if (!confirmed) return;
@@ -83,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const PopScope(
+      builder: (_) => PopScope(
         canPop: false,
         child: Center(
           child: Card(
@@ -94,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text("Đang nạp dữ liệu…"),
+                  Text(context.l10n.demoDataLoading),
                 ],
               ),
             ),
@@ -105,13 +103,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     var seeded = false;
     try {
-      await populateJohnyData(widget.repo);
+      await populateJohnyData(_repo);
       seeded = true;
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text(AppStrings.genericError)));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.genericError)));
       }
     } finally {
       if (mounted) Navigator.of(context).pop(); // dismiss loading
@@ -119,8 +117,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (!mounted || !seeded) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Đã nạp xong dữ liệu Johny Nguyễn!"),
+      SnackBar(
+        content: Text(context.l10n.demoDataLoaded),
         duration: Duration(seconds: 3),
       ),
     );
@@ -129,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildAppearanceSection(BuildContext context) {
-    final notifier = ThemeScope.of(context);
+    final notifier = ref.watch(themeNotifierProvider);
     final settings = notifier.settings;
 
     return Padding(
@@ -137,13 +135,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Giao diện", style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            context.l10n.appearanceTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 12),
 
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text("Chế độ tối"),
-            subtitle: const Text("Giao diện tối, dễ nhìn ban đêm"),
+            title: Text(context.l10n.darkModeTitle),
+            subtitle: Text(context.l10n.darkModeSubtitle),
             value: settings.themePreference.isDark,
             onChanged: (v) => notifier.update(
               settings.copyWith(
@@ -155,10 +156,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text("Màu sắc khác"),
-            subtitle: const Text(
-              "Chọn thêm màu chủ đạo thay cho ngọc lục bảo mặc định",
-            ),
+            title: Text(context.l10n.accentColorsTitle),
+            subtitle: Text(context.l10n.accentColorsSubtitle),
             value: settings.enableAccentColors,
             onChanged: (v) => notifier.update(
               settings.copyWith(
@@ -182,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  "Ngọc lục bảo (mặc định)",
+                  context.l10n.defaultGreenPreset,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -193,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (settings.enableAccentColors) ...[
             const SizedBox(height: 16),
             Text(
-              "Màu chủ đạo",
+              context.l10n.seedColorLabel,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -228,7 +227,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Tuỳ chỉnh", style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                context.l10n.customizationTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 12),
               // Name row stretches to full column width so "Lưu" aligns with ">"
               Row(
@@ -237,8 +239,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Expanded(
                     child: TextField(
                       controller: _nameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: "Tên người dùng",
+                      decoration: InputDecoration(
+                        labelText: context.l10n.userNameLabel,
                         isDense: true,
                       ),
                       onSubmitted: (_) => _saveName(),
@@ -247,7 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 10),
                   FilledButton.tonal(
                     onPressed: _saveName,
-                    child: const Text("Lưu"),
+                    child: Text(context.l10n.save),
                   ),
                 ],
               ),
@@ -256,28 +258,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         ListTile(
           leading: const Icon(Icons.category_outlined),
-          title: const Text(AppStrings.category),
-          subtitle: const Text("Thêm, sửa, xoá danh mục thu chi"),
+          title: Text(context.l10n.category),
+          subtitle: Text(context.l10n.categorySubtitle),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => CategoriesScreen(repo: widget.repo),
-              ),
+              MaterialPageRoute<void>(builder: (_) => const CategoriesScreen()),
             );
           },
         ),
         ListTile(
           leading: const Icon(Icons.fact_check_outlined),
-          title: const Text("Giao dịch chờ đối soát"),
-          subtitle: const Text("Mở danh sách đối soát"),
+          title: Text(context.l10n.pendingTransactionsTitle),
+          subtitle: Text(context.l10n.pendingTransactionsSubtitle),
           trailing: const Icon(Icons.chevron_right),
           onTap: widget.onOpenPending,
         ),
         ListTile(
           leading: const Icon(Icons.add_circle_outline),
-          title: const Text("Thêm giao dịch nhanh"),
-          onTap: () => handleAddFab(context, widget.repo),
+          title: Text(context.l10n.quickTransactionTitle),
+          onTap: () => handleAddFab(context, _repo),
         ),
         if (_showPwaInstallEntry(context)) _buildPwaInstallTile(context),
       ],
@@ -295,8 +295,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final controller = PwaScope.of(context);
     return ListTile(
       leading: const Icon(Icons.install_mobile_rounded),
-      title: const Text(AppStrings.pwaInstallMenuItem),
-      subtitle: const Text(AppStrings.pwaInstallMenuSubtitle),
+      title: Text(context.l10n.pwaInstallMenuItem),
+      subtitle: Text(context.l10n.pwaInstallMenuSubtitle),
       trailing: const Icon(Icons.chevron_right),
       onTap: () async {
         await PwaInstallGuideSheet.show(
@@ -320,7 +320,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Dữ liệu demo", style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            context.l10n.demoSectionTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 12),
           Card(
             child: Padding(
@@ -348,11 +351,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Nhân vật Johny Nguyễn",
+                              context.l10n.demoPersonName,
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
                             Text(
-                              "Software Engineer · TP.HCM · 45tr/tháng",
+                              context.l10n.demoPersonSummary,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -365,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: double.infinity,
                     child: FilledButton.tonal(
                       onPressed: _populateJohny,
-                      child: const Text("Chuyển qua chế độ demo"),
+                      child: Text(context.l10n.demoModeButton),
                     ),
                   ),
                 ],
@@ -380,10 +383,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const CustomScrollView(
+      return CustomScrollView(
         slivers: [
-          PageHeaderSliver(title: "Cá nhân"),
-          SliverFillRemaining(
+          PageHeaderSliver(title: context.l10n.profileTitle),
+          const SliverFillRemaining(
             child: Center(child: CircularProgressIndicator()),
           ),
         ],
@@ -392,7 +395,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return CustomScrollView(
       slivers: [
-        const PageHeaderSliver(title: "Cá nhân"),
+        PageHeaderSliver(title: context.l10n.profileTitle),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.only(top: 8),

@@ -1,14 +1,14 @@
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 
-import "../../../../core/amount_input.dart";
-import "../../../../core/strings.dart";
-import "../../../../core/widgets/app_text_field.dart";
-import "../../../../core/widgets/form_amount_field.dart";
-import "../../../image_attachment/domain/image_attachment_model.dart";
-import "../../../../core/widgets/app_date_picker.dart";
-import "transaction_image_attachments.dart";
-import "transaction_type_toggle.dart";
+import "package:smart_expense/core/utils/amount_input.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/shared/components/app_text_field.dart";
+import "package:smart_expense/shared/components/form_amount_field.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
+import "package:smart_expense/shared/components/app_date_picker.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_image_attachments.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_type_toggle.dart";
 
 /// Shared fields for quick entry and full transaction editor sheets.
 class TransactionEntryForm extends StatelessWidget {
@@ -104,10 +104,9 @@ class TransactionEntryForm extends StatelessWidget {
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text(AppStrings.pending),
+          title: Text(context.l10n.pending),
           subtitle: Text(
-            pendingSubtitle ??
-                "Bật nếu cần xem lại giao dịch này sau.",
+            pendingSubtitle ?? "Bật nếu cần xem lại giao dịch này sau.",
           ),
           value: pending,
           onChanged: onPendingChanged,
@@ -115,7 +114,7 @@ class TransactionEntryForm extends StatelessWidget {
         const SizedBox(height: 4),
         AppTextField(
           controller: noteController,
-          labelText: AppStrings.noteOptional,
+          labelText: context.l10n.noteOptional,
           maxLines: 2,
         ),
         ...mediaSections,

@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 
-import "../../../../data/models/category_model.dart";
-import "../../../../core/theme/app_finance_colors.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart";
 
 class TransactionCategoryChips extends StatelessWidget {
   const TransactionCategoryChips({

@@ -1,23 +1,23 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
-import "../../../core/amount_input.dart";
-import "../../../core/date_format.dart";
-import "../../../core/strings.dart";
-import "../../../core/widgets/app_text_field.dart";
-import "../../../data/models/category_model.dart";
-import "../../../core/widgets/app_discard_dialog.dart";
-import "../../../core/widgets/app_primary_button.dart";
-import "../../../core/widgets/app_voice_note_section.dart";
-import "../../image_attachment/data/image_picker_service.dart";
-import "../../image_attachment/data/image_storage_service.dart";
-import "../../image_attachment/domain/image_attachment_model.dart";
-import "../../voice_note/domain/audio_attachment_model.dart";
-import "../application/transaction_draft_validator.dart";
-import "../domain/repositories/ledger_repository.dart";
-import "widgets/transaction_category_chips.dart";
-import "widgets/transaction_entry_form.dart";
-import "widgets/transaction_sheet_shell.dart";
+import "package:smart_expense/core/utils/amount_input.dart";
+import "package:smart_expense/core/utils/date_format.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/shared/components/app_text_field.dart";
+import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/shared/components/app_discard_dialog.dart";
+import "package:smart_expense/shared/components/app_primary_button.dart";
+import "package:smart_expense/shared/components/app_voice_note_section.dart";
+import "package:smart_expense/features/transactions/data/attachments/image_picker_service.dart";
+import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
+import "package:smart_expense/features/transactions/application/transaction_draft_validator.dart";
+import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_chips.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_sheet_shell.dart";
 
 enum QuickEntryMode { tap, voice, receipt }
 
@@ -83,11 +83,11 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
     if (widget.mode == QuickEntryMode.voice) {
       final ts = formatQuickEntryTimestamp(DateTime.now());
-      _titleCtrl.text = "Ghi âm giao dịch - $ts";
+      _titleCtrl.text = "${AppLocalizations.vi.quickEntryVoice} - $ts";
       _amount.setValue(0);
     } else if (widget.mode == QuickEntryMode.receipt) {
       final ts = formatQuickEntryTimestamp(DateTime.now());
-      _titleCtrl.text = "Ảnh hoá đơn - $ts";
+      _titleCtrl.text = "${AppLocalizations.vi.quickEntryReceipt} - $ts";
       _amount.setValue(0);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
@@ -142,7 +142,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.imageSaveFailed)));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.imageSaveFailed)));
     }
   }
 
@@ -168,19 +168,19 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       TransactionSaveDraft(
         rawTitle: _titleCtrl.text,
         fallbackTitle: _income
-            ? AppStrings.quickIncomeTitle
-            : AppStrings.quickExpenseTitle,
+            ? context.l10n.quickIncomeTitle
+            : context.l10n.quickExpenseTitle,
         amountVnd: amount,
         pending: _pending,
         selectedCategoryId: _categoryId,
         fallbackCategoryId: catId,
       ),
     );
-    final message = TransactionDraftValidator.firstUserMessage(draft.errors);
-    if (message != null) {
+    final error = TransactionDraftValidator.firstUserError(draft.errors);
+    if (error != null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ).showSnackBar(SnackBar(content: Text(_validationMessage(error))));
       return;
     }
 
@@ -203,11 +203,22 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
       SnackBar(
         content: Text(
           _pending
-              ? AppStrings.savePendingSuccess
-              : AppStrings.saveTransactionSuccess,
+              ? context.l10n.savePendingSuccess
+              : context.l10n.saveTransactionSuccess,
         ),
       ),
     );
+  }
+
+  String _validationMessage(TransactionDraftValidationError error) {
+    return switch (error) {
+      TransactionDraftValidationError.titleRequired =>
+        context.l10n.titleRequired,
+      TransactionDraftValidationError.amountRequired =>
+        context.l10n.amountRequired,
+      TransactionDraftValidationError.categoryRequired =>
+        context.l10n.categoryRequired,
+    };
   }
 
   // ── Main build ─────────────────────────────────────────────────────────────
@@ -230,9 +241,9 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
         _categoryId ??= incomeCats.isNotEmpty ? incomeCats.first.id : null;
 
         final sheetTitle = switch (widget.mode) {
-          QuickEntryMode.voice => AppStrings.quickEntryVoice,
-          QuickEntryMode.receipt => AppStrings.quickEntryReceipt,
-          QuickEntryMode.tap => AppStrings.quickEntryTap,
+          QuickEntryMode.voice => context.l10n.quickEntryVoice,
+          QuickEntryMode.receipt => context.l10n.quickEntryReceipt,
+          QuickEntryMode.tap => context.l10n.quickEntryTap,
         };
 
         return SafeArea(
@@ -262,8 +273,8 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                   pending: _pending,
                   onPendingChanged: (v) => setState(() => _pending = v),
                   pendingSubtitle: _hasMedia
-                      ? AppStrings.pendingSubtitleWithMedia
-                      : AppStrings.pendingSubtitleDefault,
+                      ? context.l10n.pendingSubtitleWithMedia
+                      : context.l10n.pendingSubtitleDefault,
                   images: _images,
                   showCamera: _showCamera,
                   onPickImage: _pickImage,
@@ -272,7 +283,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                   amountAutofocus: widget.mode == QuickEntryMode.tap,
                   titleField: AppTextField(
                     controller: _titleCtrl,
-                    labelText: AppStrings.titleOptional,
+                    labelText: context.l10n.titleOptional,
                   ),
                   mediaSections: [
                     if (widget.mode == QuickEntryMode.voice ||
@@ -292,7 +303,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        AppStrings.category,
+                        context.l10n.category,
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: 8),
@@ -309,7 +320,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
                 // ── Action buttons ────────────────────────────────────────
                 AppPrimaryButton(
-                  label: AppStrings.saveTransaction,
+                  label: context.l10n.saveTransaction,
                   icon: Icons.save_rounded,
                   onPressed: () => _save(cats),
                 ),
