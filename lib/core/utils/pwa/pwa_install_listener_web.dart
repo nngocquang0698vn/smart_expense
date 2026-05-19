@@ -1,18 +1,24 @@
-import "dart:html" as html;
+import "dart:js_interop";
 
-void Function(html.Event)? _handler;
+@JS("pwaListenInstallAvailable")
+external void _jsListenInstallAvailable(JSFunction callback);
+
+@JS("pwaCancelInstallAvailable")
+external void _jsCancelInstallAvailable(JSFunction callback);
+
+JSFunction? _callback;
 
 /// Re-runs PWA banner logic when [beforeinstallprompt] fires (often after page load).
 void listenPwaInstallAvailable(void Function() onAvailable) {
   cancelPwaInstallAvailableListener();
-  _handler = (_) => onAvailable();
-  html.window.addEventListener("pwa-install-available", _handler!);
+  _callback = onAvailable.toJS;
+  _jsListenInstallAvailable(_callback!);
 }
 
 void cancelPwaInstallAvailableListener() {
-  final handler = _handler;
-  if (handler != null) {
-    html.window.removeEventListener("pwa-install-available", handler);
-    _handler = null;
+  final callback = _callback;
+  if (callback != null) {
+    _jsCancelInstallAvailable(callback);
+    _callback = null;
   }
 }

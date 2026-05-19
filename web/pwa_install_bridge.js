@@ -36,4 +36,12 @@
     window.__pwaInstallAvailable = false;
     return choice.outcome === "accepted" ? "accepted" : "dismissed";
   };
+
+  window.pwaListenInstallAvailable = function (callback) {
+    window.addEventListener("pwa-install-available", callback);
+  };
+
+  window.pwaCancelInstallAvailable = function (callback) {
+    window.removeEventListener("pwa-install-available", callback);
+  };
 })();
