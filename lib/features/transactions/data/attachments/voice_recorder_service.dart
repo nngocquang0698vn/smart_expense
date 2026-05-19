@@ -4,10 +4,11 @@ import "package:record/record.dart";
 
 import "package:smart_expense/core/storage/audio_storage_helper.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/voice_note_model.dart";
+import "package:smart_expense/features/transactions/domain/repositories/voice_recorder_repository.dart";
 import "package:smart_expense/features/transactions/data/attachments/audio_storage_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/voice_note_file_service.dart";
 
-class VoiceRecorderService {
+class VoiceRecorderService implements VoiceRecorderRepository {
   VoiceRecorderService({AudioRecorder? recorder, AudioStorageService? storage})
     : _recorder = recorder ?? AudioRecorder(),
       _storage = storage ?? AudioStorageService();
@@ -21,6 +22,7 @@ class VoiceRecorderService {
 
   Future<bool> hasPermission() => _recorder.hasPermission();
 
+  @override
   Future<void> start() async {
     final permitted = await hasPermission();
     if (!permitted) {
@@ -44,6 +46,7 @@ class VoiceRecorderService {
     _startedAt = DateTime.now();
   }
 
+  @override
   Future<void> pause() async {
     final startedAt = _startedAt;
     if (startedAt != null) {
@@ -53,17 +56,20 @@ class VoiceRecorderService {
     await _recorder.pause();
   }
 
+  @override
   Future<void> resume() async {
     await _recorder.resume();
     _startedAt = DateTime.now();
   }
 
+  @override
   Future<void> cancel() async {
     _startedAt = null;
     _recordedBeforePause = Duration.zero;
     await _recorder.cancel();
   }
 
+  @override
   Future<VoiceNoteModel> stop() async {
     final duration = elapsed;
     final path = await _recorder.stop();
@@ -88,12 +94,14 @@ class VoiceRecorderService {
     return VoiceNoteModel(audio: audio, duration: duration);
   }
 
+  @override
   Duration get elapsed {
     final startedAt = _startedAt;
     if (startedAt == null) return _recordedBeforePause;
     return _recordedBeforePause + DateTime.now().difference(startedAt);
   }
 
+  @override
   Future<void> dispose() => _recorder.dispose();
 
   Future<AudioEncoder> _bestEncoder() async {

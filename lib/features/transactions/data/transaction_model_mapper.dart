@@ -12,6 +12,27 @@ extension TransactionModelMapper on TransactionModel {
       occurredAt: occurredAt,
       pending: pending,
       complete: complete,
+      note: note,
+      audio: audio,
+      images: images,
+    );
+  }
+}
+
+extension LedgerTransactionModelMapper on LedgerTransaction {
+  TransactionModel toModel() {
+    return TransactionModel(
+      id: id,
+      title: title,
+      amountVnd: amountVnd,
+      isIncome: isIncome,
+      categoryId: categoryId,
+      occurredAt: occurredAt,
+      pending: pending,
+      complete: complete,
+      note: note,
+      audio: audio,
+      images: images,
     );
   }
 }

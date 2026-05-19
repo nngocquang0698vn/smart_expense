@@ -1,12 +1,12 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/features/dashboard/application/dashboard_view_model.dart";
 
 void main() {
   const pager = DashboardHistoryPager();
 
-  TransactionModel tx(String id) {
-    return TransactionModel(
+  LedgerTransaction tx(String id) {
+    return LedgerTransaction(
       id: id,
       title: id,
       amountVnd: 1000,

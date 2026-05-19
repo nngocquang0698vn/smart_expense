@@ -1,11 +1,12 @@
+import "package:smart_expense/features/categories/presentation/category_visuals.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 import "package:smart_expense/core/utils/amount_input.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/app_text_field.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
-import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
@@ -25,7 +26,7 @@ import "package:smart_expense/features/transactions/presentation/widgets/transac
 Future<void> showTransactionEditor(
   BuildContext context,
   LedgerRepository repo, {
-  TransactionModel? existing,
+  LedgerTransaction? existing,
   bool defaultPending = false,
 }) {
   return showTransactionFormSheet(
@@ -46,7 +47,7 @@ class _EditorBody extends StatefulWidget {
   });
 
   final LedgerRepository repo;
-  final TransactionModel? existing;
+  final LedgerTransaction? existing;
   final bool defaultPending;
 
   @override
@@ -181,7 +182,7 @@ class _EditorBodyState extends State<_EditorBody> {
     }
   }
 
-  Future<void> _saveTransaction(List<CategoryModel> cats) async {
+  Future<void> _saveTransaction(List<LedgerCategory> cats) async {
     final amount = _amount.value;
     final matchingCategories = _categorySelection.enabledForSide(
       cats,
@@ -282,7 +283,7 @@ class _EditorBodyState extends State<_EditorBody> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<CategoryModel>>(
+    return FutureBuilder<List<LedgerCategory>>(
       future: widget.repo.categories(),
       builder: (context, snap) {
         if (!snap.hasData) {

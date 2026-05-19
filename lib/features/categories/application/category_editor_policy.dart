@@ -1,5 +1,5 @@
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 
 enum CategoryValidationError { nameRequired }
 
@@ -76,7 +76,7 @@ class CategoryDeleteDecision {
 class CategoryEditorPolicy {
   const CategoryEditorPolicy();
 
-  CategoryDraft initialDraft({CategoryModel? existing}) {
+  CategoryDraft initialDraft({LedgerCategory? existing}) {
     return CategoryDraft(
       name: existing?.name ?? "",
       iconKey: existing?.iconKey ?? "category",
@@ -96,7 +96,7 @@ class CategoryEditorPolicy {
   }
 
   CategoryDeleteDecision validateDelete(
-    CategoryModel category, {
+    LedgerCategory category, {
     required bool inUse,
   }) {
     if (isSystemCategory(category)) {
@@ -110,9 +110,9 @@ class CategoryEditorPolicy {
     return CategoryDeleteDecision.allow();
   }
 
-  bool canEdit(CategoryModel category) => !isSystemCategory(category);
+  bool canEdit(LedgerCategory category) => !isSystemCategory(category);
 
-  bool isSystemCategory(CategoryModel category) =>
+  bool isSystemCategory(LedgerCategory category) =>
       isSystemCategoryId(category.id);
 
   bool isSystemCategoryId(String id) {

@@ -1,9 +1,10 @@
 import "package:flutter/material.dart";
 
 import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/core/utils/date_range.dart";
 import "package:smart_expense/shared/components/app_date_picker.dart";
 import "package:smart_expense/shared/components/app_date_range_picker.dart";
-import "package:smart_expense/features/transactions/data/date_filter.dart";
+import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
 
 String localizedDateFilterLabel(
   AppLocalizations l10n,
@@ -116,14 +117,14 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 1, 12, 31),
       initialRange:
-          sel.custom ??
+          sel.custom?.toDateTimeRange() ??
           DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
     if (range != null && mounted) {
       setState(() {
         sel = DateFilterSelection(
           preset: DateFilterPreset.custom,
-          custom: range,
+          custom: range.toAppDateRange(),
         );
       });
     }
@@ -277,4 +278,12 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
       ),
     );
   }
+}
+
+extension on AppDateRange {
+  DateTimeRange toDateTimeRange() => DateTimeRange(start: start, end: end);
+}
+
+extension on DateTimeRange {
+  AppDateRange toAppDateRange() => AppDateRange(start: start, end: end);
 }

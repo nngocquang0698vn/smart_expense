@@ -1,6 +1,7 @@
+import "package:smart_expense/features/categories/presentation/category_visuals.dart";
 import "package:flutter/material.dart";
 
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart";
 
 class TransactionCategoryChips extends StatelessWidget {
@@ -12,7 +13,7 @@ class TransactionCategoryChips extends StatelessWidget {
     required this.onSelected,
   });
 
-  final List<CategoryModel> categories;
+  final List<LedgerCategory> categories;
   final bool isIncome;
   final String? selectedId;
   final ValueChanged<String> onSelected;

@@ -1,5 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/features/transactions/data/date_filter.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:smart_expense/app/providers.dart";
+import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
 import "package:smart_expense/features/dashboard/application/dashboard_controller.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 
@@ -7,15 +9,20 @@ import "package:smart_expense/core/testing/fake_ledger_repository.dart";
 
 void main() {
   late LedgerRepository repo;
-  late DashboardController controller;
+  late ProviderContainer container;
+  late ProviderSubscription<AsyncValue<DashboardState>> subscription;
 
   setUp(() async {
     repo = await createFakeLedgerRepository();
-    controller = DashboardController(repo);
+    container = ProviderContainer(
+      overrides: [ledgerRepositoryProvider.overrideWithValue(repo)],
+    );
+    subscription = container.listen(dashboardControllerProvider, (_, _) {});
   });
 
   tearDown(() {
-    controller.dispose();
+    subscription.close();
+    container.dispose();
   });
 
   test("bootstrap loads summary and categories", () async {
@@ -28,20 +35,25 @@ void main() {
       categoryId: expenseCat.id,
     );
 
-    await controller.bootstrap();
+    await container.read(dashboardControllerProvider.future);
+    await container.read(dashboardControllerProvider.notifier).refresh();
+    final refreshed = container.read(dashboardControllerProvider).value!;
 
-    expect(controller.viewModel.topLoading, isFalse);
-    expect(controller.viewModel.summary.expense, greaterThan(0));
-    expect(controller.viewModel.categories, isNotEmpty);
+    expect(refreshed.viewModel.topLoading, isFalse);
+    expect(refreshed.viewModel.summary.expense, greaterThan(0));
+    expect(refreshed.viewModel.categories, isNotEmpty);
   });
 
   test("updateFilter reloads with new range", () async {
-    await controller.bootstrap();
-    await controller.updateFilter(
-      const DateFilterSelection(preset: DateFilterPreset.allTime),
-    );
+    await container.read(dashboardControllerProvider.future);
+    await container
+        .read(dashboardControllerProvider.notifier)
+        .updateFilter(
+          const DateFilterSelection(preset: DateFilterPreset.allTime),
+        );
+    final state = container.read(dashboardControllerProvider).value!;
 
-    expect(controller.filter.preset, DateFilterPreset.allTime);
-    expect(controller.viewModel.topLoading, isFalse);
+    expect(state.filter.preset, DateFilterPreset.allTime);
+    expect(state.viewModel.topLoading, isFalse);
   });
 }

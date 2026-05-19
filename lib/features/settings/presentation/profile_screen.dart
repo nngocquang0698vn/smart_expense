@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -29,19 +31,20 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameCtrl = TextEditingController();
   late final LedgerRepository _repo;
+  late final StreamSubscription<void> _repoSubscription;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _repo = ref.read(ledgerRepositoryProvider);
-    _repo.addListener(_onRepo);
+    _repoSubscription = _repo.changes.listen((_) => _onRepo());
     _load();
   }
 
   @override
   void dispose() {
-    _repo.removeListener(_onRepo);
+    _repoSubscription.cancel();
     _nameCtrl.dispose();
     super.dispose();
   }

@@ -5,7 +5,7 @@ import "package:smart_expense/core/utils/amount_input.dart";
 import "package:smart_expense/core/utils/date_format.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/app_text_field.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
 import "package:smart_expense/shared/components/app_voice_note_section.dart";
@@ -159,7 +159,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   // ── Save logic ────────────────────────────────────────────────────────────
 
-  Future<void> _save(List<CategoryModel> cats) async {
+  Future<void> _save(List<LedgerCategory> cats) async {
     final amount = _amount.value;
     final matched = cats.where((c) => c.isIncome == _income).toList();
     final catId = _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
@@ -225,7 +225,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<CategoryModel>>(
+    return FutureBuilder<List<LedgerCategory>>(
       future: widget.repo.categories().then(
         (list) => list.where((c) => c.enabled).toList(),
       ),

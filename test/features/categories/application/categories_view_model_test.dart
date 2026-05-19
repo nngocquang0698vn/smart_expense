@@ -1,16 +1,16 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/features/categories/application/categories_view_model.dart";
 
 void main() {
-  CategoryModel category({
+  LedgerCategory category({
     required String id,
     required String name,
     required bool isIncome,
     bool enabled = true,
   }) {
-    return CategoryModel(
+    return LedgerCategory(
       id: id,
       name: name,
       iconKey: "category",

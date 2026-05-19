@@ -1,10 +1,10 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import "package:smart_expense/app/providers.dart";
+import "package:smart_expense/features/categories/presentation/category_visuals.dart";
 import "package:smart_expense/core/constants/app_constants.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
 import "package:smart_expense/shared/components/app_empty_state.dart";
 import "package:smart_expense/shared/components/app_finance_card.dart";
@@ -16,56 +16,39 @@ import "package:smart_expense/shared/components/app_section_header.dart";
 import "package:smart_expense/features/categories/application/categories_controller.dart";
 import "package:smart_expense/features/categories/application/category_editor_policy.dart";
 
-class CategoriesScreen extends ConsumerStatefulWidget {
+class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
 
-  @override
-  ConsumerState<CategoriesScreen> createState() => _CategoriesScreenState();
-}
-
-class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
-  late final CategoriesController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = CategoriesController(repo: ref.read(ledgerRepositoryProvider))
-      ..load();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _openEditor({CategoryModel? existing}) async {
+  Future<void> _openEditor(
+    BuildContext context,
+    WidgetRef ref, {
+    LedgerCategory? existing,
+  }) async {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
       useSafeArea: true,
-      builder: (context) =>
-          _CategoryEditorSheet(controller: _controller, existing: existing),
+      builder: (context) => _CategoryEditorSheet(ref: ref, existing: existing),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final viewModel = _controller.viewModel;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categories = ref.watch(categoriesControllerProvider);
 
+    return categories.when(
+      data: (state) {
+        final viewModel = state.viewModel;
         return AppScaffold(
           title: context.l10n.category,
           padding: EdgeInsets.zero,
           floatingActionButton: FloatingActionButton(
             tooltip: context.l10n.addCategory,
-            onPressed: () => _openEditor(),
+            onPressed: () => _openEditor(context, ref),
             child: const Icon(Icons.add),
           ),
-          body: _controller.loading
+          body: state.loading
               ? AppLoadingState(message: context.l10n.loading)
               : viewModel.isEmpty
               ? AppEmptyState(
@@ -87,8 +70,11 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                           _CategoryTile(
                             category: category,
                             isSystem: viewModel.isSystem(category),
-                            onToggle: () => _controller.toggleEnabled(category),
-                            onTap: () => _openEditor(existing: category),
+                            onToggle: () => ref
+                                .read(categoriesControllerProvider.notifier)
+                                .toggleEnabled(category),
+                            onTap: () =>
+                                _openEditor(context, ref, existing: category),
                           ),
                         const SizedBox(height: AppSpacing.xs),
                         AppSectionHeader(title: context.l10n.income),
@@ -96,8 +82,11 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                           _CategoryTile(
                             category: category,
                             isSystem: viewModel.isSystem(category),
-                            onToggle: () => _controller.toggleEnabled(category),
-                            onTap: () => _openEditor(existing: category),
+                            onToggle: () => ref
+                                .read(categoriesControllerProvider.notifier)
+                                .toggleEnabled(category),
+                            onTap: () =>
+                                _openEditor(context, ref, existing: category),
                           ),
                       ],
                     ),
@@ -105,6 +94,16 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 ),
         );
       },
+      loading: () => AppScaffold(
+        title: context.l10n.category,
+        padding: EdgeInsets.zero,
+        body: AppLoadingState(message: context.l10n.loading),
+      ),
+      error: (_, _) => AppScaffold(
+        title: context.l10n.category,
+        padding: EdgeInsets.zero,
+        body: AppEmptyState(message: context.l10n.genericError),
+      ),
     );
   }
 }
@@ -117,7 +116,7 @@ class _CategoryTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final CategoryModel category;
+  final LedgerCategory category;
   final bool isSystem;
   final VoidCallback onToggle;
   final VoidCallback onTap;
@@ -184,10 +183,10 @@ class _CategoryTile extends StatelessWidget {
 }
 
 class _CategoryEditorSheet extends StatefulWidget {
-  const _CategoryEditorSheet({required this.controller, this.existing});
+  const _CategoryEditorSheet({required this.ref, this.existing});
 
-  final CategoriesController controller;
-  final CategoryModel? existing;
+  final WidgetRef ref;
+  final LedgerCategory? existing;
 
   @override
   State<_CategoryEditorSheet> createState() => _CategoryEditorSheetState();
@@ -219,10 +218,12 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   Future<void> _save() async {
     if (_saving) return;
     setState(() => _saving = true);
-    final result = await widget.controller.saveDraft(
-      draft: _draft.copyWith(name: _nameController.text),
-      existing: widget.existing,
-    );
+    final result = await widget.ref
+        .read(categoriesControllerProvider.notifier)
+        .saveDraft(
+          draft: _draft.copyWith(name: _nameController.text),
+          existing: widget.existing,
+        );
     if (!mounted) return;
     setState(() => _saving = false);
 
@@ -237,7 +238,9 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     final category = widget.existing;
     if (category == null) return;
 
-    final decision = await widget.controller.canDelete(category);
+    final decision = await widget.ref
+        .read(categoriesControllerProvider.notifier)
+        .canDelete(category);
     if (!mounted) return;
     if (!decision.allowed) {
       _showMessage(_categoryDeleteMessage(decision.reason));
@@ -253,7 +256,9 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     );
     if (!confirmed || !mounted) return;
 
-    await widget.controller.delete(category);
+    await widget.ref
+        .read(categoriesControllerProvider.notifier)
+        .delete(category);
     if (mounted) Navigator.of(context).pop();
   }
 

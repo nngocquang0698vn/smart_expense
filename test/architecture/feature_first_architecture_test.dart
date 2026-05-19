@@ -64,12 +64,37 @@ void main() {
   });
 
   test("date filter data objects do not own localized labels", () {
+    expect(
+      File("lib/features/transactions/data/date_filter.dart").existsSync(),
+      isFalse,
+    );
     final source = File(
-      "lib/features/transactions/data/date_filter.dart",
+      "lib/features/transactions/domain/entities/date_filter.dart",
     ).readAsStringSync();
 
     expect(source, isNot(contains("String label(")));
     expect(source, isNot(contains("labelVi")));
+  });
+
+  test("transactions domain does not depend on Flutter or data models", () {
+    final offenders = <String>[];
+    final forbidden = RegExp(
+      r'package:flutter|features/transactions/data|CategoryModel|TransactionModel|extends ChangeNotifier|DateTimeRange',
+    );
+
+    for (final file in Directory(
+      "lib/features/transactions/domain",
+    ).listSync(recursive: true).whereType<File>()) {
+      if (!file.path.endsWith(".dart")) continue;
+      final lines = file.readAsLinesSync();
+      for (var i = 0; i < lines.length; i++) {
+        if (forbidden.hasMatch(lines[i])) {
+          offenders.add("${file.path}:${i + 1}: ${lines[i].trim()}");
+        }
+      }
+    }
+
+    expect(offenders, isEmpty);
   });
 
   test("dart files use package imports for project files", () {

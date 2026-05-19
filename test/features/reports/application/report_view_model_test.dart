@@ -1,12 +1,12 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/features/reports/application/report_view_model.dart";
 
 void main() {
   const builder = ReportViewModelBuilder();
 
-  CategoryModel category(String id, String name) {
-    return CategoryModel(
+  LedgerCategory category(String id, String name) {
+    return LedgerCategory(
       id: id,
       name: name,
       iconKey: "category",

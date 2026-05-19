@@ -1,4 +1,4 @@
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 
 class ReportCategorySlice {
   const ReportCategorySlice({
@@ -7,7 +7,7 @@ class ReportCategorySlice {
     required this.id,
   });
 
-  final CategoryModel category;
+  final LedgerCategory category;
   final int amount;
   final String id;
 }
@@ -36,7 +36,7 @@ class ReportViewModelBuilder {
   ReportViewModel build({
     required Map<String, int> totals,
     required Map<String, int> breakdown,
-    required List<CategoryModel> categories,
+    required List<LedgerCategory> categories,
   }) {
     final categoryMap = {
       for (final category in categories) category.id: category,

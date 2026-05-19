@@ -1,11 +1,11 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
-import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/features/transactions/application/pending/pending_view_model.dart";
 
 void main() {
-  CategoryModel category(String id) {
-    return CategoryModel(
+  LedgerCategory category(String id) {
+    return LedgerCategory(
       id: id,
       name: id,
       iconKey: "category",
@@ -14,8 +14,8 @@ void main() {
     );
   }
 
-  TransactionModel tx(String id) {
-    return TransactionModel(
+  LedgerTransaction tx(String id) {
+    return LedgerTransaction(
       id: id,
       title: id,
       amountVnd: 1000,
