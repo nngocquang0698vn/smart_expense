@@ -42,11 +42,20 @@ class PwaInstallController extends Notifier<PwaInstallState> {
       canShowFromPrefs: _prefs.canShowBanner,
       platform: platform,
     );
+    final canNative = _service.canNativePrompt;
+    final standalone = _service.isStandalone;
     if (state.bannerVisible == visible &&
-        state.platform == platform) {
+        state.platform == platform &&
+        state.canNativeInstall == canNative &&
+        state.isStandalone == standalone) {
       return;
     }
-    state = state.copyWith(bannerVisible: visible, platform: platform);
+    state = state.copyWith(
+      bannerVisible: visible,
+      platform: platform,
+      canNativeInstall: canNative,
+      isStandalone: standalone,
+    );
   }
 
   void hideBanner() {

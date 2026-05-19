@@ -42,11 +42,20 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
   VoiceRecorderController get _controller =>
       ref.read(voiceRecorderControllerProvider(_config).notifier);
 
+  void _syncExistingAudio(AudioAttachmentModel audio) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(voiceRecorderControllerProvider(_config).notifier).useExisting(
+            audio,
+          );
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     if (widget.audio != null) {
-      _controller.useExisting(widget.audio!);
+      _syncExistingAudio(widget.audio!);
     }
     if (widget.autoStartRecording) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _autoStart());
@@ -57,7 +66,7 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
   void didUpdateWidget(covariant VoiceRecorderInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.audio?.id != widget.audio?.id && widget.audio != null) {
-      _controller.useExisting(widget.audio!);
+      _syncExistingAudio(widget.audio!);
     }
   }
 

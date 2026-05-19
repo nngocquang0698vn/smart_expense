@@ -3,7 +3,9 @@ import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_listener.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_service.dart";
+import "package:smart_expense/core/utils/pwa/pwa_providers.dart";
 import "package:smart_expense/shared/components/pwa_install_guide_sheet.dart";
 import "package:smart_expense/shared/components/pwa_install_prompt_card.dart";
 
@@ -24,22 +26,40 @@ class PwaInstallBannerHost extends ConsumerStatefulWidget {
 }
 
 class _PwaInstallBannerHostState extends ConsumerState<PwaInstallBannerHost> {
-  bool _evaluated = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!kIsWeb) return;
+  void _evaluateBannerSoon() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(pwaInstallControllerProvider.notifier).evaluateBanner();
     });
   }
 
+  @override
+  void initState() {
+    super.initState();
+    if (!kIsWeb) return;
+    _evaluateBannerSoon();
+    listenPwaInstallAvailable(_evaluateBannerSoon);
+  }
+
+  @override
+  void dispose() {
+    cancelPwaInstallAvailableListener();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant PwaInstallBannerHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (kIsWeb && widget.pageIndex == 0 && oldWidget.pageIndex != 0) {
+      _evaluateBannerSoon();
+    }
+  }
+
   Future<void> _onInstallTap(BuildContext context) async {
     final notifier = ref.read(pwaInstallControllerProvider.notifier);
     final state = ref.read(pwaInstallControllerProvider);
-    if (state.canNativeInstall) {
+    final canNative = ref.read(pwaInstallServiceProvider).canNativePrompt;
+    if (canNative) {
       final result = await notifier.install();
       if (!context.mounted) return;
       if (result == PwaInstallPromptResult.accepted) {
@@ -51,17 +71,18 @@ class _PwaInstallBannerHostState extends ConsumerState<PwaInstallBannerHost> {
     await PwaInstallGuideSheet.show(
       context,
       platform: state.platform,
-      showNativeInstall: state.canNativeInstall,
+      showNativeInstall: canNative,
       onNativeInstall: () => _onInstallTap(context),
     );
   }
 
   void _onShowGuide(BuildContext context) {
     final state = ref.read(pwaInstallControllerProvider);
+    final canNative = ref.read(pwaInstallServiceProvider).canNativePrompt;
     PwaInstallGuideSheet.show(
       context,
       platform: state.platform,
-      showNativeInstall: state.canNativeInstall,
+      showNativeInstall: canNative,
       onNativeInstall: () => _onInstallTap(context),
     );
   }
@@ -69,10 +90,6 @@ class _PwaInstallBannerHostState extends ConsumerState<PwaInstallBannerHost> {
   @override
   Widget build(BuildContext context) {
     if (!kIsWeb) return widget.child;
-
-    if (!_evaluated) {
-      _evaluated = true;
-    }
 
     final state = ref.watch(pwaInstallControllerProvider);
     final showBanner = widget.pageIndex == 0 && state.bannerVisible;

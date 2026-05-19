@@ -9,16 +9,17 @@ import "package:smart_expense/core/utils/pwa/pwa_platform_kind.dart";
 import "package:smart_expense/core/utils/pwa/pwa_providers.dart";
 
 class _FakePwaInstallService implements PwaInstallService {
-  _FakePwaInstallService({this.isStandalone = false})
-      : canNativePrompt = true,
-        userAgent =
+  _FakePwaInstallService({
+    this.isStandalone = false,
+    this.canNativePrompt = true,
+  }) : userAgent =
             "mozilla/5.0 (linux; android 10; k) applewebkit/537.36 chrome/91.0";
 
   @override
   final bool isStandalone;
 
   @override
-  final bool canNativePrompt;
+  bool canNativePrompt;
 
   @override
   final String? userAgent;
@@ -136,6 +137,28 @@ void main() {
       isFalse,
     );
     expect(PwaInstallPrefs(prefs).canShowBanner, isFalse);
+  });
+
+  test("evaluateBanner refreshes canNativeInstall from service", () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    service = _FakePwaInstallService(canNativePrompt: false);
+    container = createContainer(prefs: prefs);
+    container.listen(pwaInstallControllerProvider, (_, _) {});
+
+    final notifier = container.read(pwaInstallControllerProvider.notifier);
+    notifier.evaluateBanner(isWeb: true);
+    expect(
+      container.read(pwaInstallControllerProvider).canNativeInstall,
+      isFalse,
+    );
+
+    service.canNativePrompt = true;
+    notifier.evaluateBanner(isWeb: true);
+    expect(
+      container.read(pwaInstallControllerProvider).canNativeInstall,
+      isTrue,
+    );
   });
 
   test("neverShowAgain hides banner", () async {

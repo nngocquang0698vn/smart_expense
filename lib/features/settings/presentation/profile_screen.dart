@@ -302,6 +302,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       subtitle: Text(context.l10n.pwaInstallMenuSubtitle),
       trailing: const Icon(Icons.chevron_right),
       onTap: () async {
+        ref.read(pwaInstallControllerProvider.notifier).evaluateBanner();
         await PwaInstallGuideSheet.show(
           context,
           platform: state.platform,
