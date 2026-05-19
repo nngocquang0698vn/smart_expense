@@ -89,7 +89,9 @@ class _PendingScreenState extends ConsumerState<PendingScreen> {
                 TextButton.icon(
                   onPressed: _pickFilter,
                   icon: const Icon(Icons.filter_alt_outlined),
-                  label: Text(_controller.filter.label()),
+                  label: Text(
+                    localizedDateFilterLabel(context.l10n, _controller.filter),
+                  ),
                 ),
               ],
             ),

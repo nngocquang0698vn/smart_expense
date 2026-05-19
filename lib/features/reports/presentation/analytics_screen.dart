@@ -15,6 +15,24 @@ import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart
 import "package:smart_expense/features/reports/application/report_controller.dart";
 import "package:smart_expense/features/reports/application/report_view_model.dart";
 
+String localizedAnalyticsPeriodLabel(
+  AppLocalizations l10n,
+  AnalyticsPeriod period,
+) {
+  switch (period) {
+    case AnalyticsPeriod.week:
+      return l10n.reportPeriodWeek;
+    case AnalyticsPeriod.month:
+      return l10n.reportPeriodMonth;
+    case AnalyticsPeriod.quarter:
+      return l10n.reportPeriodQuarter;
+    case AnalyticsPeriod.year:
+      return l10n.reportPeriodYear;
+    case AnalyticsPeriod.custom:
+      return l10n.reportPeriodCustom;
+  }
+}
+
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
 
@@ -68,7 +86,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     if (_period == AnalyticsPeriod.custom && _custom != null) {
       return "${formatReportAxis(_custom!.start)} – ${formatReportAxis(_custom!.end)}";
     }
-    return _period.labelVi;
+    return localizedAnalyticsPeriodLabel(context.l10n, _period);
   }
 
   @override
@@ -82,6 +100,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final sumSlice = viewModel.sliceTotal;
     final loading = _controller.loading;
     final incomeSide = _controller.incomeSide;
+    final l10n = context.l10n;
 
     return CustomScrollView(
       slivers: [
@@ -101,8 +120,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     child: ChoiceChip(
                       label: Text(
                         p == AnalyticsPeriod.custom
-                            ? (_period == p ? _periodLabel() : p.labelVi)
-                            : p.labelVi,
+                            ? (_period == p
+                                  ? _periodLabel()
+                                  : localizedAnalyticsPeriodLabel(l10n, p))
+                            : localizedAnalyticsPeriodLabel(l10n, p),
                       ),
                       selected: _period == p,
                       onSelected: (v) async {

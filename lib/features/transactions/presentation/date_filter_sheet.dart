@@ -5,6 +5,31 @@ import "package:smart_expense/shared/components/app_date_picker.dart";
 import "package:smart_expense/shared/components/app_date_range_picker.dart";
 import "package:smart_expense/features/transactions/data/date_filter.dart";
 
+String localizedDateFilterLabel(
+  AppLocalizations l10n,
+  DateFilterSelection selection,
+) {
+  switch (selection.preset) {
+    case DateFilterPreset.last30Days:
+      return l10n.dateFilterLast30Days;
+    case DateFilterPreset.thisWeek:
+      return l10n.dateFilterThisWeek;
+    case DateFilterPreset.thisMonth:
+      return l10n.dateFilterThisMonth;
+    case DateFilterPreset.thisYear:
+      return l10n.dateFilterThisYear;
+    case DateFilterPreset.allTime:
+      return l10n.dateFilterAllTime;
+    case DateFilterPreset.pickMonth:
+      final month = selection.month ?? DateTime.now();
+      return l10n.dateFilterMonthValue(month.month, month.year);
+    case DateFilterPreset.pickYear:
+      return l10n.dateFilterYearValue(selection.year ?? DateTime.now().year);
+    case DateFilterPreset.custom:
+      return l10n.dateFilterCustom;
+  }
+}
+
 Future<DateFilterSelection?> showDateFilterSheet(
   BuildContext context,
   DateFilterSelection current,
@@ -122,6 +147,8 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
@@ -132,7 +159,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                context.l10n.dateFilterTitle,
+                l10n.dateFilterTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
@@ -143,9 +170,12 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                 children: [
                   _tile(
                     selected: sel.preset == DateFilterPreset.last30Days,
-                    title: DateFilterSelection(
-                      preset: DateFilterPreset.last30Days,
-                    ).label(),
+                    title: localizedDateFilterLabel(
+                      l10n,
+                      const DateFilterSelection(
+                        preset: DateFilterPreset.last30Days,
+                      ),
+                    ),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.last30Days,
@@ -154,9 +184,12 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.thisWeek,
-                    title: DateFilterSelection(
-                      preset: DateFilterPreset.thisWeek,
-                    ).label(),
+                    title: localizedDateFilterLabel(
+                      l10n,
+                      const DateFilterSelection(
+                        preset: DateFilterPreset.thisWeek,
+                      ),
+                    ),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.thisWeek,
@@ -165,9 +198,12 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.thisMonth,
-                    title: DateFilterSelection(
-                      preset: DateFilterPreset.thisMonth,
-                    ).label(),
+                    title: localizedDateFilterLabel(
+                      l10n,
+                      const DateFilterSelection(
+                        preset: DateFilterPreset.thisMonth,
+                      ),
+                    ),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.thisMonth,
@@ -176,9 +212,12 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.thisYear,
-                    title: DateFilterSelection(
-                      preset: DateFilterPreset.thisYear,
-                    ).label(),
+                    title: localizedDateFilterLabel(
+                      l10n,
+                      const DateFilterSelection(
+                        preset: DateFilterPreset.thisYear,
+                      ),
+                    ),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.thisYear,
@@ -187,9 +226,12 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.allTime,
-                    title: DateFilterSelection(
-                      preset: DateFilterPreset.allTime,
-                    ).label(),
+                    title: localizedDateFilterLabel(
+                      l10n,
+                      const DateFilterSelection(
+                        preset: DateFilterPreset.allTime,
+                      ),
+                    ),
                     onTap: () => setState(
                       () => sel = const DateFilterSelection(
                         preset: DateFilterPreset.allTime,
@@ -198,25 +240,25 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.pickMonth,
-                    title: context.l10n.dateFilterPickMonth,
+                    title: l10n.dateFilterPickMonth,
                     subtitle: sel.preset == DateFilterPreset.pickMonth
-                        ? sel.label()
+                        ? localizedDateFilterLabel(l10n, sel)
                         : null,
                     onTap: _pickMonth,
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.pickYear,
-                    title: context.l10n.dateFilterPickYear,
+                    title: l10n.dateFilterPickYear,
                     subtitle: sel.preset == DateFilterPreset.pickYear
-                        ? sel.label()
+                        ? localizedDateFilterLabel(l10n, sel)
                         : null,
                     onTap: _pickYear,
                   ),
                   _tile(
                     selected: sel.preset == DateFilterPreset.custom,
-                    title: context.l10n.dateFilterCustomRange,
+                    title: l10n.dateFilterCustomRange,
                     subtitle: sel.preset == DateFilterPreset.custom
-                        ? sel.label()
+                        ? localizedDateFilterLabel(l10n, sel)
                         : null,
                     onTap: _pickCustom,
                   ),
@@ -227,7 +269,7 @@ class _DateFilterBodyState extends State<_DateFilterBody> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: FilledButton(
                 onPressed: () => Navigator.pop(context, sel),
-                child: Text(context.l10n.apply),
+                child: Text(l10n.apply),
               ),
             ),
           ],

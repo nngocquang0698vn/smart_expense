@@ -56,9 +56,20 @@ class AppLocalizations {
   String get darkModeSubtitle => text("darkModeSubtitle");
   String get darkModeTitle => text("darkModeTitle");
   String get dateFilterCustomRange => text("dateFilterCustomRange");
+  String get dateFilterCustom => text("dateFilterCustom");
+  String get dateFilterLast30Days => text("dateFilterLast30Days");
+  String dateFilterMonthValue(int month, int year) => text(
+    "dateFilterMonthValue",
+  ).replaceAll("{month}", "$month").replaceAll("{year}", "$year");
+  String get dateFilterAllTime => text("dateFilterAllTime");
   String get dateFilterPickMonth => text("dateFilterPickMonth");
   String get dateFilterPickYear => text("dateFilterPickYear");
+  String get dateFilterThisMonth => text("dateFilterThisMonth");
+  String get dateFilterThisWeek => text("dateFilterThisWeek");
+  String get dateFilterThisYear => text("dateFilterThisYear");
   String get dateFilterTitle => text("dateFilterTitle");
+  String dateFilterYearValue(int year) =>
+      text("dateFilterYearValue").replaceAll("{year}", "$year");
   String get datePickerNotSelected => text("datePickerNotSelected");
   String get dateRangeClear => text("dateRangeClear");
   String get dateRangeNotSelected => text("dateRangeNotSelected");
@@ -175,6 +186,11 @@ class AppLocalizations {
   String get recordSuccess => text("recordSuccess");
   String get reportBalance => text("reportBalance");
   String get reportByCategory => text("reportByCategory");
+  String get reportPeriodCustom => text("reportPeriodCustom");
+  String get reportPeriodMonth => text("reportPeriodMonth");
+  String get reportPeriodQuarter => text("reportPeriodQuarter");
+  String get reportPeriodWeek => text("reportPeriodWeek");
+  String get reportPeriodYear => text("reportPeriodYear");
   String get reportTitle => text("reportTitle");
   String get reRecord => text("reRecord");
   String get resumePlayback => text("resumePlayback");
@@ -272,10 +288,18 @@ const _vi = {
   "confirmPendingTitle": "Xác nhận giao dịch?",
   "continueEditing": "Tiếp tục chỉnh sửa",
   "continueEntry": "Tiếp tục nhập",
+  "dateFilterCustom": "Tuỳ chọn",
   "dateFilterCustomRange": "Khoảng ngày tuỳ chọn…",
+  "dateFilterLast30Days": "30 ngày vừa qua",
+  "dateFilterMonthValue": "Tháng {month}/{year}",
+  "dateFilterAllTime": "Toàn bộ",
   "dateFilterPickMonth": "Theo tháng…",
   "dateFilterPickYear": "Theo năm…",
+  "dateFilterThisMonth": "Tháng này",
+  "dateFilterThisWeek": "Tuần này",
+  "dateFilterThisYear": "Năm này",
   "dateFilterTitle": "Bộ lọc thời gian",
+  "dateFilterYearValue": "Năm {year}",
   "datePickerNotSelected": "Chưa chọn ngày",
   "dateRangeClear": "Xóa",
   "dateRangeNotSelected": "Chưa chọn khoảng ngày",
@@ -351,6 +375,11 @@ const _vi = {
   "recordSuccess": "Ghi âm thành công",
   "reportBalance": "Còn lại",
   "reportByCategory": "Theo hạng mục",
+  "reportPeriodCustom": "Tuỳ chọn",
+  "reportPeriodMonth": "Tháng",
+  "reportPeriodQuarter": "Quý",
+  "reportPeriodWeek": "Tuần",
+  "reportPeriodYear": "Năm",
   "reportTitle": "Báo cáo",
   "reRecord": "Ghi lại",
   "resumePlayback": "Tiếp tục phát",

@@ -79,30 +79,6 @@ class DateFilterSelection {
         );
     }
   }
-
-  /// Human-readable label for the current filter selection.
-  /// Pure function — no [BuildContext] needed.
-  String label() {
-    switch (preset) {
-      case DateFilterPreset.last30Days:
-        return "30 ngày vừa qua";
-      case DateFilterPreset.thisWeek:
-        return "Tuần này";
-      case DateFilterPreset.thisMonth:
-        return "Tháng này";
-      case DateFilterPreset.thisYear:
-        return "Năm này";
-      case DateFilterPreset.allTime:
-        return "Toàn bộ";
-      case DateFilterPreset.pickMonth:
-        final m = month ?? DateTime.now();
-        return "Tháng ${m.month}/${m.year}";
-      case DateFilterPreset.pickYear:
-        return "Năm ${year ?? DateTime.now().year}";
-      case DateFilterPreset.custom:
-        return "Tuỳ chọn";
-    }
-  }
 }
 
 enum AnalyticsPeriod { week, month, quarter, year, custom }
@@ -131,21 +107,6 @@ extension AnalyticsPeriodX on AnalyticsPeriod {
           );
         }
         return c;
-    }
-  }
-
-  String get labelVi {
-    switch (this) {
-      case AnalyticsPeriod.week:
-        return "Tuần";
-      case AnalyticsPeriod.month:
-        return "Tháng";
-      case AnalyticsPeriod.quarter:
-        return "Quý";
-      case AnalyticsPeriod.year:
-        return "Năm";
-      case AnalyticsPeriod.custom:
-        return "Tuỳ chọn";
     }
   }
 }

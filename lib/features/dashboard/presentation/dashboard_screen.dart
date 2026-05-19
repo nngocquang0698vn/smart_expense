@@ -285,7 +285,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               TextButton.icon(
                 onPressed: _pickFilter,
                 icon: const Icon(Icons.filter_alt_outlined),
-                label: Text(_controller.filter.label()),
+                label: Text(
+                  localizedDateFilterLabel(context.l10n, _controller.filter),
+                ),
               ),
             ],
           ),
@@ -492,7 +494,7 @@ class _DesktopHeader extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onFilterTap,
                 icon: const Icon(Icons.filter_alt_outlined),
-                label: Text(filter.label()),
+                label: Text(localizedDateFilterLabel(context.l10n, filter)),
               ),
             ],
           ),

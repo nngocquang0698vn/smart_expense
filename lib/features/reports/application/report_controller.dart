@@ -1,6 +1,5 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" show DateTimeRange;
-import "package:smart_expense/core/utils/date_format.dart";
 
 import "package:smart_expense/features/transactions/data/date_filter.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
@@ -66,13 +65,6 @@ class ReportController extends ChangeNotifier {
     if (incomeSide == next) return;
     incomeSide = next;
     await load();
-  }
-
-  String periodLabel() {
-    if (period == AnalyticsPeriod.custom && customRange != null) {
-      return "${formatReportAxis(customRange!.start)} - ${formatReportAxis(customRange!.end)}";
-    }
-    return period.labelVi;
   }
 
   @override

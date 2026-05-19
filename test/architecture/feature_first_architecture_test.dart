@@ -55,11 +55,21 @@ void main() {
   });
 
   test("app supports Vietnamese localization only", () {
+    expect(Directory("lib/app/localization/l10n").existsSync(), isFalse);
     expect(File("lib/app/localization/l10n/app_en.arb").existsSync(), isFalse);
     expect(
       AppLocalizations.supportedLocales.map((locale) => locale.languageCode),
       equals(["vi"]),
     );
+  });
+
+  test("date filter data objects do not own localized labels", () {
+    final source = File(
+      "lib/features/transactions/data/date_filter.dart",
+    ).readAsStringSync();
+
+    expect(source, isNot(contains("String label(")));
+    expect(source, isNot(contains("labelVi")));
   });
 
   test("dart files use package imports for project files", () {
