@@ -30,7 +30,7 @@ flowchart TB
   end
 
   subgraph App["Application state"]
-    ThemeNotifier["ThemeNotifier + SharedPreferences"]
+    ThemeController["ThemeController (Riverpod) + SharedPreferences"]
     RepoScope["RepoScope (InheritedNotifier)"]
   end
 
@@ -54,7 +54,7 @@ flowchart TB
   DB --> Meta
   DB --> Cats
   DB --> Txs
-  ThemeNotifier -.-> UI
+  ThemeController -.-> UI
   LR -->|notifyListeners| UI
 ```
 
@@ -62,7 +62,7 @@ flowchart TB
 
 - UI **không** gọi Sembast trực tiếp — mọi đọc/ghi qua `LedgerRepository`.
 - `LedgerRepository` extends `ChangeNotifier`: sau mỗi thay đổi gọi `notifyListeners()` → màn hình đăng ký `repo.addListener(...)` tự reload.
-- Theme tách riêng: `ThemeNotifier` + `ThemeSettings` (SharedPreferences), không nằm trong DB giao dịch.
+- Theme tách riêng: `ThemeController` + `ThemeSettings` (SharedPreferences), không nằm trong DB giao dịch.
 
 ---
 
@@ -299,7 +299,7 @@ sequenceDiagram
 | Tính năng | Luồng dữ liệu |
 |-----------|----------------|
 | Tên người dùng | `setUserName` → meta |
-| Giao diện | `ThemeNotifier.update(ThemeSettings)` → SharedPreferences |
+| Giao diện | `ThemeController.update(ThemeSettings)` → SharedPreferences |
 | Quản lý danh mục | `Navigator` → `CategoriesScreen` |
 | Đối soát | `onOpenPending` → đổi tab shell |
 | Thêm nhanh | `handleAddFab` |

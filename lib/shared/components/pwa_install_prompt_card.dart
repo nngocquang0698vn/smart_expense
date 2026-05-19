@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 
-import "package:smart_expense/core/utils/pwa/pwa_install_prompt_controller.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/app_finance_card.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
@@ -9,14 +8,16 @@ import "package:smart_expense/shared/components/app_secondary_button.dart";
 class PwaInstallPromptCard extends StatelessWidget {
   const PwaInstallPromptCard({
     super.key,
-    required this.controller,
     required this.onInstallTap,
     required this.onShowGuide,
+    required this.onSnooze,
+    required this.onNeverShow,
   });
 
-  final PwaInstallPromptController controller;
   final VoidCallback onInstallTap;
   final VoidCallback onShowGuide;
+  final Future<void> Function() onSnooze;
+  final Future<void> Function() onNeverShow;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +55,7 @@ class PwaInstallPromptCard extends StatelessWidget {
               ),
               IconButton(
                 tooltip: context.l10n.close,
-                onPressed: () => controller.snooze(),
+                onPressed: () => onSnooze(),
                 icon: const Icon(Icons.close_rounded, size: 20),
               ),
             ],
@@ -70,14 +71,14 @@ class PwaInstallPromptCard extends StatelessWidget {
               Expanded(
                 child: AppSecondaryButton(
                   label: context.l10n.pwaInstallLater,
-                  onPressed: () => controller.snooze(),
+                  onPressed: () => onSnooze(),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: AppSecondaryButton(
                   label: context.l10n.pwaInstallNever,
-                  onPressed: () => controller.neverShowAgain(),
+                  onPressed: () => onNeverShow(),
                 ),
               ),
             ],

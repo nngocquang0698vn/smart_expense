@@ -1,8 +1,9 @@
 import "package:smart_expense/features/categories/presentation/category_visuals.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:image_picker/image_picker.dart";
-import "package:smart_expense/core/utils/amount_input.dart";
+import "package:smart_expense/core/utils/amount_input_notifier.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
@@ -39,7 +40,7 @@ Future<void> showTransactionEditor(
   );
 }
 
-class _EditorBody extends StatefulWidget {
+class _EditorBody extends ConsumerStatefulWidget {
   const _EditorBody({
     required this.repo,
     this.existing,
@@ -51,12 +52,13 @@ class _EditorBody extends StatefulWidget {
   final bool defaultPending;
 
   @override
-  State<_EditorBody> createState() => _EditorBodyState();
+  ConsumerState<_EditorBody> createState() => _EditorBodyState();
 }
 
-class _EditorBodyState extends State<_EditorBody> {
+class _EditorBodyState extends ConsumerState<_EditorBody> {
+  late final int _amountKey;
+
   final _titleCtrl = TextEditingController();
-  final _amount = AmountInputController();
   final _noteCtrl = TextEditingController();
   late bool _income;
   String? _categoryId;
@@ -84,7 +86,7 @@ class _EditorBodyState extends State<_EditorBody> {
 
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
-      _amount.value != _initAmount ||
+      ref.read(amountInputProvider(_amountKey)) != _initAmount ||
       _noteCtrl.text != _initNote ||
       _income != _initIncome ||
       _categoryId != _initCategoryId ||
@@ -96,10 +98,10 @@ class _EditorBodyState extends State<_EditorBody> {
   @override
   void initState() {
     super.initState();
+    _amountKey = widget.existing?.amountVnd ?? 0;
     final e = widget.existing;
     if (e != null) {
       _titleCtrl.text = e.title;
-      _amount.setValue(e.amountVnd);
       _noteCtrl.text = e.note ?? "";
       _income = e.isIncome;
       _categoryId = e.categoryId;
@@ -115,7 +117,7 @@ class _EditorBodyState extends State<_EditorBody> {
     }
     // Snapshot initial values for dirty check
     _initTitle = _titleCtrl.text;
-    _initAmount = _amount.value;
+    _initAmount = _amountKey;
     _initNote = _noteCtrl.text;
     _initIncome = _income;
     _initCategoryId = _categoryId;
@@ -126,14 +128,12 @@ class _EditorBodyState extends State<_EditorBody> {
 
     // Rebuild on text changes so dirty flag updates
     _titleCtrl.addListener(() => setState(() {}));
-    _amount.addListener(() => setState(() {}));
     _noteCtrl.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
-    _amount.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -183,7 +183,7 @@ class _EditorBodyState extends State<_EditorBody> {
   }
 
   Future<void> _saveTransaction(List<LedgerCategory> cats) async {
-    final amount = _amount.value;
+    final amount = ref.read(amountInputProvider(_amountKey));
     final matchingCategories = _categorySelection.enabledForSide(
       cats,
       isIncome: _income,
@@ -283,6 +283,8 @@ class _EditorBodyState extends State<_EditorBody> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(amountInputProvider(_amountKey), (_, _) => setState(() {}));
+
     return FutureBuilder<List<LedgerCategory>>(
       future: widget.repo.categories(),
       builder: (context, snap) {
@@ -324,7 +326,7 @@ class _EditorBodyState extends State<_EditorBody> {
                     controller: _titleCtrl,
                     labelText: context.l10n.transactionTitle,
                   ),
-                  amountController: _amount,
+                  initialAmount: _amountKey,
                   noteController: _noteCtrl,
                   isIncome: _income,
                   onIncomeChanged: (income) => setState(() => _income = income),

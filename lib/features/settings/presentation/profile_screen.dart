@@ -7,9 +7,10 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:smart_expense/app/providers.dart";
 import "package:smart_expense/core/constants/app_constants.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_service.dart";
-import "package:smart_expense/core/utils/pwa/pwa_scope.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/pwa_install_guide_sheet.dart";
+import "package:smart_expense/app/theme/theme_controller.dart";
 import "package:smart_expense/app/theme/theme_presets.dart";
 import "package:smart_expense/app/theme/theme_settings.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
@@ -130,8 +131,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildAppearanceSection(BuildContext context) {
-    final notifier = ref.watch(themeNotifierProvider);
-    final settings = notifier.settings;
+    final settings = ref.watch(themeControllerProvider);
+    final themeNotifier = ref.read(themeControllerProvider.notifier);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
@@ -149,7 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: Text(context.l10n.darkModeTitle),
             subtitle: Text(context.l10n.darkModeSubtitle),
             value: settings.themePreference.isDark,
-            onChanged: (v) => notifier.update(
+            onChanged: (v) => themeNotifier.update(
               settings.copyWith(
                 themePreference: v
                     ? AppThemePreference.dark
@@ -162,7 +163,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: Text(context.l10n.accentColorsTitle),
             subtitle: Text(context.l10n.accentColorsSubtitle),
             value: settings.enableAccentColors,
-            onChanged: (v) => notifier.update(
+            onChanged: (v) => themeNotifier.update(
               settings.copyWith(
                 enableAccentColors: v,
                 seedColor: v ? settings.seedColor : AppColors.brandGreen,
@@ -209,7 +210,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   _ColorDot(
                     preset: preset,
                     selected: settings.seedColor == preset.color,
-                    onTap: () => notifier.update(
+                    onTap: () => themeNotifier.update(
                       settings.copyWith(seedColor: preset.color),
                     ),
                   ),
@@ -282,20 +283,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           title: Text(context.l10n.quickTransactionTitle),
           onTap: () => handleAddFab(context, _repo),
         ),
-        if (_showPwaInstallEntry(context)) _buildPwaInstallTile(context),
+        if (_showPwaInstallEntry()) _buildPwaInstallTile(context),
       ],
     );
   }
 
-  bool _showPwaInstallEntry(BuildContext context) {
+  bool _showPwaInstallEntry() {
     if (!kIsWeb) return false;
-    final controller = PwaScope.maybeOf(context);
-    if (controller == null) return false;
-    return !controller.isStandalone;
+    return !ref.read(pwaInstallControllerProvider).isStandalone;
   }
 
   Widget _buildPwaInstallTile(BuildContext context) {
-    final controller = PwaScope.of(context);
+    final state = ref.watch(pwaInstallControllerProvider);
+    final notifier = ref.read(pwaInstallControllerProvider.notifier);
     return ListTile(
       leading: const Icon(Icons.install_mobile_rounded),
       title: Text(context.l10n.pwaInstallMenuItem),
@@ -304,12 +304,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       onTap: () async {
         await PwaInstallGuideSheet.show(
           context,
-          platform: controller.platform,
-          showNativeInstall: controller.canNativeInstall,
+          platform: state.platform,
+          showNativeInstall: state.canNativeInstall,
           onNativeInstall: () async {
-            final result = await controller.install();
+            final result = await notifier.install();
             if (result == PwaInstallPromptResult.accepted) {
-              await controller.onInstallAccepted();
+              await notifier.onInstallAccepted();
             }
           },
         );

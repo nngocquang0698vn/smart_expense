@@ -1,7 +1,8 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:image_picker/image_picker.dart";
-import "package:smart_expense/core/utils/amount_input.dart";
+import "package:smart_expense/core/utils/amount_input_notifier.dart";
 import "package:smart_expense/core/utils/date_format.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/app_text_field.dart";
@@ -32,19 +33,20 @@ Future<void> showQuickEntrySheet(
   );
 }
 
-class _QuickEntryBody extends StatefulWidget {
+class _QuickEntryBody extends ConsumerStatefulWidget {
   const _QuickEntryBody({required this.repo, required this.mode});
 
   final LedgerRepository repo;
   final QuickEntryMode mode;
 
   @override
-  State<_QuickEntryBody> createState() => _QuickEntryBodyState();
+  ConsumerState<_QuickEntryBody> createState() => _QuickEntryBodyState();
 }
 
-class _QuickEntryBodyState extends State<_QuickEntryBody> {
+class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
+  static const _amountKey = 0;
+
   final _titleCtrl = TextEditingController();
-  final _amount = AmountInputController();
   final _noteCtrl = TextEditingController();
 
   bool _income = false;
@@ -71,7 +73,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
-      _amount.value != _initAmount ||
+      ref.read(amountInputProvider(_amountKey)) != _initAmount ||
       _noteCtrl.text.isNotEmpty ||
       _audio != null ||
       _images.isNotEmpty;
@@ -84,11 +86,9 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
     if (widget.mode == QuickEntryMode.voice) {
       final ts = formatQuickEntryTimestamp(DateTime.now());
       _titleCtrl.text = "${AppLocalizations.vi.quickEntryVoice} - $ts";
-      _amount.setValue(0);
     } else if (widget.mode == QuickEntryMode.receipt) {
       final ts = formatQuickEntryTimestamp(DateTime.now());
       _titleCtrl.text = "${AppLocalizations.vi.quickEntryReceipt} - $ts";
-      _amount.setValue(0);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         await _pickImage(
@@ -99,17 +99,15 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
     // Snapshot initial values so we can detect dirty state
     _initTitle = _titleCtrl.text;
-    _initAmount = _amount.value;
+    _initAmount = _amountKey;
 
     _titleCtrl.addListener(() => setState(() {}));
-    _amount.addListener(() => setState(() {}));
     _noteCtrl.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
-    _amount.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -160,7 +158,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
   // ── Save logic ────────────────────────────────────────────────────────────
 
   Future<void> _save(List<LedgerCategory> cats) async {
-    final amount = _amount.value;
+    final amount = ref.read(amountInputProvider(_amountKey));
     final matched = cats.where((c) => c.isIncome == _income).toList();
     final catId = _categoryId ?? (matched.isNotEmpty ? matched.first.id : null);
 
@@ -225,6 +223,8 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(amountInputProvider(_amountKey), (_, _) => setState(() {}));
+
     return FutureBuilder<List<LedgerCategory>>(
       future: widget.repo.categories().then(
         (list) => list.where((c) => c.enabled).toList(),
@@ -261,7 +261,7 @@ class _QuickEntryBodyState extends State<_QuickEntryBody> {
                 TransactionEntryForm(
                   typeToggleFirst: true,
                   showSelectedIcon: false,
-                  amountController: _amount,
+                  initialAmount: _amountKey,
                   noteController: _noteCtrl,
                   isIncome: _income,
                   onIncomeChanged: (income) => setState(() {
