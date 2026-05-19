@@ -1,5 +1,6 @@
 import "dart:io";
 
+import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:flutter_test/flutter_test.dart";
 
 void main() {
@@ -51,6 +52,14 @@ void main() {
     expect(Directory("test/features/home").existsSync(), isFalse);
     expect(Directory("test/widgets").existsSync(), isFalse);
     expect(Directory("test/fakes").existsSync(), isFalse);
+  });
+
+  test("app supports Vietnamese localization only", () {
+    expect(File("lib/app/localization/l10n/app_en.arb").existsSync(), isFalse);
+    expect(
+      AppLocalizations.supportedLocales.map((locale) => locale.languageCode),
+      equals(["vi"]),
+    );
   });
 
   test("dart files use package imports for project files", () {
