@@ -1,7 +1,5 @@
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
-
-import "package:smart_expense/core/utils/amount_input.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/shared/components/form_amount_field.dart";
@@ -13,7 +11,7 @@ import "package:smart_expense/features/transactions/presentation/widgets/transac
 /// Shared fields for quick entry and full transaction editor sheets.
 class TransactionEntryForm extends StatelessWidget {
   const TransactionEntryForm({
-    required this.amountController,
+    required this.initialAmount,
     required this.noteController,
     required this.isIncome,
     required this.onIncomeChanged,
@@ -41,7 +39,7 @@ class TransactionEntryForm extends StatelessWidget {
     super.key,
   });
 
-  final AmountInputController amountController;
+  final int initialAmount;
   final TextEditingController noteController;
   final bool isIncome;
   final ValueChanged<bool> onIncomeChanged;
@@ -88,7 +86,7 @@ class TransactionEntryForm extends StatelessWidget {
         if (typeToggleFirst) ...[toggle, const SizedBox(height: 14)],
         if (titleField != null) ...[titleField!, const SizedBox(height: 12)],
         FormAmountField(
-          controller: amountController,
+          initialAmount: initialAmount,
           alwaysShowKeypad: amountAlwaysShowKeypad,
           autofocus: amountAutofocus,
         ),

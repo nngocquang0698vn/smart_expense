@@ -1,10 +1,10 @@
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 
 class CategorySelectionResolver {
   const CategorySelectionResolver();
 
-  List<CategoryModel> enabledForSide(
-    List<CategoryModel> categories, {
+  List<LedgerCategory> enabledForSide(
+    List<LedgerCategory> categories, {
     required bool isIncome,
   }) {
     final seen = <String>{};
@@ -19,7 +19,7 @@ class CategorySelectionResolver {
 
   String? selectedValueOrNull({
     required String? selectedId,
-    required List<CategoryModel> items,
+    required List<LedgerCategory> items,
   }) {
     if (selectedId == null || selectedId.isEmpty) return null;
     return items.any((category) => category.id == selectedId)
@@ -27,13 +27,13 @@ class CategorySelectionResolver {
         : null;
   }
 
-  String? fallbackId(List<CategoryModel> items) {
+  String? fallbackId(List<LedgerCategory> items) {
     return items.isEmpty ? null : items.first.id;
   }
 
   String? selectedOrFallback({
     required String? selectedId,
-    required List<CategoryModel> items,
+    required List<LedgerCategory> items,
   }) {
     return selectedValueOrNull(selectedId: selectedId, items: items) ??
         fallbackId(items);
@@ -41,9 +41,10 @@ class CategorySelectionResolver {
 }
 
 class CategoryNameLookup {
-  CategoryNameLookup(List<CategoryModel> categories) : _categories = categories;
+  CategoryNameLookup(List<LedgerCategory> categories)
+    : _categories = categories;
 
-  final List<CategoryModel> _categories;
+  final List<LedgerCategory> _categories;
 
   String? idFor({
     required String name,

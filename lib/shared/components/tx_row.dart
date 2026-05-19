@@ -1,9 +1,10 @@
+import "package:smart_expense/features/categories/presentation/category_visuals.dart";
 import "package:flutter/material.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
 import "package:smart_expense/core/utils/date_format.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
-import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/shared/components/app_transaction_tile.dart";
 import "package:smart_expense/core/utils/formatters/money.dart";
 
@@ -16,8 +17,8 @@ class TxRow extends StatelessWidget {
     this.onTap,
   });
 
-  final TransactionModel transaction;
-  final CategoryModel? category;
+  final LedgerTransaction transaction;
+  final LedgerCategory? category;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -109,7 +110,7 @@ class TxRow extends StatelessWidget {
 
 Widget buildPendingActions({
   required BuildContext context,
-  required TransactionModel transaction,
+  required LedgerTransaction transaction,
   required VoidCallback onConfirm,
   required VoidCallback onEdit,
 }) {

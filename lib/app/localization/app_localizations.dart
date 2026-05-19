@@ -6,12 +6,11 @@ class AppLocalizations {
   const AppLocalizations(this.locale, this._strings);
 
   static const vi = AppLocalizations(Locale("vi", "VN"), _vi);
-  static const en = AppLocalizations(Locale("en", "US"), _en);
 
   final Locale locale;
   final Map<String, String> _strings;
 
-  static const supportedLocales = [Locale("vi", "VN"), Locale("en", "US")];
+  static const supportedLocales = [Locale("vi", "VN")];
 
   static const localizationsDelegates = [
     _AppLocalizationsDelegate(),
@@ -57,9 +56,20 @@ class AppLocalizations {
   String get darkModeSubtitle => text("darkModeSubtitle");
   String get darkModeTitle => text("darkModeTitle");
   String get dateFilterCustomRange => text("dateFilterCustomRange");
+  String get dateFilterCustom => text("dateFilterCustom");
+  String get dateFilterLast30Days => text("dateFilterLast30Days");
+  String dateFilterMonthValue(int month, int year) => text(
+    "dateFilterMonthValue",
+  ).replaceAll("{month}", "$month").replaceAll("{year}", "$year");
+  String get dateFilterAllTime => text("dateFilterAllTime");
   String get dateFilterPickMonth => text("dateFilterPickMonth");
   String get dateFilterPickYear => text("dateFilterPickYear");
+  String get dateFilterThisMonth => text("dateFilterThisMonth");
+  String get dateFilterThisWeek => text("dateFilterThisWeek");
+  String get dateFilterThisYear => text("dateFilterThisYear");
   String get dateFilterTitle => text("dateFilterTitle");
+  String dateFilterYearValue(int year) =>
+      text("dateFilterYearValue").replaceAll("{year}", "$year");
   String get datePickerNotSelected => text("datePickerNotSelected");
   String get dateRangeClear => text("dateRangeClear");
   String get dateRangeNotSelected => text("dateRangeNotSelected");
@@ -176,6 +186,11 @@ class AppLocalizations {
   String get recordSuccess => text("recordSuccess");
   String get reportBalance => text("reportBalance");
   String get reportByCategory => text("reportByCategory");
+  String get reportPeriodCustom => text("reportPeriodCustom");
+  String get reportPeriodMonth => text("reportPeriodMonth");
+  String get reportPeriodQuarter => text("reportPeriodQuarter");
+  String get reportPeriodWeek => text("reportPeriodWeek");
+  String get reportPeriodYear => text("reportPeriodYear");
   String get reportTitle => text("reportTitle");
   String get reRecord => text("reRecord");
   String get resumePlayback => text("resumePlayback");
@@ -203,16 +218,11 @@ class _AppLocalizationsDelegate
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) =>
-      locale.languageCode == "vi" || locale.languageCode == "en";
+  bool isSupported(Locale locale) => locale.languageCode == "vi";
 
   @override
-  Future<AppLocalizations> load(Locale locale) {
-    if (locale.languageCode == "en") {
-      return SynchronousFuture(AppLocalizations.en);
-    }
-    return SynchronousFuture(AppLocalizations.vi);
-  }
+  Future<AppLocalizations> load(Locale locale) =>
+      SynchronousFuture(AppLocalizations.vi);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -278,10 +288,18 @@ const _vi = {
   "confirmPendingTitle": "Xác nhận giao dịch?",
   "continueEditing": "Tiếp tục chỉnh sửa",
   "continueEntry": "Tiếp tục nhập",
+  "dateFilterCustom": "Tuỳ chọn",
   "dateFilterCustomRange": "Khoảng ngày tuỳ chọn…",
+  "dateFilterLast30Days": "30 ngày vừa qua",
+  "dateFilterMonthValue": "Tháng {month}/{year}",
+  "dateFilterAllTime": "Toàn bộ",
   "dateFilterPickMonth": "Theo tháng…",
   "dateFilterPickYear": "Theo năm…",
+  "dateFilterThisMonth": "Tháng này",
+  "dateFilterThisWeek": "Tuần này",
+  "dateFilterThisYear": "Năm này",
   "dateFilterTitle": "Bộ lọc thời gian",
+  "dateFilterYearValue": "Năm {year}",
   "datePickerNotSelected": "Chưa chọn ngày",
   "dateRangeClear": "Xóa",
   "dateRangeNotSelected": "Chưa chọn khoảng ngày",
@@ -357,6 +375,11 @@ const _vi = {
   "recordSuccess": "Ghi âm thành công",
   "reportBalance": "Còn lại",
   "reportByCategory": "Theo hạng mục",
+  "reportPeriodCustom": "Tuỳ chọn",
+  "reportPeriodMonth": "Tháng",
+  "reportPeriodQuarter": "Quý",
+  "reportPeriodWeek": "Tuần",
+  "reportPeriodYear": "Năm",
   "reportTitle": "Báo cáo",
   "reRecord": "Ghi lại",
   "resumePlayback": "Tiếp tục phát",
@@ -406,69 +429,4 @@ const _vi = {
   "onboardingInsightsTitle": "Quản lý thông minh",
   "onboardingInsightsBody":
       "Theo dõi thu chi qua biểu đồ trực quan - toàn bộ dữ liệu lưu riêng tư trên máy bạn.",
-};
-
-const _en = {
-  "accentColorsSubtitle":
-      "Choose more accent colors instead of the default emerald",
-  "accentColorsTitle": "More colors",
-  "appearanceTitle": "Appearance",
-  "categoryNoun": "categories",
-  "categorySubtitle": "Add, edit, and delete income or expense categories",
-  "customizationTitle": "Customization",
-  "darkModeSubtitle": "Dark interface for easier night viewing",
-  "darkModeTitle": "Dark mode",
-  "demoDataConfirm": "Load data",
-  "demoDataLoaded": "Johny Nguyen demo data loaded!",
-  "demoDataLoading": "Loading demo data...",
-  "demoModeButton": "Switch to demo mode",
-  "demoPersonName": "Johny Nguyen persona",
-  "demoPersonSummary": "Software Engineer · HCMC · 45m/month",
-  "demoSectionTitle": "Demo data",
-  "defaultGreenPreset": "Emerald (default)",
-  "nameSaved": "Name saved",
-  "pendingTransactionsSubtitle": "Open the review list",
-  "pendingTransactionsTitle": "Pending transactions",
-  "profileTitle": "Profile",
-  "quickEntryReceiptCaptureSubtitle": "Save receipt photos for later review",
-  "quickEntryReceiptCaptureTitle": "Capture receipt",
-  "quickEntryReceiptPickSubtitle": "Choose a receipt image for review",
-  "quickEntryReceiptPickTitle": "Choose receipt",
-  "quickEntryTapSubtitle": "Enter a transaction quickly with one tap",
-  "quickEntryVoiceSubtitle": "Record a quick voice note for later review",
-  "quickTransactionTitle": "Quick transaction",
-  "seedColorLabel": "Accent color",
-  "userNameLabel": "User name",
-  "appName": "Smart Ledger",
-  "loading": "Loading data...",
-  "navHome": "Home",
-  "navPending": "Review",
-  "navAnalytics": "Reports",
-  "navProfile": "Profile",
-  "homeTitle": "Home",
-  "income": "Income",
-  "expense": "Expense",
-  "pending": "Pending review",
-  "seeAll": "See all",
-  "historyTitle": "Transaction history",
-  "onboardingNameRequired": "Please enter your name",
-  "onboardingSkip": "Skip",
-  "onboardingBack": "Back",
-  "onboardingStart": "Start",
-  "onboardingPrevious": "Previous",
-  "onboardingNext": "Next",
-  "onboardingNameLabel": "Your name",
-  "onboardingNameHint": "Example: Nguyen Van A",
-  "onboardingIntroTitle": "Smart Ledger",
-  "onboardingIntroBody":
-      "Track spending intelligently, store data on your device, and keep working offline.",
-  "onboardingFastTitle": "Fast entry",
-  "onboardingFastBody":
-      "Tap to enter quickly, capture receipts, or record voice notes in seconds.",
-  "onboardingReviewTitle": "Smart review",
-  "onboardingReviewBody":
-      "Review and classify pending transactions whenever you have time.",
-  "onboardingInsightsTitle": "Clear control",
-  "onboardingInsightsBody":
-      "Follow income and expenses with visual reports while your data stays private.",
 };

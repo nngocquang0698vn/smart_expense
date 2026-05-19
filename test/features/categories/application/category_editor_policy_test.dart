@@ -1,18 +1,18 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/features/categories/application/category_editor_policy.dart";
 
 void main() {
   const policy = CategoryEditorPolicy();
 
-  CategoryModel category({
+  LedgerCategory category({
     String id = "food",
     String name = "Ăn uống",
     bool isIncome = false,
     bool enabled = true,
   }) {
-    return CategoryModel(
+    return LedgerCategory(
       id: id,
       name: name,
       iconKey: "restaurant",

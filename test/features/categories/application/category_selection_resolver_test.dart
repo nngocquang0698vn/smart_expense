@@ -1,16 +1,16 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/features/categories/application/category_selection_resolver.dart";
 
 void main() {
   const resolver = CategorySelectionResolver();
 
-  CategoryModel category({
+  LedgerCategory category({
     required String id,
     required bool isIncome,
     bool enabled = true,
   }) {
-    return CategoryModel(
+    return LedgerCategory(
       id: id,
       name: id,
       iconKey: "category",
@@ -71,8 +71,8 @@ void main() {
   });
 
   test("CategoryNameLookup resolves Khác to the matching side", () {
-    CategoryModel khac(String id, bool isIncome) {
-      return CategoryModel(
+    LedgerCategory khac(String id, bool isIncome) {
+      return LedgerCategory(
         id: id,
         name: "Khác",
         iconKey: "category",

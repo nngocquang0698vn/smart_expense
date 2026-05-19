@@ -1,21 +1,23 @@
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/core/utils/amount_input.dart";
+import "package:smart_expense/core/utils/amount_input_notifier.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
 import "package:smart_expense/shared/components/amount_keypad.dart";
 
 /// Prominent amount field with custom numeric keypad (no system keyboard).
-class FormAmountField extends StatefulWidget {
+class FormAmountField extends ConsumerStatefulWidget {
   const FormAmountField({
     super.key,
-    required this.controller,
+    required this.initialAmount,
     this.style,
     this.autofocus = false,
     this.alwaysShowKeypad = false,
     this.onDone,
   });
 
-  final AmountInputController controller;
+  final int initialAmount;
   final TextStyle? style;
   final bool autofocus;
 
@@ -25,27 +27,16 @@ class FormAmountField extends StatefulWidget {
   final VoidCallback? onDone;
 
   @override
-  State<FormAmountField> createState() => _FormAmountFieldState();
+  ConsumerState<FormAmountField> createState() => _FormAmountFieldState();
 }
 
-class _FormAmountFieldState extends State<FormAmountField> {
+class _FormAmountFieldState extends ConsumerState<FormAmountField> {
   late bool _keypadOpen;
 
   @override
   void initState() {
     super.initState();
     _keypadOpen = widget.alwaysShowKeypad || widget.autofocus;
-    widget.controller.addListener(_onAmountChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_onAmountChanged);
-    super.dispose();
-  }
-
-  void _onAmountChanged() {
-    if (mounted) setState(() {});
   }
 
   void _openKeypad() {
@@ -60,6 +51,10 @@ class _FormAmountFieldState extends State<FormAmountField> {
 
   @override
   Widget build(BuildContext context) {
+    final amount = ref.watch(amountInputProvider(widget.initialAmount));
+    final notifier = ref.read(
+      amountInputProvider(widget.initialAmount).notifier,
+    );
     final cs = Theme.of(context).colorScheme;
     final finance = context.financeColors;
     final radius = BorderRadius.circular(AppRadius.lg);
@@ -109,7 +104,7 @@ class _FormAmountFieldState extends State<FormAmountField> {
                     ),
                     Flexible(
                       child: Text(
-                        widget.controller.displayText,
+                        formatAmountInput(amount),
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -124,9 +119,9 @@ class _FormAmountFieldState extends State<FormAmountField> {
           if (showKeypad) ...[
             const SizedBox(height: AppSpacing.xs),
             AmountKeypad(
-              onDigit: widget.controller.appendDigit,
-              onTripleZero: widget.controller.appendTripleZero,
-              onBackspace: widget.controller.backspace,
+              onDigit: notifier.appendDigit,
+              onTripleZero: notifier.appendTripleZero,
+              onBackspace: notifier.backspace,
               onDone: _closeKeypad,
             ),
           ],

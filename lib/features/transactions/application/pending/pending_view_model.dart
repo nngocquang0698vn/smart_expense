@@ -1,5 +1,5 @@
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
-import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 
 class PendingViewModel {
   const PendingViewModel({
@@ -13,19 +13,19 @@ class PendingViewModel {
       categories = const [],
       loading = true;
 
-  final List<TransactionModel> transactions;
-  final List<CategoryModel> categories;
+  final List<LedgerTransaction> transactions;
+  final List<LedgerCategory> categories;
   final bool loading;
 
   bool get isEmpty => transactions.isEmpty;
 
-  Map<String, CategoryModel> get categoryMap => {
+  Map<String, LedgerCategory> get categoryMap => {
     for (final category in categories) category.id: category,
   };
 
   PendingViewModel copyWith({
-    List<TransactionModel>? transactions,
-    List<CategoryModel>? categories,
+    List<LedgerTransaction>? transactions,
+    List<LedgerCategory>? categories,
     bool? loading,
   }) {
     return PendingViewModel(

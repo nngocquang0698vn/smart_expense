@@ -1,14 +1,16 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import "package:smart_expense/core/utils/pwa/pwa_install_prompt_controller.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_listener.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_service.dart";
-import "package:smart_expense/core/utils/pwa/pwa_scope.dart";
+import "package:smart_expense/core/utils/pwa/pwa_providers.dart";
 import "package:smart_expense/shared/components/pwa_install_guide_sheet.dart";
 import "package:smart_expense/shared/components/pwa_install_prompt_card.dart";
 
 /// Shows the PWA install banner on the home tab when appropriate.
-class PwaInstallBannerHost extends StatefulWidget {
+class PwaInstallBannerHost extends ConsumerStatefulWidget {
   const PwaInstallBannerHost({
     super.key,
     required this.pageIndex,
@@ -19,60 +21,68 @@ class PwaInstallBannerHost extends StatefulWidget {
   final Widget child;
 
   @override
-  State<PwaInstallBannerHost> createState() => _PwaInstallBannerHostState();
+  ConsumerState<PwaInstallBannerHost> createState() =>
+      _PwaInstallBannerHostState();
 }
 
-class _PwaInstallBannerHostState extends State<PwaInstallBannerHost> {
-  PwaInstallPromptController? _controller;
-  bool _evaluated = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!kIsWeb || _evaluated) return;
-    _evaluated = true;
-    _controller = PwaScope.maybeOf(context);
-    _controller?.addListener(_onController);
+class _PwaInstallBannerHostState extends ConsumerState<PwaInstallBannerHost> {
+  void _evaluateBannerSoon() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller?.evaluateBanner();
+      if (!mounted) return;
+      ref.read(pwaInstallControllerProvider.notifier).evaluateBanner();
     });
   }
 
   @override
+  void initState() {
+    super.initState();
+    if (!kIsWeb) return;
+    _evaluateBannerSoon();
+    listenPwaInstallAvailable(_evaluateBannerSoon);
+  }
+
+  @override
   void dispose() {
-    _controller?.removeListener(_onController);
+    cancelPwaInstallAvailableListener();
     super.dispose();
   }
 
-  void _onController() {
-    if (mounted) setState(() {});
+  @override
+  void didUpdateWidget(covariant PwaInstallBannerHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (kIsWeb && widget.pageIndex == 0 && oldWidget.pageIndex != 0) {
+      _evaluateBannerSoon();
+    }
   }
 
   Future<void> _onInstallTap(BuildContext context) async {
-    final controller = PwaScope.of(context);
-    if (controller.canNativeInstall) {
-      final result = await controller.install();
+    final notifier = ref.read(pwaInstallControllerProvider.notifier);
+    final state = ref.read(pwaInstallControllerProvider);
+    final canNative = ref.read(pwaInstallServiceProvider).canNativePrompt;
+    if (canNative) {
+      final result = await notifier.install();
       if (!context.mounted) return;
       if (result == PwaInstallPromptResult.accepted) {
-        await controller.onInstallAccepted();
+        await notifier.onInstallAccepted();
         return;
       }
     }
     if (!context.mounted) return;
     await PwaInstallGuideSheet.show(
       context,
-      platform: controller.platform,
-      showNativeInstall: controller.canNativeInstall,
+      platform: state.platform,
+      showNativeInstall: canNative,
       onNativeInstall: () => _onInstallTap(context),
     );
   }
 
   void _onShowGuide(BuildContext context) {
-    final controller = PwaScope.of(context);
+    final state = ref.read(pwaInstallControllerProvider);
+    final canNative = ref.read(pwaInstallServiceProvider).canNativePrompt;
     PwaInstallGuideSheet.show(
       context,
-      platform: controller.platform,
-      showNativeInstall: controller.canNativeInstall,
+      platform: state.platform,
+      showNativeInstall: canNative,
       onNativeInstall: () => _onInstallTap(context),
     );
   }
@@ -81,24 +91,20 @@ class _PwaInstallBannerHostState extends State<PwaInstallBannerHost> {
   Widget build(BuildContext context) {
     if (!kIsWeb) return widget.child;
 
-    final controller = PwaScope.maybeOf(context);
-    final showBanner =
-        widget.pageIndex == 0 && controller != null && controller.bannerVisible;
+    final state = ref.watch(pwaInstallControllerProvider);
+    final showBanner = widget.pageIndex == 0 && state.bannerVisible;
 
     if (!showBanner) return widget.child;
 
+    final notifier = ref.read(pwaInstallControllerProvider.notifier);
+
     return Column(
       children: [
-        ListenableBuilder(
-          listenable: controller,
-          builder: (context, _) {
-            if (!controller.bannerVisible) return const SizedBox.shrink();
-            return PwaInstallPromptCard(
-              controller: controller,
-              onInstallTap: () => _onInstallTap(context),
-              onShowGuide: () => _onShowGuide(context),
-            );
-          },
+        PwaInstallPromptCard(
+          onSnooze: notifier.snooze,
+          onNeverShow: notifier.neverShowAgain,
+          onInstallTap: () => _onInstallTap(context),
+          onShowGuide: () => _onShowGuide(context),
         ),
         Expanded(child: widget.child),
       ],

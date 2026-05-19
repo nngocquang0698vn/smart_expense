@@ -1,5 +1,5 @@
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
-import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 
 class DashboardSummaryViewModel {
   const DashboardSummaryViewModel({
@@ -36,9 +36,9 @@ class DashboardViewModel {
       allLoaded = false;
 
   final DashboardSummaryViewModel summary;
-  final List<TransactionModel> pending;
-  final List<CategoryModel> categories;
-  final List<TransactionModel> history;
+  final List<LedgerTransaction> pending;
+  final List<LedgerCategory> categories;
+  final List<LedgerTransaction> history;
   final int historyOffset;
   final bool topLoading;
   final bool loadingMore;
@@ -47,15 +47,15 @@ class DashboardViewModel {
   bool get initialLoading =>
       topLoading && pending.isEmpty && categories.isEmpty;
 
-  Map<String, CategoryModel> get categoryMap => {
+  Map<String, LedgerCategory> get categoryMap => {
     for (final category in categories) category.id: category,
   };
 
   DashboardViewModel copyWith({
     DashboardSummaryViewModel? summary,
-    List<TransactionModel>? pending,
-    List<CategoryModel>? categories,
-    List<TransactionModel>? history,
+    List<LedgerTransaction>? pending,
+    List<LedgerCategory>? categories,
+    List<LedgerTransaction>? history,
     int? historyOffset,
     bool? topLoading,
     bool? loadingMore,
@@ -91,7 +91,7 @@ class DashboardHistoryPager {
 
   DashboardViewModel appendBatch(
     DashboardViewModel viewModel,
-    List<TransactionModel> batch, {
+    List<LedgerTransaction> batch, {
     required int pageSize,
   }) {
     if (batch.isEmpty) {

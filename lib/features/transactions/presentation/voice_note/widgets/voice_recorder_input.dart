@@ -1,13 +1,15 @@
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/features/transactions/application/voice_note/voice_recorder_config.dart";
+import "package:smart_expense/features/transactions/application/voice_note/voice_recorder_controller.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/voice_recording_status.dart";
-import "package:smart_expense/features/transactions/presentation/voice_note/controllers/voice_recorder_controller.dart";
 import "package:smart_expense/shared/dialogs/dialogs.dart";
 import "package:smart_expense/features/transactions/presentation/voice_note/widgets/voice_note_preview.dart";
 
-class VoiceRecorderInput extends StatefulWidget {
+class VoiceRecorderInput extends ConsumerStatefulWidget {
   const VoiceRecorderInput({
     super.key,
     this.audio,
@@ -24,22 +26,36 @@ class VoiceRecorderInput extends StatefulWidget {
   final Duration maxRecordDuration;
 
   @override
-  State<VoiceRecorderInput> createState() => _VoiceRecorderInputState();
+  ConsumerState<VoiceRecorderInput> createState() => _VoiceRecorderInputState();
 }
 
-class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
-  late final VoiceRecorderController _controller;
+class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
+  final Object _sessionId = Object();
   bool _autoStarted = false;
   bool _showPreviewActions = false;
+
+  VoiceRecorderConfig get _config => VoiceRecorderConfig(
+    sessionId: _sessionId,
+    maxDuration: widget.maxRecordDuration,
+  );
+
+  VoiceRecorderController get _controller =>
+      ref.read(voiceRecorderControllerProvider(_config).notifier);
+
+  void _syncExistingAudio(AudioAttachmentModel audio) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(voiceRecorderControllerProvider(_config).notifier).useExisting(
+            audio,
+          );
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _controller = VoiceRecorderController(
-      maxDuration: widget.maxRecordDuration,
-    );
     if (widget.audio != null) {
-      _controller.useExisting(widget.audio!);
+      _syncExistingAudio(widget.audio!);
     }
     if (widget.autoStartRecording) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _autoStart());
@@ -50,7 +66,7 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
   void didUpdateWidget(covariant VoiceRecorderInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.audio?.id != widget.audio?.id && widget.audio != null) {
-      _controller.useExisting(widget.audio!);
+      _syncExistingAudio(widget.audio!);
     }
   }
 
@@ -60,12 +76,6 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
     }
     _autoStarted = true;
     await _controller.start();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _showMessage(String message) {
@@ -110,44 +120,39 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        if (!widget.showWhenEmpty &&
-            _controller.status == VoiceRecordingStatus.idle &&
-            _controller.voiceNote == null) {
-          return const SizedBox.shrink();
-        }
+    final recorderState = ref.watch(voiceRecorderControllerProvider(_config));
+    if (!widget.showWhenEmpty &&
+        recorderState.status == VoiceRecordingStatus.idle &&
+        recorderState.voiceNote == null) {
+      return const SizedBox.shrink();
+    }
 
-        final error = _controller.errorMessage;
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(AppRadius.xxl),
-            border: Border.all(color: cs.outlineVariant),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              child: _buildContent(error),
-            ),
-          ),
-        );
-      },
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: _buildContent(recorderState),
+        ),
+      ),
     );
   }
 
-  Widget _buildContent(String? error) {
-    final status = _controller.status;
-    final note = _controller.voiceNote;
+  Widget _buildContent(VoiceRecorderState recorderState) {
+    final status = recorderState.status;
+    final note = recorderState.voiceNote;
     if (status == VoiceRecordingStatus.recording ||
         status == VoiceRecordingStatus.paused ||
         status == VoiceRecordingStatus.saving) {
       return _RecordingPanel(
         key: const ValueKey("recording"),
         status: status,
-        elapsed: _controller.elapsed,
+        elapsed: recorderState.elapsed,
         format: _format,
         onPause: _controller.pause,
         onResume: _controller.resume,
@@ -179,7 +184,9 @@ class _VoiceRecorderInputState extends State<VoiceRecorderInput> {
 
     return _IdlePanel(
       key: const ValueKey("idle"),
-      error: status == VoiceRecordingStatus.error ? error : null,
+      error: status == VoiceRecordingStatus.error
+          ? recorderState.errorMessage
+          : null,
       onStart: _controller.start,
     );
   }

@@ -8,14 +8,15 @@ import "package:smart_expense/core/utils/formatters/money.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
 import "package:smart_expense/shared/components/summary_card.dart";
 import "package:smart_expense/shared/components/tx_row.dart";
-import "package:smart_expense/features/transactions/data/date_filter.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
-import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
+import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
 import "package:smart_expense/shared/components/app_empty_state.dart";
 import "package:smart_expense/features/transactions/presentation/date_filter_sheet.dart";
 import "package:smart_expense/features/transactions/presentation/transaction_editor_sheet.dart";
 import "package:smart_expense/features/dashboard/application/dashboard_controller.dart";
+import "package:smart_expense/features/dashboard/application/dashboard_view_model.dart";
 import "package:smart_expense/features/dashboard/utils/tx_grouping.dart";
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -28,7 +29,6 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  late final DashboardController _controller;
   final _scroll = ScrollController();
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -36,14 +36,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = DashboardController(ref.read(ledgerRepositoryProvider))
-      ..bootstrap();
     _scroll.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -51,18 +48,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // ── Data loading ──────────────────────────────────────────────────────────
 
   void _onScroll() {
-    final viewModel = _controller.viewModel;
+    final viewModel = _viewModel;
     if (viewModel.allLoaded || viewModel.loadingMore) return;
     if (_scroll.position.pixels >
         _scroll.position.maxScrollExtent - AppPageSizes.scrollLoadThreshold) {
-      _controller.loadMore();
+      ref.read(dashboardControllerProvider.notifier).loadMore();
     }
   }
 
+  DashboardViewModel get _viewModel =>
+      ref.read(dashboardControllerProvider).value?.viewModel ??
+      const DashboardViewModel.initial();
+
+  DateFilterSelection get _filter =>
+      ref.read(dashboardControllerProvider).value?.filter ??
+      const DateFilterSelection(preset: DateFilterPreset.thisMonth);
+
   Future<void> _pickFilter() async {
-    final next = await showDateFilterSheet(context, _controller.filter);
+    final next = await showDateFilterSheet(context, _filter);
     if (next != null && mounted) {
-      await _controller.updateFilter(next);
+      await ref.read(dashboardControllerProvider.notifier).updateFilter(next);
     }
   }
 
@@ -77,13 +82,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return "$n+";
   }
 
-  void _openEditor(TransactionModel t) => showTransactionEditor(
+  void _openEditor(LedgerTransaction t) => showTransactionEditor(
     context,
     ref.read(ledgerRepositoryProvider),
     existing: t,
   );
 
-  Future<void> _confirmPending(TransactionModel t) async {
+  Future<void> _confirmPending(LedgerTransaction t) async {
     final ok = await AppConfirmBottomSheet.show(
       context,
       title: context.l10n.confirmPendingTitle,
@@ -93,7 +98,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(ledgerRepositoryProvider).confirmPending(t.id);
   }
 
-  Widget _pendingTrailing(TransactionModel t) => buildPendingActions(
+  Widget _pendingTrailing(LedgerTransaction t) => buildPendingActions(
     context: context,
     transaction: t,
     onConfirm: () => _confirmPending(t),
@@ -104,10 +109,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        final viewModel = _controller.viewModel;
+    final dashboard = ref.watch(dashboardControllerProvider);
+    return dashboard.when(
+      data: (state) {
+        final viewModel = state.viewModel;
         if (viewModel.initialLoading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -123,6 +128,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 expense: viewModel.summary.expense,
                 pendingAll: viewModel.pending,
                 catMap: viewModel.categoryMap,
+                filter: state.filter,
               )
             : _buildMobile(
                 context,
@@ -131,8 +137,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 expense: viewModel.summary.expense,
                 pendingAll: viewModel.pending,
                 catMap: viewModel.categoryMap,
+                filter: state.filter,
               );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) => Center(child: Text(context.l10n.genericError)),
     );
   }
 
@@ -143,14 +152,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required AppLocalizations l10n,
     required int income,
     required int expense,
-    required List<TransactionModel> pendingAll,
-    required Map<String, CategoryModel> catMap,
+    required List<LedgerTransaction> pendingAll,
+    required Map<String, LedgerCategory> catMap,
+    required DateFilterSelection filter,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _DesktopHeader(
-          filter: _controller.filter,
+          filter: filter,
           l10n: l10n,
           income: income,
           expense: expense,
@@ -165,7 +175,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               Expanded(
                 flex: 4,
                 child: RefreshIndicator(
-                  onRefresh: _controller.refreshTop,
+                  onRefresh: () =>
+                      ref.read(dashboardControllerProvider.notifier).refresh(),
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(
                       0,
@@ -231,12 +242,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             l10n.historyTitle,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          if (_controller.viewModel.history.isNotEmpty) ...[
+                          if (_viewModel.history.isNotEmpty) ...[
                             const SizedBox(width: 6),
                             HistoryCountBadge(
                               label: _fmtCount(
-                                _controller.viewModel.history.length,
-                                hasMore: !_controller.viewModel.allLoaded,
+                                _viewModel.history.length,
+                                hasMore: !_viewModel.allLoaded,
                               ),
                             ),
                           ],
@@ -244,7 +255,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ),
                     ..._historyWidgets(catMap),
-                    if (_controller.viewModel.loadingMore)
+                    if (_viewModel.loadingMore)
                       const Padding(
                         padding: EdgeInsets.all(12),
                         child: Center(child: CircularProgressIndicator()),
@@ -266,14 +277,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required AppLocalizations l10n,
     required int income,
     required int expense,
-    required List<TransactionModel> pendingAll,
-    required Map<String, CategoryModel> catMap,
+    required List<LedgerTransaction> pendingAll,
+    required Map<String, LedgerCategory> catMap,
+    required DateFilterSelection filter,
   }) {
     final pendingPreview = pendingAll.take(3).toList();
 
     return RefreshIndicator(
       onRefresh: () async {
-        await _controller.refresh();
+        await ref.read(dashboardControllerProvider.notifier).refresh();
       },
       child: CustomScrollView(
         controller: _scroll,
@@ -285,7 +297,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               TextButton.icon(
                 onPressed: _pickFilter,
                 icon: const Icon(Icons.filter_alt_outlined),
-                label: Text(_controller.filter.label()),
+                label: Text(localizedDateFilterLabel(context.l10n, filter)),
               ),
             ],
           ),
@@ -359,12 +371,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     l10n.historyTitle,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  if (_controller.viewModel.history.isNotEmpty) ...[
+                  if (_viewModel.history.isNotEmpty) ...[
                     const SizedBox(width: 6),
                     HistoryCountBadge(
                       label: _fmtCount(
-                        _controller.viewModel.history.length,
-                        hasMore: !_controller.viewModel.allLoaded,
+                        _viewModel.history.length,
+                        hasMore: !_viewModel.allLoaded,
                       ),
                     ),
                   ],
@@ -373,7 +385,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
           ..._historySlivers(catMap),
-          if (_controller.viewModel.loadingMore)
+          if (_viewModel.loadingMore)
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.all(16),
@@ -390,8 +402,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   // ── History renderers ─────────────────────────────────────────────────────
 
-  Iterable<Widget> _historyWidgets(Map<String, CategoryModel> catMap) {
-    final viewModel = _controller.viewModel;
+  Iterable<Widget> _historyWidgets(Map<String, LedgerCategory> catMap) {
+    final viewModel = _viewModel;
     final buckets = groupByDay(viewModel.history);
     if (buckets.isEmpty && !viewModel.loadingMore) {
       return [
@@ -419,8 +431,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ];
   }
 
-  Iterable<Widget> _historySlivers(Map<String, CategoryModel> catMap) {
-    final viewModel = _controller.viewModel;
+  Iterable<Widget> _historySlivers(Map<String, LedgerCategory> catMap) {
+    final viewModel = _viewModel;
     final buckets = groupByDay(viewModel.history);
     if (buckets.isEmpty && !viewModel.loadingMore) {
       return [
@@ -492,7 +504,7 @@ class _DesktopHeader extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onFilterTap,
                 icon: const Icon(Icons.filter_alt_outlined),
-                label: Text(filter.label()),
+                label: Text(localizedDateFilterLabel(context.l10n, filter)),
               ),
             ],
           ),
@@ -532,7 +544,7 @@ class _DesktopHeader extends StatelessWidget {
 class _PendingSubheader extends StatelessWidget {
   const _PendingSubheader({required this.items});
 
-  final List<TransactionModel> items;
+  final List<LedgerTransaction> items;
 
   @override
   Widget build(BuildContext context) {

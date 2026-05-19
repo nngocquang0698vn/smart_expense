@@ -1,9 +1,13 @@
-import "package:flutter/material.dart";
+import "dart:async";
+
 import "package:sembast/sembast.dart";
 import "package:smart_expense/core/utils/date_range.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
+import "package:smart_expense/features/transactions/data/category_model_mapper.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 import "package:smart_expense/features/transactions/data/transaction_model_mapper.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
+import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
 import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/features/transactions/domain/services/ledger_query_service.dart";
@@ -11,7 +15,6 @@ import "package:smart_expense/features/transactions/data/attachments/audio_stora
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:uuid/uuid.dart";
 
-import "package:smart_expense/features/transactions/data/date_filter.dart";
 import "package:smart_expense/features/transactions/data/models/category_model.dart";
 import "package:smart_expense/features/transactions/data/models/transaction_model.dart";
 
@@ -21,12 +24,16 @@ class SembastLedgerRepository extends LedgerRepository {
   final Database _db;
   final AudioStorageService _audioStorage = AudioStorageService();
   final ImageStorageService _imageStorage = ImageStorageService();
+  final StreamController<void> _changes = StreamController<void>.broadcast();
   final _uuid = const Uuid();
   final _queries = const LedgerQueryService();
 
   static final _meta = stringMapStoreFactory.store("meta");
   static final _categories = stringMapStoreFactory.store("categories");
   static final _transactions = stringMapStoreFactory.store("transactions");
+
+  @override
+  Stream<void> get changes => _changes.stream;
 
   @override
   Future<void> ensureDefaults() async {
@@ -197,7 +204,7 @@ class SembastLedgerRepository extends LedgerRepository {
     final cur = await getMeta();
     cur["userName"] = name;
     await _meta.record("app").put(_db, cur);
-    notifyListeners();
+    _notifyChanged();
   }
 
   @override
@@ -205,30 +212,38 @@ class SembastLedgerRepository extends LedgerRepository {
     final cur = await getMeta();
     cur["onboarded"] = v;
     await _meta.record("app").put(_db, cur);
-    notifyListeners();
+    _notifyChanged();
   }
 
   @override
-  Future<List<CategoryModel>> categories() async {
+  Future<List<LedgerCategory>> categories() async {
     final snap = await _categories.find(_db);
-    return snap.map((r) => CategoryModel.fromMap(r.key, r.value)).toList()
+    return snap
+        .map((r) => CategoryModel.fromMap(r.key, r.value).toEntity())
+        .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
   }
 
   @override
-  Future<void> upsertCategory(CategoryModel c) async {
-    await _categories.record(c.id).put(_db, c.toMap());
-    notifyListeners();
+  Future<void> upsertCategory(LedgerCategory category) async {
+    final model = category.toModel();
+    await _categories.record(model.id).put(_db, model.toMap());
+    _notifyChanged();
   }
 
   @override
   Future<void> deleteCategory(String id) async {
     await _categories.record(id).delete(_db);
-    notifyListeners();
+    _notifyChanged();
   }
 
   @override
-  Future<List<TransactionModel>> allTransactions() async {
+  Future<List<LedgerTransaction>> allTransactions() async {
+    final list = await _allTransactionModels();
+    return list.map((transaction) => transaction.toEntity()).toList();
+  }
+
+  Future<List<TransactionModel>> _allTransactionModels() async {
     final snap = await _transactions.find(_db);
     final list = snap
         .map((r) => TransactionModel.fromMap(r.key, r.value))
@@ -239,56 +254,46 @@ class SembastLedgerRepository extends LedgerRepository {
 
   @override
   Future<Map<String, int>> homeSummary(DateFilterSelection filter) async {
-    final all = await allTransactions();
+    final all = await _allTransactionModels();
     final range = filter.resolveRange(DateTime.now());
-    return _queries
-        .confirmedTotals(_entities(all), _appRange(range))
-        .toLegacyMap();
+    return _queries.confirmedTotals(_entities(all), range).toLegacyMap();
   }
 
   @override
-  Future<List<TransactionModel>> pendingForHome(
+  Future<List<LedgerTransaction>> pendingForHome(
     DateFilterSelection filter,
   ) async {
-    final all = await allTransactions();
+    final all = await _allTransactionModels();
     final range = filter.resolveRange(DateTime.now());
-    return _modelsForEntities(
-      all,
-      _queries.pendingInRange(_entities(all), _appRange(range), limit: 3),
-    );
+    return _queries.pendingInRange(_entities(all), range, limit: 3);
   }
 
   @override
-  Future<List<TransactionModel>> pendingAll(DateFilterSelection filter) async {
-    final all = await allTransactions();
+  Future<List<LedgerTransaction>> pendingAll(DateFilterSelection filter) async {
+    final all = await _allTransactionModels();
     final range = filter.resolveRange(DateTime.now());
-    return _modelsForEntities(
-      all,
-      _queries.pendingInRange(_entities(all), _appRange(range)),
-    );
+    return _queries.pendingInRange(_entities(all), range);
   }
 
   @override
-  Future<List<TransactionModel>> historyPage({
+  Future<List<LedgerTransaction>> historyPage({
     required DateFilterSelection filter,
     required int offset,
     required int limit,
   }) async {
-    final all = await allTransactions();
+    final all = await _allTransactionModels();
     final range = filter.resolveRange(DateTime.now());
-    return _modelsForEntities(
-      all,
-      _queries.confirmedHistoryPage(
-        _entities(all),
-        _appRange(range),
-        offset: offset,
-        limit: limit,
-      ),
+    return _queries.confirmedHistoryPage(
+      _entities(all),
+      range,
+      offset: offset,
+      limit: limit,
     );
   }
 
   @override
-  Future<void> putTransaction(TransactionModel t) async {
+  Future<void> putTransaction(LedgerTransaction transaction) async {
+    final t = transaction.toModel();
     final raw = await _transactions.record(t.id).get(_db);
     final previous = raw == null ? null : TransactionModel.fromMap(t.id, raw);
     await _transactions.record(t.id).put(_db, t.toMap());
@@ -297,7 +302,7 @@ class SembastLedgerRepository extends LedgerRepository {
       await _audioStorage.delete(previousAudio);
     }
     await _deleteRemovedImages(previous?.images ?? const [], t.images);
-    notifyListeners();
+    _notifyChanged();
   }
 
   @override
@@ -307,18 +312,18 @@ class SembastLedgerRepository extends LedgerRepository {
     await _transactions.record(id).delete(_db);
     await _audioStorage.delete(t?.audio);
     await _deleteImages(t?.images ?? const []);
-    notifyListeners();
+    _notifyChanged();
   }
 
   @override
   Future<void> clearAllTransactions() async {
-    final all = await allTransactions();
+    final all = await _allTransactionModels();
     await _transactions.delete(_db);
     for (final t in all) {
       await _audioStorage.delete(t.audio);
       await _deleteImages(t.images);
     }
-    notifyListeners();
+    _notifyChanged();
   }
 
   @override
@@ -326,11 +331,11 @@ class SembastLedgerRepository extends LedgerRepository {
     final raw = await _transactions.record(id).get(_db);
     if (raw == null) return;
     final t = TransactionModel.fromMap(id, raw);
-    await putTransaction(t.copyWith(pending: false, complete: true));
+    await putTransaction(t.copyWith(pending: false, complete: true).toEntity());
   }
 
   @override
-  Future<TransactionModel> addQuick({
+  Future<LedgerTransaction> addQuick({
     required String title,
     required int amountVnd,
     required bool isIncome,
@@ -355,47 +360,45 @@ class SembastLedgerRepository extends LedgerRepository {
       audio: audio,
       images: images,
     );
-    await putTransaction(t);
-    return t;
+    await putTransaction(t.toEntity());
+    return t.toEntity();
   }
 
   @override
   Future<Map<String, int>> analyticsTotals({
     required AnalyticsPeriod period,
-    DateTimeRange? custom,
+    AppDateRange? custom,
   }) async {
     final now = DateTime.now();
     final range = period.resolve(now, custom: custom);
-    final all = await allTransactions();
-    return _queries
-        .confirmedTotals(_entities(all), _appRange(range))
-        .toLegacyMap();
+    final all = await _allTransactionModels();
+    return _queries.confirmedTotals(_entities(all), range).toLegacyMap();
   }
 
   @override
   Future<Map<String, int>> categoryBreakdown({
     required AnalyticsPeriod period,
     required bool incomeSide,
-    DateTimeRange? custom,
+    AppDateRange? custom,
   }) async {
     final now = DateTime.now();
     final range = period.resolve(now, custom: custom);
-    final all = await allTransactions();
+    final all = await _allTransactionModels();
     return _queries.categoryBreakdown(
       _entities(all),
-      _appRange(range),
+      range,
       incomeSide: incomeSide,
     );
   }
 
   @override
   Future<bool> categoryInUse(String categoryId) async {
-    final all = await allTransactions();
+    final all = await _allTransactionModels();
     return all.any((t) => t.categoryId == categoryId);
   }
 
   @override
-  Future<CategoryModel> createCategory({
+  Future<LedgerCategory> createCategory({
     required String name,
     required bool isIncome,
     required String iconKey,
@@ -408,48 +411,28 @@ class SembastLedgerRepository extends LedgerRepository {
       colorValue: colorValue,
       isIncome: isIncome,
     );
-    await upsertCategory(c);
-    return c;
+    await upsertCategory(c.toEntity());
+    return c.toEntity();
   }
 
   @override
-  Future<List<TransactionModel>> transactionsForCategory({
+  Future<List<LedgerTransaction>> transactionsForCategory({
     required String categoryId,
     required AnalyticsPeriod period,
-    DateTimeRange? custom,
+    AppDateRange? custom,
   }) async {
     final now = DateTime.now();
     final range = period.resolve(now, custom: custom);
-    final all = await allTransactions();
-    return _modelsForEntities(
-      all,
-      _queries.transactionsForCategory(
-        _entities(all),
-        _appRange(range),
-        categoryId: categoryId,
-      ),
+    final all = await _allTransactionModels();
+    return _queries.transactionsForCategory(
+      _entities(all),
+      range,
+      categoryId: categoryId,
     );
   }
 
   List<LedgerTransaction> _entities(List<TransactionModel> transactions) {
     return transactions.map((transaction) => transaction.toEntity()).toList();
-  }
-
-  List<TransactionModel> _modelsForEntities(
-    List<TransactionModel> source,
-    List<LedgerTransaction> entities,
-  ) {
-    final byId = {
-      for (final transaction in source) transaction.id: transaction,
-    };
-    return [
-      for (final entity in entities)
-        if (byId[entity.id] != null) byId[entity.id]!,
-    ];
-  }
-
-  AppDateRange _appRange(DateTimeRange range) {
-    return AppDateRange(start: range.start, end: range.end);
   }
 
   Future<void> _deleteRemovedImages(
@@ -465,5 +448,15 @@ class SembastLedgerRepository extends LedgerRepository {
     for (final image in images) {
       await _imageStorage.delete(image);
     }
+  }
+
+  void _notifyChanged() {
+    if (!_changes.isClosed) {
+      _changes.add(null);
+    }
+  }
+
+  Future<void> dispose() async {
+    await _changes.close();
   }
 }

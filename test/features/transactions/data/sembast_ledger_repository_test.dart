@@ -1,5 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/features/transactions/data/date_filter.dart";
+import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 
 import "package:smart_expense/core/testing/fake_ledger_repository.dart";

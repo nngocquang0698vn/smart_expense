@@ -1,4 +1,4 @@
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/features/categories/application/category_editor_policy.dart";
 
 class CategoriesViewModel {
@@ -12,7 +12,7 @@ class CategoriesViewModel {
     return CategoriesViewModel._(expense: const [], income: const []);
   }
 
-  factory CategoriesViewModel.fromCategories(List<CategoryModel> categories) {
+  factory CategoriesViewModel.fromCategories(List<LedgerCategory> categories) {
     return CategoriesViewModel._(
       expense: [
         for (final category in categories)
@@ -25,11 +25,11 @@ class CategoriesViewModel {
     );
   }
 
-  final List<CategoryModel> expense;
-  final List<CategoryModel> income;
+  final List<LedgerCategory> expense;
+  final List<LedgerCategory> income;
   final CategoryEditorPolicy _policy;
 
   bool get isEmpty => expense.isEmpty && income.isEmpty;
 
-  bool isSystem(CategoryModel category) => _policy.isSystemCategory(category);
+  bool isSystem(LedgerCategory category) => _policy.isSystemCategory(category);
 }

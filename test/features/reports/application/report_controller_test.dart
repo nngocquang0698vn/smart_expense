@@ -1,5 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:smart_expense/features/transactions/data/date_filter.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:smart_expense/app/providers.dart";
+import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
 import "package:smart_expense/features/reports/application/report_controller.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 
@@ -7,15 +9,20 @@ import "package:smart_expense/core/testing/fake_ledger_repository.dart";
 
 void main() {
   late LedgerRepository repo;
-  late ReportController controller;
+  late ProviderContainer container;
+  late ProviderSubscription<AsyncValue<ReportState>> subscription;
 
   setUp(() async {
     repo = await createFakeLedgerRepository();
-    controller = ReportController(repo);
+    container = ProviderContainer(
+      overrides: [ledgerRepositoryProvider.overrideWithValue(repo)],
+    );
+    subscription = container.listen(reportControllerProvider, (_, _) {});
   });
 
   tearDown(() {
-    controller.dispose();
+    subscription.close();
+    container.dispose();
   });
 
   test("load builds report view model from repo totals", () async {
@@ -28,17 +35,22 @@ void main() {
       categoryId: expenseCat.id,
     );
 
-    await controller.load();
+    await container.read(reportControllerProvider.future);
+    await container.read(reportControllerProvider.notifier).reload();
+    final state = container.read(reportControllerProvider).value!;
 
-    expect(controller.loading, isFalse);
-    expect(controller.viewModel.expense, greaterThan(0));
+    expect(state.loading, isFalse);
+    expect(state.viewModel.expense, greaterThan(0));
   });
 
   test("selectPeriod updates period and reloads", () async {
-    await controller.load();
-    await controller.selectPeriod(AnalyticsPeriod.year);
+    await container.read(reportControllerProvider.future);
+    await container
+        .read(reportControllerProvider.notifier)
+        .selectPeriod(AnalyticsPeriod.year);
+    final state = container.read(reportControllerProvider).value!;
 
-    expect(controller.period, AnalyticsPeriod.year);
-    expect(controller.loading, isFalse);
+    expect(state.period, AnalyticsPeriod.year);
+    expect(state.loading, isFalse);
   });
 }

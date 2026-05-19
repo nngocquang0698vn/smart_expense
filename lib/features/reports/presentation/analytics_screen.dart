@@ -2,18 +2,38 @@ import "package:fl_chart/fl_chart.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:smart_expense/app/providers.dart";
+import "package:smart_expense/features/categories/presentation/category_visuals.dart";
+import "package:smart_expense/core/utils/date_range.dart";
 import "package:smart_expense/core/utils/date_format.dart";
 import "package:smart_expense/shared/components/app_date_range_picker.dart";
 import "package:smart_expense/core/utils/formatters/money.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
 import "package:smart_expense/shared/components/summary_card.dart";
-import "package:smart_expense/features/transactions/data/date_filter.dart";
-import "package:smart_expense/features/transactions/data/models/category_model.dart";
+import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
+import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/components/app_empty_state.dart";
 import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart";
 import "package:smart_expense/features/reports/application/report_controller.dart";
 import "package:smart_expense/features/reports/application/report_view_model.dart";
+
+String localizedAnalyticsPeriodLabel(
+  AppLocalizations l10n,
+  AnalyticsPeriod period,
+) {
+  switch (period) {
+    case AnalyticsPeriod.week:
+      return l10n.reportPeriodWeek;
+    case AnalyticsPeriod.month:
+      return l10n.reportPeriodMonth;
+    case AnalyticsPeriod.quarter:
+      return l10n.reportPeriodQuarter;
+    case AnalyticsPeriod.year:
+      return l10n.reportPeriodYear;
+    case AnalyticsPeriod.custom:
+      return l10n.reportPeriodCustom;
+  }
+}
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
@@ -23,65 +43,69 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
-  late final ReportController _controller;
   int _touchedIndex = -1;
 
-  AnalyticsPeriod get _period => _controller.period;
-
-  DateTimeRange? get _custom => _controller.customRange;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = ReportController(ref.read(ledgerRepositoryProvider))..load();
-    _controller.addListener(_resetTouchedSlice);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_resetTouchedSlice);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _resetTouchedSlice() {
-    if (!mounted) return;
-    setState(() => _touchedIndex = -1);
-  }
-
-  Future<void> _pickCustomRange() async {
+  Future<void> _pickCustomRange(ReportState state) async {
     final now = DateTime.now();
     final r = await showAppDateRangePicker(
       context,
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 1, 12, 31),
       initialRange:
-          _controller.customRange ??
+          state.customRange ??
           DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
     if (r != null) {
-      await _controller.selectCustomRange(r);
+      setState(() => _touchedIndex = -1);
+      await ref.read(reportControllerProvider.notifier).selectCustomRange(r);
     }
   }
 
-  String _periodLabel() {
-    if (_period == AnalyticsPeriod.custom && _custom != null) {
-      return "${formatReportAxis(_custom!.start)} – ${formatReportAxis(_custom!.end)}";
+  String _periodLabel(ReportState state) {
+    if (state.period == AnalyticsPeriod.custom && state.customRange != null) {
+      return "${formatReportAxis(state.customRange!.start)} – ${formatReportAxis(state.customRange!.end)}";
     }
-    return _period.labelVi;
+    return localizedAnalyticsPeriodLabel(context.l10n, state.period);
   }
 
   @override
   Widget build(BuildContext context) {
+    final report = ref.watch(reportControllerProvider);
+    return report.when(
+      data: _buildReport,
+      loading: () => CustomScrollView(
+        slivers: [
+          PageHeaderSliver(title: context.l10n.reportTitle),
+          const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ],
+      ),
+      error: (_, _) => CustomScrollView(
+        slivers: [
+          PageHeaderSliver(title: context.l10n.reportTitle),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: AppEmptyState(message: context.l10n.genericError),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReport(ReportState state) {
     final cs = Theme.of(context).colorScheme;
-    final viewModel = _controller.viewModel;
+    final viewModel = state.viewModel;
     final income = viewModel.income;
     final expense = viewModel.expense;
     final net = viewModel.balance;
     final slices = viewModel.slices;
     final sumSlice = viewModel.sliceTotal;
-    final loading = _controller.loading;
-    final incomeSide = _controller.incomeSide;
+    final loading = state.loading;
+    final incomeSide = state.incomeSide;
+    final l10n = context.l10n;
 
     return CustomScrollView(
       slivers: [
@@ -101,16 +125,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     child: ChoiceChip(
                       label: Text(
                         p == AnalyticsPeriod.custom
-                            ? (_period == p ? _periodLabel() : p.labelVi)
-                            : p.labelVi,
+                            ? (state.period == p
+                                  ? _periodLabel(state)
+                                  : localizedAnalyticsPeriodLabel(l10n, p))
+                            : localizedAnalyticsPeriodLabel(l10n, p),
                       ),
-                      selected: _period == p,
+                      selected: state.period == p,
                       onSelected: (v) async {
                         if (!v) return;
+                        setState(() => _touchedIndex = -1);
                         if (p == AnalyticsPeriod.custom) {
-                          await _pickCustomRange();
+                          await _pickCustomRange(state);
                         } else {
-                          await _controller.selectPeriod(p);
+                          await ref
+                              .read(reportControllerProvider.notifier)
+                              .selectPeriod(p);
                         }
                       },
                     ),
@@ -188,7 +217,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     selected: !incomeSide,
                     color: context.financeColors.expenseAmount,
                     onTap: () {
-                      _controller.selectIncomeSide(false);
+                      setState(() => _touchedIndex = -1);
+                      ref
+                          .read(reportControllerProvider.notifier)
+                          .selectIncomeSide(false);
                     },
                   ),
                 ),
@@ -200,7 +232,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     selected: incomeSide,
                     color: context.financeColors.incomeAmount,
                     onTap: () {
-                      _controller.selectIncomeSide(true);
+                      setState(() => _touchedIndex = -1);
+                      ref
+                          .read(reportControllerProvider.notifier)
+                          .selectIncomeSide(true);
                     },
                   ),
                 ),
@@ -302,7 +337,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-          // ── Category list header ────────────────────────────────────────
+          // ── LedgerCategory list header ────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -316,7 +351,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             ),
           ),
 
-          // ── Category rows ────────────────────────────────────────────────
+          // ── LedgerCategory rows ────────────────────────────────────────────────
           for (var i = 0; i < slices.length; i++)
             SliverToBoxAdapter(
               child: _CategoryRow(
@@ -371,8 +406,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         .read(ledgerRepositoryProvider)
         .transactionsForCategory(
           categoryId: categoryId,
-          period: _period,
-          custom: _custom,
+          period:
+              ref.read(reportControllerProvider).value?.period ??
+              AnalyticsPeriod.month,
+          custom: ref
+              .read(reportControllerProvider)
+              .value
+              ?.customRange
+              ?.toAppDateRange(),
         );
     if (!mounted) return;
     await showModalBottomSheet<void>(
@@ -428,6 +469,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       },
     );
   }
+}
+
+extension on DateTimeRange {
+  AppDateRange toAppDateRange() => AppDateRange(start: start, end: end);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -538,7 +583,7 @@ class _DonutCenter extends StatelessWidget {
     required this.isIncome,
   });
 
-  final CategoryModel cat;
+  final LedgerCategory cat;
   final double pct;
   final int amount;
   final bool isIncome;
@@ -686,7 +731,7 @@ class _PieBadge extends StatelessWidget {
     required this.labelAbove,
   });
 
-  final CategoryModel cat;
+  final LedgerCategory cat;
   final double pct;
   final bool isTouched;
 

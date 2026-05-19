@@ -3,6 +3,8 @@
   let deferredPrompt = null;
 
   window.addEventListener("beforeinstallprompt", function (e) {
+    // Defer the browser prompt so the app can show its own install UI.
+    // This hides Chrome's default omnibar install icon until prompt() runs.
     e.preventDefault();
     deferredPrompt = e;
     window.__pwaInstallAvailable = true;

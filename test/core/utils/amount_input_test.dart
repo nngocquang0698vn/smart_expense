@@ -24,31 +24,6 @@ void main() {
     });
   });
 
-  group("AmountInputController", () {
-    test("appendDigit and backspace", () {
-      final c = AmountInputController();
-      c.appendDigit(1);
-      c.appendDigit(2);
-      c.appendDigit(3);
-      expect(c.value, 123);
-      expect(c.displayText, "123");
-      c.backspace();
-      expect(c.value, 12);
-    });
-
-    test("appendTripleZero multiplies by 1000", () {
-      final c = AmountInputController()..setValue(5);
-      c.appendTripleZero();
-      expect(c.value, 5000);
-    });
-
-    test("appendTripleZero on zero does nothing", () {
-      final c = AmountInputController();
-      c.appendTripleZero();
-      expect(c.value, 0);
-    });
-  });
-
   group("parseAmountDigits", () {
     test("strips non-digits", () {
       expect(parseAmountDigits("1,234,567"), 1234567);
