@@ -5,7 +5,6 @@ import "package:smart_expense/app/providers.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_service.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_storage.dart";
-import "package:smart_expense/core/utils/pwa/pwa_platform_kind.dart";
 import "package:smart_expense/core/utils/pwa/pwa_providers.dart";
 
 class _FakePwaInstallService implements PwaInstallService {
@@ -59,6 +58,17 @@ void main() {
       container.read(pwaInstallControllerProvider).canNativeInstall,
       isFalse,
     );
+  });
+
+  test("hides onboarding card when standalone", () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    service = _FakePwaInstallService(isStandalone: true);
+    container = createContainer(prefs: prefs);
+    container.listen(pwaInstallControllerProvider, (_, _) {});
+
+    final notifier = container.read(pwaInstallControllerProvider.notifier);
+    expect(notifier.shouldShowOnboardingCard(isWeb: true), isFalse);
   });
 
   test("hides onboarding card when installed", () async {
