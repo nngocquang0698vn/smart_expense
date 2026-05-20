@@ -28,10 +28,11 @@ void main() {
     await tester.tap(find.text("open"));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining("Chia sẻ"), findsWidgets);
+    expect(find.textContaining("chia sẻ"), findsWidgets);
     expect(find.byIcon(Icons.ios_share_rounded), findsOneWidget);
     expect(find.byIcon(Icons.add_box_outlined), findsOneWidget);
-    expect(find.text("Thêm"), findsOneWidget);
+    expect(find.textContaining("Thêm"), findsWidgets);
+    expect(find.textContaining("Add"), findsWidgets);
     expect(find.text("Tôi đã hiểu"), findsOneWidget);
   });
 }

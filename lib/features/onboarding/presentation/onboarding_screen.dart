@@ -5,9 +5,12 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
-import "package:smart_expense/shared/components/pwa/pwa_install_actions.dart";
+import "package:smart_expense/shared/layouts/onboarding_page_layout.dart";
 import "package:smart_expense/shared/components/pwa/pwa_install_hint.dart";
-import "package:smart_expense/shared/components/pwa/pwa_install_onboarding_card.dart";
+import "package:smart_expense/shared/components/pwa/pwa_install_onboarding_page.dart";
+
+/// Chiều rộng tối đa nội dung onboarding (mobile + PWA web rộng).
+const double kOnboardingContentMaxWidth = 480;
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key, required this.repo, required this.onDone});
@@ -24,8 +27,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _i = 0;
   final _nameCtrl = TextEditingController();
 
-  static const _total = 4;
-
   @override
   void dispose() {
     _page.dispose();
@@ -33,8 +34,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  void _next() {
-    if (_i < _total - 1) {
+  int _pageCount(bool showPwaGuide) => showPwaGuide ? 5 : 4;
+
+  int _namePageIndex(bool showPwaGuide) => showPwaGuide ? 4 : 3;
+
+  void _next(int pageCount) {
+    if (_i < pageCount - 1) {
       _page.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
@@ -64,175 +69,242 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     widget.onDone();
   }
 
+  void _skipToName(int namePageIndex) {
+    _page.animateToPage(
+      namePageIndex,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width >= 1000;
-    final isLast = _i == _total - 1;
     final l10n = context.l10n;
     final pwaNotifier = ref.read(pwaInstallControllerProvider.notifier);
     final showHint = kIsWeb && pwaNotifier.shouldShowOnboardingHint();
-    final showCard = kIsWeb && pwaNotifier.shouldShowOnboardingCard();
+    final showPwaGuide = kIsWeb && pwaNotifier.shouldShowOnboardingCard();
+    final pageCount = _pageCount(showPwaGuide);
+    final namePageIndex = _namePageIndex(showPwaGuide);
+    final isLast = _i == namePageIndex;
+    final cs = Theme.of(context).colorScheme;
+
+    final pages = <Widget>[
+      _IntroPage(
+        title: l10n.onboardingIntroTitle,
+        body: l10n.onboardingIntroBody,
+        icon: Icons.account_balance_wallet_outlined,
+        footer: showHint ? const PwaInstallHint() : null,
+      ),
+      _IntroPage(
+        title: l10n.onboardingFastTitle,
+        body: l10n.onboardingFastBody,
+        icon: Icons.bolt,
+      ),
+      if (showPwaGuide) const PwaInstallOnboardingPage(),
+      _IntroPage(
+        title: l10n.onboardingReviewTitle,
+        body: l10n.onboardingReviewBody,
+        icon: Icons.fact_check,
+      ),
+      _IntroPage(
+        title: l10n.onboardingInsightsTitle,
+        body: l10n.onboardingInsightsBody,
+        icon: Icons.insights,
+      ),
+    ];
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            if (!isLast)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 6, right: 12),
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(
-                        context,
-                      ).colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: () => _page.animateToPage(
-                      _total - 1,
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOut,
-                    ),
-                    child: Text(l10n.onboardingSkip),
-                  ),
-                ),
-              )
-            else
-              const SizedBox(height: 36),
-
-            Expanded(
-              child: PageView(
-                controller: _page,
-                onPageChanged: (v) => setState(() => _i = v),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: kOnboardingContentMaxWidth),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
                 children: [
-                  _IntroPage(
-                    title: l10n.onboardingIntroTitle,
-                    body: l10n.onboardingIntroBody,
-                    icon: Icons.account_balance_wallet_outlined,
-                    footer: showHint ? const PwaInstallHint() : null,
+                  if (!isLast)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 4),
+                      child: Row(
+                        children: [
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: () => _skipToName(namePageIndex),
+                            icon: Icon(
+                              Icons.close_rounded,
+                              size: 18,
+                              color: cs.onSurfaceVariant,
+                            ),
+                            label: Text(l10n.onboardingSkip),
+                            style: TextButton.styleFrom(
+                              foregroundColor: cs.onSurfaceVariant,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const SizedBox(height: 44),
+
+                  Expanded(
+                    child: PageView(
+                      controller: _page,
+                      onPageChanged: (v) => setState(() => _i = v),
+                      children: pages,
+                    ),
                   ),
-                  _IntroPage(
-                    title: l10n.onboardingFastTitle,
-                    body: l10n.onboardingFastBody,
-                    icon: Icons.bolt,
-                    footer: showCard
-                        ? PwaInstallOnboardingCard(
-                            onInstall: () =>
-                                PwaInstallActions.requestInstall(context, ref),
+
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(pageCount, (idx) {
+                        final active = idx == _i;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: active ? 24 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: active
+                                ? cs.primary
+                                : cs.primary.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: isLast
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextField(
+                                controller: _nameCtrl,
+                                decoration: InputDecoration(
+                                  labelText: l10n.onboardingNameLabel,
+                                  hintText: l10n.onboardingNameHint,
+                                ),
+                                textCapitalization: TextCapitalization.words,
+                                onSubmitted: (_) => _finish(),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  OutlinedButton.icon(
+                                    onPressed: _prev,
+                                    style: _onboardingOutlinedStyle(context),
+                                    icon: const Icon(
+                                      Icons.arrow_back_rounded,
+                                      size: 18,
+                                    ),
+                                    label: Text(l10n.onboardingBack),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: FilledButton(
+                                      onPressed: _finish,
+                                      style: _onboardingFilledStyle(context),
+                                      child: Text(l10n.onboardingStart),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           )
-                        : null,
-                  ),
-                  _IntroPage(
-                    title: l10n.onboardingReviewTitle,
-                    body: l10n.onboardingReviewBody,
-                    icon: Icons.fact_check,
-                  ),
-                  _IntroPage(
-                    title: l10n.onboardingInsightsTitle,
-                    body: l10n.onboardingInsightsBody,
-                    icon: Icons.insights,
+                        : _OnboardingNavRow(
+                            showPrevious: _i > 0,
+                            onPrevious: _prev,
+                            onNext: () => _next(pageCount),
+                            previousLabel: l10n.onboardingPrevious,
+                            nextLabel: l10n.onboardingNext,
+                          ),
                   ),
                 ],
               ),
             ),
-
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_total, (idx) {
-                  final active = idx == _i;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: active ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: active
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  );
-                }),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: isLast
-                  ? Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: isWide ? 460 : double.infinity,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            TextField(
-                              controller: _nameCtrl,
-                              decoration: InputDecoration(
-                                labelText: l10n.onboardingNameLabel,
-                                hintText: l10n.onboardingNameHint,
-                              ),
-                              textCapitalization: TextCapitalization.words,
-                              onSubmitted: (_) => _finish(),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                OutlinedButton.icon(
-                                  onPressed: _prev,
-                                  icon: const Icon(
-                                    Icons.arrow_back_rounded,
-                                    size: 18,
-                                  ),
-                                  label: Text(l10n.onboardingBack),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: FilledButton(
-                                    onPressed: _finish,
-                                    child: Text(l10n.onboardingStart),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_i > 0) ...[
-                          OutlinedButton.icon(
-                            onPressed: _prev,
-                            icon: const Icon(
-                              Icons.arrow_back_rounded,
-                              size: 18,
-                            ),
-                            label: Text(l10n.onboardingPrevious),
-                          ),
-                          const SizedBox(width: 16),
-                        ],
-                        FilledButton.icon(
-                          onPressed: _next,
-                          label: Text(l10n.onboardingNext),
-                          icon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 18,
-                          ),
-                          iconAlignment: IconAlignment.end,
-                        ),
-                      ],
-                    ),
-            ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+ButtonStyle _onboardingOutlinedStyle(BuildContext context) {
+  return OutlinedButton.styleFrom(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    minimumSize: const Size(0, 40),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
+}
+
+ButtonStyle _onboardingFilledStyle(BuildContext context) {
+  return FilledButton.styleFrom(
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+    minimumSize: const Size(0, 40),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
+}
+
+class _OnboardingNavRow extends StatelessWidget {
+  const _OnboardingNavRow({
+    required this.showPrevious,
+    required this.onPrevious,
+    required this.onNext,
+    required this.previousLabel,
+    required this.nextLabel,
+  });
+
+  final bool showPrevious;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final String previousLabel;
+  final String nextLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final outlined = _onboardingOutlinedStyle(context);
+    final filled = _onboardingFilledStyle(context);
+
+    if (!showPrevious) {
+      return Align(
+        alignment: Alignment.center,
+        child: FilledButton.icon(
+          onPressed: onNext,
+          style: filled,
+          label: Text(nextLabel),
+          icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+          iconAlignment: IconAlignment.end,
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        OutlinedButton.icon(
+          onPressed: onPrevious,
+          style: outlined,
+          icon: const Icon(Icons.arrow_back_rounded, size: 18),
+          label: Text(previousLabel),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: onNext,
+            style: filled,
+            label: Text(nextLabel),
+            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+            iconAlignment: IconAlignment.end,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -252,10 +324,9 @@ class _IntroPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
+    return OnboardingPageLayout(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 72, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 24),
