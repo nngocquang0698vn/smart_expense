@@ -3,36 +3,16 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import "package:smart_expense/app/providers.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
-import "package:smart_expense/core/utils/pwa/pwa_install_service.dart";
+import "package:smart_expense/core/testing/pwa_install_test_support.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_storage.dart";
+import "package:smart_expense/core/utils/pwa/pwa_platform_kind.dart";
 import "package:smart_expense/core/utils/pwa/pwa_providers.dart";
-
-class _FakePwaInstallService implements PwaInstallService {
-  _FakePwaInstallService({
-    this.isStandalone = false,
-    this.canNativePrompt = true,
-  }) : userAgent =
-            "mozilla/5.0 (linux; android 10; k) applewebkit/537.36 chrome/91.0";
-
-  @override
-  final bool isStandalone;
-
-  @override
-  bool canNativePrompt;
-
-  @override
-  final String? userAgent;
-
-  @override
-  Future<PwaInstallPromptResult> promptInstall() async =>
-      PwaInstallPromptResult.unavailable;
-}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late ProviderContainer container;
-  late _FakePwaInstallService service;
+  late FakePwaInstallService service;
 
   ProviderContainer createContainer({SharedPreferences? prefs}) {
     return ProviderContainer(
@@ -50,7 +30,7 @@ void main() {
   test("build exposes service canNativeInstall", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = _FakePwaInstallService(canNativePrompt: false);
+    service = FakePwaInstallService(userAgent: kAndroidChromeUa, canNativePrompt: false);
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -63,7 +43,7 @@ void main() {
   test("hides onboarding card when standalone", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = _FakePwaInstallService(isStandalone: true);
+    service = FakePwaInstallService(userAgent: kAndroidChromeUa, isStandalone: true);
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -75,7 +55,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     await PwaInstallStorage(prefs).markInstalled();
-    service = _FakePwaInstallService();
+    service = FakePwaInstallService(userAgent: kAndroidChromeUa);
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -86,7 +66,7 @@ void main() {
   test("hides onboarding card after third dismiss", () async {
     SharedPreferences.setMockInitialValues({"pwa_install_dismiss_count": 3});
     final prefs = await SharedPreferences.getInstance();
-    service = _FakePwaInstallService();
+    service = FakePwaInstallService(userAgent: kAndroidChromeUa);
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -97,7 +77,7 @@ void main() {
   test("recordDismiss increments count and blocks auto prompt", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = _FakePwaInstallService();
+    service = FakePwaInstallService(userAgent: kAndroidChromeUa);
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -117,7 +97,7 @@ void main() {
   test("marks first complete transaction only once in storage", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = _FakePwaInstallService();
+    service = FakePwaInstallService(userAgent: kAndroidChromeUa);
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -140,7 +120,7 @@ void main() {
   test("schedulePostActionCta sets flag when eligible", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = _FakePwaInstallService();
+    service = FakePwaInstallService(userAgent: kAndroidChromeUa);
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -153,10 +133,23 @@ void main() {
     );
   });
 
+  test("detects platform from user agent when service provides UA in VM", () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    service = FakePwaInstallService(userAgent: kIosSafariUa);
+    container = createContainer(prefs: prefs);
+    container.listen(pwaInstallControllerProvider, (_, _) {});
+
+    expect(
+      container.read(pwaInstallControllerProvider).platform,
+      PwaPlatformKind.iosSafari,
+    );
+  });
+
   test("refresh updates canNativeInstall from service", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = _FakePwaInstallService(canNativePrompt: false);
+    service = FakePwaInstallService(userAgent: kAndroidChromeUa, canNativePrompt: false);
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 

@@ -17,10 +17,19 @@ class PwaInstallController extends Notifier<PwaInstallState> {
 
   PwaInstallService get _service => ref.read(pwaInstallServiceProvider);
 
+  /// Web khi chạy Flutter web hoặc service cung cấp user-agent (widget test).
+  static bool isWebContext(PwaInstallService service) {
+    return kIsWeb ||
+        (service.userAgent != null && service.userAgent!.isNotEmpty);
+  }
+
   PwaInstallState _composeState({bool? showPostActionCta}) {
     final service = ref.watch(pwaInstallServiceProvider);
     final storage = ref.watch(pwaInstallStorageProvider);
-    final platform = PwaPlatformDetector.detect(userAgent: service.userAgent);
+    final platform = PwaPlatformDetector.detect(
+      userAgent: service.userAgent,
+      isWeb: isWebContext(service),
+    );
     final standalone = service.isStandalone;
     final installed = storage.isInstalled || standalone;
 
@@ -99,7 +108,7 @@ class PwaInstallController extends Notifier<PwaInstallState> {
     if (_storage.postActionCtaShown) return;
     final platform = PwaPlatformDetector.detect(
       userAgent: _service.userAgent,
-      isWeb: web,
+      isWeb: web && isWebContext(_service),
     );
     final show = PwaInstallBannerLogic.shouldShowPostActionCta(
       isWeb: web,

@@ -10,7 +10,7 @@ class PwaPhoneMockup extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return SizedBox(
-      height: 140,
+      height: 180,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.center,
