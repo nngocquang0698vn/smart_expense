@@ -119,9 +119,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ? PwaInstallOnboardingCard(
                             onInstall: () =>
                                 PwaInstallActions.requestInstall(context, ref),
-                            onLater: () async {
-                              await pwaNotifier.recordDismiss();
-                            },
                           )
                         : null,
                   ),

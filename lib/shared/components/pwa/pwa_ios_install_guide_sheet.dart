@@ -1,112 +1,91 @@
-import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
 
-/// iOS Safari blue used for toolbar/share affordances (SF Symbol style).
-const Color _kIosSystemBlue = Color(0xFF007AFF);
-
-/// iOS Safari install guide — Stitch «Hướng dẫn cài đặt iOS», Cupertino chrome.
+/// Hướng dẫn cài PWA trên iOS Safari — dùng theme app (Material icons cho web).
 class PwaIosInstallGuideSheet extends StatelessWidget {
   const PwaIosInstallGuideSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showCupertinoModalPopup<void>(
+    return showModalBottomSheet<void>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      builder: (sheetContext) {
-        final bottom = MediaQuery.paddingOf(sheetContext).bottom;
-        return Align(
-          alignment: Alignment.bottomCenter,
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              width: double.infinity,
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.92,
-              ),
-              padding: EdgeInsets.only(bottom: bottom),
-              decoration: const BoxDecoration(
-                color: CupertinoColors.systemBackground,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-              ),
-              child: const PwaIosInstallGuideSheet(),
-            ),
-          ),
-        );
-      },
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (context) => const PwaIosInstallGuideSheet(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final cs = Theme.of(context).colorScheme;
     final steps = [
       _IosStep(
         number: 1,
         text: l10n.pwaIosGuideStep1,
         helper: l10n.pwaIosShareLabel,
-        preview: const _SafariShareBarPreview(),
+        preview: _SafariShareBarPreview(color: cs.primary),
       ),
       _IosStep(
         number: 2,
         text: l10n.pwaIosGuideStep2,
         helper: l10n.pwaIosAddToHomeLabel,
-        preview: _SafariAddToHomeRowPreview(label: l10n.pwaIosAddToHomeLabel),
+        preview: _SafariAddToHomeRowPreview(
+          label: l10n.pwaIosAddToHomeLabel,
+          iconColor: cs.onSurfaceVariant,
+        ),
       ),
       _IosStep(
         number: 3,
         text: l10n.pwaIosGuideStep3,
         helper: null,
-        preview: const _SafariAddButtonPreview(),
+        preview: _SafariAddActionPreview(color: cs.primary),
       ),
     ];
 
     return SafeArea(
-      top: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 5,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey3.resolveFrom(context),
-                  borderRadius: BorderRadius.circular(2.5),
-                ),
-              ),
-            ),
             Text(
               l10n.pwaIosGuideTitle,
               textAlign: TextAlign.center,
-              style: CupertinoTheme.of(context).textTheme.navTitleTextStyle
-                  .copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: CupertinoColors.label.resolveFrom(context),
-                  ),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: cs.primary,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               l10n.pwaIosGuideBody,
               textAlign: TextAlign.center,
-              style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                color: CupertinoColors.secondaryLabel.resolveFrom(context),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
                 height: 1.4,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             ...steps.map((step) => _IosStepCard(step: step)),
             const SizedBox(height: AppSpacing.sm),
-            SizedBox(
-              width: double.infinity,
-              child: CupertinoButton.filled(
-                borderRadius: BorderRadius.circular(12),
+            Align(
+              alignment: Alignment.center,
+              child: FilledButton(
                 onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  minimumSize: const Size(0, 44),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: Text(l10n.pwaIosGuideDone),
               ),
             ),
@@ -117,68 +96,62 @@ class PwaIosInstallGuideSheet extends StatelessWidget {
   }
 }
 
-/// Mimics Safari bottom toolbar with Share (square.and.arrow.up).
+/// Thanh toolbar Safari + Share (Material — hiển thị đúng trên PWA web).
 class _SafariShareBarPreview extends StatelessWidget {
-  const _SafariShareBarPreview();
+  const _SafariShareBarPreview({required this.color});
+
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      width: 220,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+      width: 200,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemGrey6.resolveFrom(context),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: CupertinoColors.separator.resolveFrom(context),
-        ),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
-      child: const Center(
-        child: Icon(
-          CupertinoIcons.square_arrow_up,
-          size: 30,
-          color: _kIosSystemBlue,
-        ),
+      child: Icon(
+        Icons.ios_share_rounded,
+        size: 32,
+        color: color,
       ),
     );
   }
 }
 
-/// Mimics a row inside the Safari share sheet menu.
 class _SafariAddToHomeRowPreview extends StatelessWidget {
-  const _SafariAddToHomeRowPreview({required this.label});
+  const _SafariAddToHomeRowPreview({
+    required this.label,
+    required this.iconColor,
+  });
 
   final String label;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 260,
       decoration: BoxDecoration(
-        color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: CupertinoColors.separator.resolveFrom(context),
-        ),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
           children: [
             Expanded(
               child: Text(
                 label,
-                style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
-            Icon(
-              Icons.add_box_outlined,
-              size: 24,
-              color: CupertinoColors.secondaryLabel.resolveFrom(context),
-            ),
+            Icon(Icons.add_box_outlined, size: 24, color: iconColor),
           ],
         ),
       ),
@@ -186,31 +159,30 @@ class _SafariAddToHomeRowPreview extends StatelessWidget {
   }
 }
 
-/// Mimics the blue «Add» action on the iOS share-sheet header.
-class _SafariAddButtonPreview extends StatelessWidget {
-  const _SafariAddButtonPreview();
+class _SafariAddActionPreview extends StatelessWidget {
+  const _SafariAddActionPreview({required this.color});
+
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 260,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemGrey6.resolveFrom(context),
-        borderRadius: BorderRadius.circular(10),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Text(
-            "Add",
-            style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-              color: _kIosSystemBlue,
-              fontWeight: FontWeight.w600,
-              fontSize: 17,
-            ),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Text(
+          "Thêm",
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -237,30 +209,26 @@ class _IosStepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemGrey6.resolveFrom(context),
-        borderRadius: BorderRadius.circular(12),
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: _kIosSystemBlue,
-              shape: BoxShape.circle,
-            ),
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: cs.primary,
             child: Text(
               "${step.number}",
-              style: const TextStyle(
-                color: CupertinoColors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
+              style: TextStyle(
+                color: cs.onPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
               ),
             ),
           ),
@@ -269,26 +237,15 @@ class _IosStepCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  step.text,
-                  style: CupertinoTheme.of(context).textTheme.textStyle
-                      .copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
+                Text(step.text, style: Theme.of(context).textTheme.bodyLarge),
                 if (step.helper != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     step.helper!,
-                    style: CupertinoTheme.of(context).textTheme.textStyle
-                        .copyWith(
-                          fontSize: 12,
-                          color: CupertinoColors.secondaryLabel.resolveFrom(
-                            context,
-                          ),
-                          fontStyle: FontStyle.italic,
-                        ),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
                 if (step.preview != null) ...[
