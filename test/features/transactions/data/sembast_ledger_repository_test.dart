@@ -37,12 +37,24 @@ void main() {
           .where((c) => c.enabled && c.isIncome)
           .map((c) => c.name)
           .toSet();
-      expect(enabledIncomeNames, equals({"Thu nhập", "Khác"}));
+      expect(enabledIncomeNames, equals({"Lương", "Khác"}));
+      expect(categories.any((c) => c.name == "Thu nhập"), isFalse);
 
       expect(
         categories.where((c) => !c.enabled).map((c) => c.name).toSet(),
-        containsAll({"Cà phê", "Tạp hoá", "Lương", "Thu nhập khác"}),
+        containsAll({"Cà phê", "Tạp hoá", "Thu nhập khác"}),
       );
+
+      final enabledExpenseList = categories
+          .where((c) => c.enabled && !c.isIncome)
+          .map((c) => c.name)
+          .toList();
+      final enabledIncomeList = categories
+          .where((c) => c.enabled && c.isIncome)
+          .map((c) => c.name)
+          .toList();
+      expect(enabledExpenseList.last, "Khác");
+      expect(enabledIncomeList.last, "Khác");
 
       final meta = await repo.getMeta();
       expect(meta.containsKey("onboarded"), isTrue);

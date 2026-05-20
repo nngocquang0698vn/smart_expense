@@ -1076,7 +1076,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
 }
 
 String _normalizedSeedCategory(String name, {required bool isIncome}) {
-  if (isIncome) return name == "Khác" ? "Khác" : "Thu nhập";
+  if (isIncome) return name == "Khác" ? "Khác" : "Lương";
 
   return switch (name) {
     "Ăn uống" || "Cà phê" || "Tạp hoá" => "Ăn uống",

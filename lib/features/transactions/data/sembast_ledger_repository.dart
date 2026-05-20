@@ -42,7 +42,6 @@ class SembastLedgerRepository extends LedgerRepository {
       await _seedCategories();
     }
     await _ensureKhac();
-    await _ensureThuNhap();
     final meta = await _meta.record("app").get(_db);
     if (meta == null) {
       await _meta.record("app").put(_db, {"userName": "", "onboarded": false});
@@ -84,28 +83,6 @@ class SembastLedgerRepository extends LedgerRepository {
             ).toMap(),
           );
     }
-  }
-
-  Future<void> _ensureThuNhap() async {
-    final existing = await _categories.find(
-      _db,
-      finder: Finder(
-        filter: Filter.and([
-          Filter.equals("name", "Thu nhập"),
-          Filter.equals("isIncome", true),
-        ]),
-      ),
-    );
-    if (existing.isNotEmpty) return;
-
-    final model = CategoryModel(
-      id: _uuid.v4(),
-      name: "Thu nhập",
-      iconKey: "payments",
-      colorValue: 0xFF4CAF50,
-      isIncome: true,
-    );
-    await _categories.record(model.id).put(_db, model.toMap());
   }
 
   Future<void> _seedCategories() async {
@@ -208,14 +185,6 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "payments",
         colorValue: 0xFF4CAF50,
         isIncome: true,
-        enabled: false,
-      ),
-      CategoryModel(
-        id: _uuid.v4(),
-        name: "Thu nhập",
-        iconKey: "payments",
-        colorValue: 0xFF4CAF50,
-        isIncome: true,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -261,7 +230,14 @@ class SembastLedgerRepository extends LedgerRepository {
     return snap
         .map((r) => CategoryModel.fromMap(r.key, r.value).toEntity())
         .toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+      ..sort(_compareCategories);
+  }
+
+  int _compareCategories(LedgerCategory a, LedgerCategory b) {
+    final aIsOther = a.name == "Khác";
+    final bIsOther = b.name == "Khác";
+    if (aIsOther != bIsOther) return aIsOther ? 1 : -1;
+    return a.name.compareTo(b.name);
   }
 
   @override
