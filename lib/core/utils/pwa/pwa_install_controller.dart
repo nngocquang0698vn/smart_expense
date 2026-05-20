@@ -2,85 +2,123 @@ import "package:flutter/foundation.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/core/utils/pwa/pwa_install_banner_logic.dart";
-import "package:smart_expense/core/utils/pwa/pwa_install_prefs.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_service.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_state.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_storage.dart";
 import "package:smart_expense/core/utils/pwa/pwa_platform_detector.dart";
 import "package:smart_expense/core/utils/pwa/pwa_providers.dart";
 
-/// Orchestrates when to show the PWA install banner and install actions.
+/// Orchestrates PWA install eligibility, dismiss rules, and native install.
 class PwaInstallController extends Notifier<PwaInstallState> {
   @override
-  PwaInstallState build() {
-    final service = ref.watch(pwaInstallServiceProvider);
-    final platform = PwaPlatformDetector.detect(
-      userAgent: service.userAgent,
-    );
-    return PwaInstallState(
-      platform: platform,
-      canNativeInstall: service.canNativePrompt,
-      isStandalone: service.isStandalone,
-    );
-  }
+  PwaInstallState build() => _composeState();
 
-  PwaInstallPrefs get _prefs => ref.read(pwaInstallPrefsProvider);
+  PwaInstallStorage get _storage => ref.read(pwaInstallStorageProvider);
 
   PwaInstallService get _service => ref.read(pwaInstallServiceProvider);
 
-  /// Call after first frame on web when user has finished app onboarding.
-  ///
-  /// [isWeb] overrides [kIsWeb] for unit tests.
-  void evaluateBanner({bool? isWeb}) {
-    final web = isWeb ?? kIsWeb;
-    final platform = PwaPlatformDetector.detect(
-      userAgent: _service.userAgent,
-      isWeb: web,
-    );
-    final visible = PwaInstallBannerLogic.shouldShowBanner(
-      isWeb: web,
-      isStandalone: _service.isStandalone,
-      canShowFromPrefs: _prefs.canShowBanner,
+  PwaInstallState _composeState({bool? showPostActionCta}) {
+    final service = ref.watch(pwaInstallServiceProvider);
+    final storage = ref.watch(pwaInstallStorageProvider);
+    final platform = PwaPlatformDetector.detect(userAgent: service.userAgent);
+    final standalone = service.isStandalone;
+    final installed = storage.isInstalled || standalone;
+
+    return PwaInstallState(
       platform: platform,
-    );
-    final canNative = _service.canNativePrompt;
-    final standalone = _service.isStandalone;
-    if (state.bannerVisible == visible &&
-        state.platform == platform &&
-        state.canNativeInstall == canNative &&
-        state.isStandalone == standalone) {
-      return;
-    }
-    state = state.copyWith(
-      bannerVisible: visible,
-      platform: platform,
-      canNativeInstall: canNative,
+      canNativeInstall: service.canNativePrompt,
       isStandalone: standalone,
+      isInstalled: installed,
+      canShowAutoPrompt: storage.canShowAutoPrompt && !installed,
+      dismissCount: storage.dismissCount,
+      showPostActionCta: showPostActionCta ?? false,
     );
   }
 
-  void hideBanner() {
-    if (!state.bannerVisible) return;
-    state = state.copyWith(bannerVisible: false);
+  void refresh({bool? keepPostActionCta}) {
+    final keep = keepPostActionCta ?? state.showPostActionCta;
+    state = _composeState(showPostActionCta: keep);
   }
 
-  Future<void> snooze() async {
-    await _prefs.snooze();
-    hideBanner();
+  Future<void> recordSession() async {
+    await _storage.recordSession();
+    refresh();
   }
 
-  Future<void> neverShowAgain() async {
-    await _prefs.setNeverShow();
-    hideBanner();
+  Future<void> recordDismiss() async {
+    await _storage.recordDismiss();
+    refresh();
+  }
+
+  Future<void> markInstalled() async {
+    await _storage.markInstalled();
+    refresh();
   }
 
   Future<PwaInstallPromptResult> install() => _service.promptInstall();
 
   Future<void> onInstallAccepted() async {
-    await _prefs.setNeverShow();
-    hideBanner();
+    await markInstalled();
   }
 
-  Future<void> resetPromptPreferences() => _prefs.resetPrompt();
+  bool shouldShowOnboardingHint({bool? isWeb}) {
+    final web = isWeb ?? kIsWeb;
+    return PwaInstallBannerLogic.shouldShowOnboardingHint(
+      isWeb: web,
+      isStandalone: _service.isStandalone,
+      isInstalled: state.isInstalledMode,
+      platform: state.platform,
+    );
+  }
+
+  bool shouldShowOnboardingCard({bool? isWeb}) {
+    final web = isWeb ?? kIsWeb;
+    return PwaInstallBannerLogic.shouldShowOnboardingCard(
+      isWeb: web,
+      isStandalone: _service.isStandalone,
+      isInstalled: state.isInstalledMode,
+      canShowAutoPrompt: state.canShowAutoPrompt,
+      platform: state.platform,
+    );
+  }
+
+  /// After the first complete (non-pending) transaction on web.
+  Future<void> onFirstCompleteTransactionSaved({
+    required bool pending,
+    required bool complete,
+    bool? isWeb,
+  }) async {
+    if (!(isWeb ?? kIsWeb) || pending || !complete) return;
+    final isFirst = await _storage.markFirstCompleteTransactionSaved();
+    if (!isFirst) return;
+    schedulePostActionCta();
+  }
+
+  void schedulePostActionCta({bool? isWeb}) {
+    final web = isWeb ?? kIsWeb;
+    if (_storage.postActionCtaShown) return;
+    final platform = PwaPlatformDetector.detect(
+      userAgent: _service.userAgent,
+      isWeb: web,
+    );
+    final show = PwaInstallBannerLogic.shouldShowPostActionCta(
+      isWeb: web,
+      isStandalone: _service.isStandalone,
+      isInstalled: state.isInstalledMode,
+      canShowAutoPrompt: state.canShowAutoPrompt,
+      alreadyShown: _storage.postActionCtaShown,
+      platform: platform,
+    );
+    if (!show) return;
+    state = state.copyWith(showPostActionCta: true);
+  }
+
+  Future<void> consumePostActionCta() async {
+    await _storage.markPostActionCtaShown();
+    state = state.copyWith(showPostActionCta: false);
+  }
+
+  Future<void> resetForDebug() => _storage.resetForDebug();
 }
 
 final pwaInstallControllerProvider =

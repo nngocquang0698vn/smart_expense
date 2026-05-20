@@ -1,19 +1,25 @@
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
+import "package:smart_expense/shared/components/pwa/pwa_install_actions.dart";
+import "package:smart_expense/shared/components/pwa/pwa_install_hint.dart";
+import "package:smart_expense/shared/components/pwa/pwa_install_onboarding_card.dart";
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key, required this.repo, required this.onDone});
 
   final LedgerRepository repo;
   final VoidCallback onDone;
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _page = PageController();
   int _i = 0;
   final _nameCtrl = TextEditingController();
@@ -63,12 +69,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final isWide = MediaQuery.sizeOf(context).width >= 1000;
     final isLast = _i == _total - 1;
     final l10n = context.l10n;
+    final pwaNotifier = ref.read(pwaInstallControllerProvider.notifier);
+    final showHint = kIsWeb && pwaNotifier.shouldShowOnboardingHint();
+    final showCard = kIsWeb && pwaNotifier.shouldShowOnboardingCard();
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // Top bar: only the skip link, right-aligned
             if (!isLast)
               Align(
                 alignment: Alignment.centerRight,
@@ -92,7 +100,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             else
               const SizedBox(height: 36),
 
-            // Page content
             Expanded(
               child: PageView(
                 controller: _page,
@@ -102,11 +109,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     title: l10n.onboardingIntroTitle,
                     body: l10n.onboardingIntroBody,
                     icon: Icons.account_balance_wallet_outlined,
+                    footer: showHint ? const PwaInstallHint() : null,
                   ),
                   _IntroPage(
                     title: l10n.onboardingFastTitle,
                     body: l10n.onboardingFastBody,
                     icon: Icons.bolt,
+                    footer: showCard
+                        ? PwaInstallOnboardingCard(
+                            onInstall: () =>
+                                PwaInstallActions.requestInstall(context, ref),
+                            onLater: () async {
+                              await pwaNotifier.recordDismiss();
+                            },
+                          )
+                        : null,
                   ),
                   _IntroPage(
                     title: l10n.onboardingReviewTitle,
@@ -122,7 +139,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Centered step indicator dots
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
@@ -147,7 +163,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Bottom: prev / next or name input
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
               child: isLast
@@ -230,15 +245,17 @@ class _IntroPage extends StatelessWidget {
     required this.title,
     required this.body,
     required this.icon,
+    this.footer,
   });
 
   final String title;
   final String body;
   final IconData icon;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(28),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -256,6 +273,7 @@ class _IntroPage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
+          if (footer != null) ...[footer!],
         ],
       ),
     );

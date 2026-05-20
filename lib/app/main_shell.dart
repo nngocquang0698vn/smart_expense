@@ -1,3 +1,4 @@
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:smart_expense/core/utils/date_format.dart";
@@ -5,7 +6,9 @@ import "package:smart_expense/core/utils/date_format.dart";
 import "package:smart_expense/core/constants/app_constants.dart";
 import "package:smart_expense/shared/components/fab_center.dart";
 import "package:smart_expense/shared/components/pill_nav_bar.dart";
-import "package:smart_expense/shared/components/pwa_install_banner_host.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_listener.dart";
+import "package:smart_expense/shared/components/pwa/pwa_install_actions.dart";
 import "package:smart_expense/features/dashboard/presentation/dashboard_screen.dart";
 import "package:smart_expense/features/transactions/presentation/pending/pending_screen.dart";
 import "package:smart_expense/features/reports/presentation/analytics_screen.dart";
@@ -45,13 +48,45 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   int _page = 0;
+  bool _pwaBootstrapped = false;
 
   void _goPending() => setState(() => _page = 1);
 
   void _selectPage(int index) => setState(() => _page = index);
 
+  void _onPwaEvent() {
+    if (!mounted) return;
+    ref.read(pwaInstallControllerProvider.notifier).refresh();
+  }
+
+  void _bootstrapPwaIfNeeded() {
+    if (!kIsWeb || _pwaBootstrapped) return;
+    _pwaBootstrapped = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final notifier = ref.read(pwaInstallControllerProvider.notifier);
+      await notifier.recordSession();
+      listenPwaInstallAvailable(_onPwaEvent);
+      listenPwaInstalled(() {
+        ref.read(pwaInstallControllerProvider.notifier).markInstalled();
+      });
+      if (!mounted) return;
+      await PwaInstallActions.showPostActionCtaIfNeeded(context, ref);
+    });
+  }
+
+  @override
+  void dispose() {
+    if (kIsWeb) {
+      cancelPwaInstallAvailableListener();
+      cancelPwaInstalledListener();
+    }
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    _bootstrapPwaIfNeeded();
     final repo = ref.watch(ledgerRepositoryProvider);
     final l10n = context.l10n;
     final pages = [
@@ -116,10 +151,7 @@ class _MobileShell extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
-      body: PwaInstallBannerHost(
-        pageIndex: page,
-        child: IndexedStack(index: page, children: pages),
-      ),
+      body: IndexedStack(index: page, children: pages),
       bottomNavigationBar: SizedBox(
         height: navBarHeight,
         child: Padding(
@@ -184,10 +216,7 @@ class _DesktopShell extends StatelessWidget {
                       color: contentColor,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: PwaInstallBannerHost(
-                      pageIndex: page,
-                      child: IndexedStack(index: page, children: pages),
-                    ),
+                    child: IndexedStack(index: page, children: pages),
                   ),
                 ),
               ],
