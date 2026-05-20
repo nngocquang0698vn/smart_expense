@@ -29,6 +29,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _i = 0;
   final _nameCtrl = TextEditingController();
+  bool _showNameError = false;
 
   @override
   void dispose() {
@@ -57,9 +58,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.onboardingNameRequired)),
-      );
+      setState(() => _showNameError = true);
       return;
     }
     await widget.repo.setUserName(name);
@@ -191,8 +190,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             decoration: InputDecoration(
                               labelText: l10n.onboardingNameLabel,
                               hintText: l10n.onboardingNameHint,
+                              errorText: _showNameError
+                                  ? l10n.onboardingNameRequired
+                                  : null,
                             ),
                             textCapitalization: TextCapitalization.words,
+                            onChanged: (_) {
+                              if (_showNameError) {
+                                setState(() => _showNameError = false);
+                              }
+                            },
                             onSubmitted: (_) => _finish(),
                           ),
                         )
@@ -226,9 +233,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       ),
 
                       Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.md,
-                        ),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
                         child: isLast
                             ? OnboardingLastNavRow(
                                 onBack: _prev,

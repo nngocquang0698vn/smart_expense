@@ -67,10 +67,9 @@ void main() {
 
       expect(
         errors.where(
-          (error) =>
-              error.toString().contains(
-                "Tried to modify a provider while the widget tree was building",
-              ),
+          (error) => error.toString().contains(
+            "Tried to modify a provider while the widget tree was building",
+          ),
         ),
         isEmpty,
       );
@@ -91,11 +90,7 @@ void main() {
   });
 
   testWidgets("autoStartRecording starts after first frame", (tester) async {
-    await pumpInput(
-      tester,
-      autoStartRecording: true,
-      onChanged: (_) {},
-    );
+    await pumpInput(tester, autoStartRecording: true, onChanged: (_) {});
     await tester.pump();
 
     expect(find.byKey(const ValueKey("recording")), findsOneWidget);
@@ -163,10 +158,7 @@ class _AudioHarness extends StatefulWidget {
 class _AudioHarnessState extends State<_AudioHarness> {
   @override
   Widget build(BuildContext context) {
-    return VoiceRecorderInput(
-      audio: widget.audio,
-      onChanged: (_) {},
-    );
+    return VoiceRecorderInput(audio: widget.audio, onChanged: (_) {});
   }
 }
 

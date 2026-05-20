@@ -28,17 +28,13 @@ void main() {
       of: find.byType(OnboardingPageLayout),
       matching: find.byWidgetPredicate(
         (w) =>
-            w is ConstrainedBox &&
-            w.constraints.minHeight == expectedMinHeight,
+            w is ConstrainedBox && w.constraints.minHeight == expectedMinHeight,
       ),
     );
     expect(constrainedFinder, findsOneWidget);
 
     final column = tester.widget<Column>(
-      find.descendant(
-        of: constrainedFinder,
-        matching: find.byType(Column),
-      ),
+      find.descendant(of: constrainedFinder, matching: find.byType(Column)),
     );
     expect(column.mainAxisAlignment, MainAxisAlignment.center);
   });

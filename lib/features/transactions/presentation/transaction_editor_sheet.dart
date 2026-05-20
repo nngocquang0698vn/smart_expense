@@ -11,6 +11,7 @@ import "package:smart_expense/features/transactions/domain/entities/ledger_trans
 import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
+import "package:smart_expense/shared/components/app_snack_bar.dart";
 import "package:smart_expense/shared/components/app_voice_note_section.dart";
 import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart";
 import "package:smart_expense/features/categories/application/category_selection_resolver.dart";
@@ -71,6 +72,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
   final _imageStorage = ImageStorageService();
   final _draftResolver = const TransactionDraftResolver();
   final _categorySelection = const CategorySelectionResolver();
+  TransactionDraftValidationError? _validationError;
 
   bool get _showCamera => !kIsWeb;
 
@@ -128,7 +130,13 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
     _initImageIds = _images.map((image) => image.id).toSet();
 
     // Rebuild on text changes so dirty flag updates
-    _titleCtrl.addListener(() => setState(() {}));
+    _titleCtrl.addListener(() {
+      if (_validationError == TransactionDraftValidationError.titleRequired &&
+          _titleCtrl.text.trim().isNotEmpty) {
+        _validationError = null;
+      }
+      setState(() {});
+    });
     _noteCtrl.addListener(() => setState(() {}));
   }
 
@@ -165,9 +173,12 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
       });
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.imageSaveFailed)));
+        title: "Chưa thể lưu ảnh",
+        message: context.l10n.imageSaveFailed,
+        type: AppSnackBarType.error,
+      );
     }
   }
 
@@ -207,41 +218,51 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
       includeTitle: true,
     );
     if (error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_validationMessage(error))));
+      setState(() => _validationError = error);
       return;
     }
+    setState(() => _validationError = null);
 
     final e = widget.existing;
-    if (e == null) {
-      await widget.repo.addQuick(
-        title: draft.title,
-        amountVnd: amount,
-        isIncome: _income,
-        categoryId: draft.categoryId ?? "",
-        at: _date,
-        pending: _pending,
-        complete: draft.complete,
-        note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-        audio: _audio,
-        images: _images,
-      );
-    } else {
-      await widget.repo.putTransaction(
-        e.copyWith(
+    try {
+      if (e == null) {
+        await widget.repo.addQuick(
           title: draft.title,
           amountVnd: amount,
           isIncome: _income,
-          categoryId: draft.categoryId ?? e.categoryId,
-          occurredAt: _date,
+          categoryId: draft.categoryId ?? "",
+          at: _date,
           pending: _pending,
           complete: draft.complete,
           note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
           audio: _audio,
           images: _images,
-        ),
+        );
+      } else {
+        await widget.repo.putTransaction(
+          e.copyWith(
+            title: draft.title,
+            amountVnd: amount,
+            isIncome: _income,
+            categoryId: draft.categoryId ?? e.categoryId,
+            occurredAt: _date,
+            pending: _pending,
+            complete: draft.complete,
+            note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+            audio: _audio,
+            images: _images,
+          ),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        title: "Chưa thể lưu",
+        message: "Chưa thể lưu giao dịch. Vui lòng thử lại.",
+        type: AppSnackBarType.error,
       );
+      return;
     }
 
     if (e == null) {
@@ -255,14 +276,15 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
 
     if (!mounted) return;
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _pending
-              ? context.l10n.savePendingSuccess
-              : context.l10n.saveTransactionSuccess,
-        ),
-      ),
+    showAppSnackBar(
+      context,
+      title: "Đã lưu",
+      message: e == null
+          ? (_pending
+                ? context.l10n.savePendingSuccess
+                : context.l10n.saveTransactionSuccess)
+          : "Đã cập nhật giao dịch.",
+      type: AppSnackBarType.success,
     );
   }
 
@@ -275,9 +297,36 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
       isDestructive: true,
     );
     if (!confirmed || !mounted) return;
-    await widget.repo.deleteTransaction(widget.existing!.id);
+    try {
+      await widget.repo.deleteTransaction(widget.existing!.id);
+    } catch (_) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        title: "Chưa thể xoá",
+        message: "Chưa thể xoá giao dịch. Vui lòng thử lại.",
+        type: AppSnackBarType.error,
+      );
+      return;
+    }
     if (!mounted) return;
     Navigator.pop(context);
+    showAppSnackBar(
+      context,
+      title: "Đã xoá",
+      message: "Đã xoá giao dịch.",
+      type: AppSnackBarType.success,
+    );
+  }
+
+  void _clearValidation(TransactionDraftValidationError error) {
+    if (_validationError == error) {
+      setState(() => _validationError = null);
+    }
+  }
+
+  String? _validationMessageFor(TransactionDraftValidationError error) {
+    return _validationError == error ? _validationMessage(error) : null;
   }
 
   String _validationMessage(TransactionDraftValidationError error) {
@@ -293,7 +342,13 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(amountInputProvider(_amountKey), (_, _) => setState(() {}));
+    ref.listen(amountInputProvider(_amountKey), (_, next) {
+      if (_validationError == TransactionDraftValidationError.amountRequired &&
+          next > 0) {
+        _validationError = null;
+      }
+      setState(() {});
+    });
 
     return FutureBuilder<List<LedgerCategory>>(
       future: widget.repo.categories(),
@@ -335,6 +390,9 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                   titleField: AppTextField(
                     controller: _titleCtrl,
                     labelText: context.l10n.transactionTitle,
+                    errorText: _validationMessageFor(
+                      TransactionDraftValidationError.titleRequired,
+                    ),
                   ),
                   initialAmount: _amountKey,
                   noteController: _noteCtrl,
@@ -346,6 +404,10 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                       isIncome: _income,
                     );
                     _categoryId = _categorySelection.fallbackId(nextItems);
+                    if (_validationError ==
+                        TransactionDraftValidationError.categoryRequired) {
+                      _validationError = null;
+                    }
                   },
                   date: _date,
                   dateStyle: AppDatePickerStyle.listTile,
@@ -357,6 +419,9 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                   onPickImage: _pickImage,
                   onDeleteImage: _removeImage,
                   imageThumbnailHeight: 96,
+                  amountErrorText: _validationMessageFor(
+                    TransactionDraftValidationError.amountRequired,
+                  ),
                   mediaSections: [
                     AppVoiceNoteSection(
                       audio: _audio,
@@ -392,9 +457,17 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                           ),
                         )
                         .toList(),
-                    onChanged: (v) => setState(() => _categoryId = v),
+                    onChanged: (v) {
+                      setState(() => _categoryId = v);
+                      _clearValidation(
+                        TransactionDraftValidationError.categoryRequired,
+                      );
+                    },
                     decoration: InputDecoration(
                       labelText: context.l10n.category,
+                      errorText: _validationMessageFor(
+                        TransactionDraftValidationError.categoryRequired,
+                      ),
                     ),
                   ),
                 ),

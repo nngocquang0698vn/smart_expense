@@ -32,64 +32,64 @@ class PwaInstallGuideContent extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.fromLTRB(hPad, vPad, hPad, 16),
           child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.pwaIosGuideTitle,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: cs.primary,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.pwaIosGuideBody,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _IosStepCard(
-            step: 1,
-            text: l10n.pwaIosGuideStep1,
-            helper: l10n.pwaIosShareLabel,
-            preview: const _SafariShareBarPreview(),
-          ),
-          _IosStepCard(
-            step: 2,
-            text: l10n.pwaIosGuideStep2,
-            helper: l10n.pwaIosAddToHomeLabel,
-            preview: _SafariAddToHomeRowPreview(
-              label: l10n.pwaIosAddToHomeLabel,
-            ),
-          ),
-          _IosStepCard(
-            step: 3,
-            text: l10n.pwaIosGuideStep3,
-            preview: const _SafariAddActionPreview(),
-          ),
-          if (onPrimaryPressed != null && primaryButtonLabel != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Align(
-              alignment: Alignment.center,
-              child: FilledButton(
-                onPressed: onPrimaryPressed,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  minimumSize: const Size(0, 44),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.pwaIosGuideTitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: cs.primary,
                 ),
-                child: Text(primaryButtonLabel!),
               ),
-            ),
-          ],
-        ],
+              const SizedBox(height: 6),
+              Text(
+                l10n.pwaIosGuideBody,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _IosStepCard(
+                step: 1,
+                text: l10n.pwaIosGuideStep1,
+                helper: l10n.pwaIosShareLabel,
+                preview: const _SafariShareBarPreview(),
+              ),
+              _IosStepCard(
+                step: 2,
+                text: l10n.pwaIosGuideStep2,
+                helper: l10n.pwaIosAddToHomeLabel,
+                preview: _SafariAddToHomeRowPreview(
+                  label: l10n.pwaIosAddToHomeLabel,
+                ),
+              ),
+              _IosStepCard(
+                step: 3,
+                text: l10n.pwaIosGuideStep3,
+                preview: const _SafariAddActionPreview(),
+              ),
+              if (onPrimaryPressed != null && primaryButtonLabel != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Align(
+                  alignment: Alignment.center,
+                  child: FilledButton(
+                    onPressed: onPrimaryPressed,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      minimumSize: const Size(0, 44),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(primaryButtonLabel!),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -140,10 +140,7 @@ class _SafariAddToHomeRowPreview extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
             ),
             const Icon(
               Icons.add_box_outlined,

@@ -34,6 +34,7 @@ class TransactionEntryForm extends StatelessWidget {
     this.pendingSubtitle,
     this.amountAlwaysShowKeypad = false,
     this.amountAutofocus = false,
+    this.amountErrorText,
     this.typeToggleFirst = false,
     this.imageThumbnailHeight = 80,
     super.key,
@@ -62,6 +63,7 @@ class TransactionEntryForm extends StatelessWidget {
   final List<Widget> mediaSections;
   final bool amountAlwaysShowKeypad;
   final bool amountAutofocus;
+  final String? amountErrorText;
   final bool typeToggleFirst;
   final double imageThumbnailHeight;
 
@@ -89,6 +91,7 @@ class TransactionEntryForm extends StatelessWidget {
           initialAmount: initialAmount,
           alwaysShowKeypad: amountAlwaysShowKeypad,
           autofocus: amountAutofocus,
+          errorText: amountErrorText,
         ),
         const SizedBox(height: 12),
         ...afterAmount,

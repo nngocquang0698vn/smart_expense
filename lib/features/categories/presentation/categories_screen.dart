@@ -13,6 +13,7 @@ import "package:smart_expense/shared/components/app_loading_state.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
 import "package:smart_expense/shared/components/app_scaffold.dart";
 import "package:smart_expense/shared/components/app_section_header.dart";
+import "package:smart_expense/shared/components/app_snack_bar.dart";
 import "package:smart_expense/features/categories/application/categories_controller.dart";
 import "package:smart_expense/features/categories/application/category_editor_policy.dart";
 
@@ -197,6 +198,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   late final TextEditingController _nameController;
   late CategoryDraft _draft;
   bool _saving = false;
+  CategoryValidationError? _validationError;
 
   @override
   void initState() {
@@ -218,19 +220,36 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   Future<void> _save() async {
     if (_saving) return;
     setState(() => _saving = true);
-    final result = await widget.ref
-        .read(categoriesControllerProvider.notifier)
-        .saveDraft(
-          draft: _draft.copyWith(name: _nameController.text),
-          existing: widget.existing,
-        );
+    late final CategoryValidationResult result;
+    try {
+      result = await widget.ref
+          .read(categoriesControllerProvider.notifier)
+          .saveDraft(
+            draft: _draft.copyWith(name: _nameController.text),
+            existing: widget.existing,
+          );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      _showMessage(
+        "Chưa thể lưu danh mục. Vui lòng thử lại.",
+        type: AppSnackBarType.error,
+        title: "Chưa thể lưu",
+      );
+      return;
+    }
     if (!mounted) return;
     setState(() => _saving = false);
 
     if (!result.isValid) {
-      _showMessage(_categoryValidationMessage(result.error));
+      setState(() => _validationError = result.error);
       return;
     }
+    _showMessage(
+      "Đã lưu danh mục.",
+      type: AppSnackBarType.success,
+      title: "Đã lưu",
+    );
     Navigator.of(context).pop();
   }
 
@@ -243,7 +262,11 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
         .canDelete(category);
     if (!mounted) return;
     if (!decision.allowed) {
-      _showMessage(_categoryDeleteMessage(decision.reason));
+      _showMessage(
+        _categoryDeleteMessage(decision.reason),
+        type: AppSnackBarType.warning,
+        title: "Chưa thể xoá",
+      );
       return;
     }
 
@@ -256,22 +279,39 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     );
     if (!confirmed || !mounted) return;
 
-    await widget.ref
-        .read(categoriesControllerProvider.notifier)
-        .delete(category);
+    try {
+      await widget.ref
+          .read(categoriesControllerProvider.notifier)
+          .delete(category);
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(
+        "Chưa thể xoá danh mục. Vui lòng thử lại.",
+        type: AppSnackBarType.error,
+        title: "Chưa thể xoá",
+      );
+      return;
+    }
+    _showMessage(
+      "Đã xoá danh mục.",
+      type: AppSnackBarType.success,
+      title: "Đã xoá",
+    );
     if (mounted) Navigator.of(context).pop();
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  void _showMessage(
+    String message, {
+    AppSnackBarType type = AppSnackBarType.info,
+    String title = "Thông báo",
+  }) {
+    showAppSnackBar(context, title: title, message: message, type: type);
   }
 
-  String _categoryValidationMessage(CategoryValidationError? error) {
+  String? _categoryValidationMessage(CategoryValidationError? error) {
     return switch (error) {
       CategoryValidationError.nameRequired => context.l10n.categoryNameRequired,
-      null => context.l10n.genericError,
+      null => null,
     };
   }
 
@@ -354,8 +394,14 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                     decoration: InputDecoration(
                       labelText: context.l10n.categoryName,
                       prefixIcon: Icon(Icons.edit_outlined),
+                      errorText: _categoryValidationMessage(_validationError),
                     ),
                     textCapitalization: TextCapitalization.sentences,
+                    onChanged: (_) {
+                      if (_validationError != null) {
+                        setState(() => _validationError = null);
+                      }
+                    },
                     onSubmitted: (_) => _save(),
                   ),
                   const SizedBox(height: AppSpacing.md),

@@ -17,6 +17,7 @@ class AppTextField extends StatelessWidget {
     this.style,
     this.prefixText,
     this.suffix,
+    this.errorText,
   });
 
   final TextEditingController? controller;
@@ -29,6 +30,7 @@ class AppTextField extends StatelessWidget {
   final TextStyle? style;
   final String? prefixText;
   final Widget? suffix;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +55,7 @@ class AppTextField extends StatelessWidget {
         hintText: hintText,
         prefixText: prefixText,
         suffix: suffix,
+        errorText: errorText,
         filled: true,
         fillColor: finance.fieldFill,
         labelStyle: TextStyle(color: finance.textHint),

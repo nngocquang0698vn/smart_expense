@@ -9,7 +9,6 @@ import "package:smart_expense/core/testing/pwa_install_test_support.dart";
 import "package:smart_expense/core/utils/pwa/pwa_providers.dart";
 import "package:smart_expense/features/onboarding/presentation/onboarding_layout_metrics.dart";
 import "package:smart_expense/features/onboarding/presentation/onboarding_nav_row.dart";
-import "package:smart_expense/shared/design_system/tokens/app_spacing.dart";
 import "package:smart_expense/features/onboarding/presentation/onboarding_screen.dart";
 import "package:smart_expense/shared/layouts/onboarding_page_layout.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
@@ -109,27 +108,28 @@ void main() {
     );
   });
 
-  testWidgets("intro page shows feature icon beside title not oversized above", (
-    tester,
-  ) async {
-    await pumpOnboarding(tester);
+  testWidgets(
+    "intro page shows feature icon beside title not oversized above",
+    (tester) async {
+      await pumpOnboarding(tester);
 
-    final titleFinder = find.text("Smart Ledger");
-    final iconFinder = find.byIcon(Icons.account_balance_wallet_outlined);
-    expect(titleFinder, findsOneWidget);
-    expect(iconFinder, findsOneWidget);
+      final titleFinder = find.text("Smart Ledger");
+      final iconFinder = find.byIcon(Icons.account_balance_wallet_outlined);
+      expect(titleFinder, findsOneWidget);
+      expect(iconFinder, findsOneWidget);
 
-    final titleBox = tester.getRect(titleFinder);
-    final iconBox = tester.getRect(iconFinder);
-    final icon = tester.widget<Icon>(iconFinder);
+      final titleBox = tester.getRect(titleFinder);
+      final iconBox = tester.getRect(iconFinder);
+      final icon = tester.widget<Icon>(iconFinder);
 
-    expect(icon.size, lessThanOrEqualTo(32));
-    expect(icon.size, greaterThan(0));
-    expect(iconBox.center.dy, closeTo(titleBox.center.dy, 12));
-    expect(iconBox.left, greaterThan(titleBox.left));
-    expect(iconBox.top, greaterThan(titleBox.top - 8));
-    expect(iconBox.top, lessThan(titleBox.bottom + 8));
-  });
+      expect(icon.size, lessThanOrEqualTo(32));
+      expect(icon.size, greaterThan(0));
+      expect(iconBox.center.dy, closeTo(titleBox.center.dy, 12));
+      expect(iconBox.left, greaterThan(titleBox.left));
+      expect(iconBox.top, greaterThan(titleBox.top - 8));
+      expect(iconBox.top, lessThan(titleBox.bottom + 8));
+    },
+  );
 
   testWidgets("fast entry page shows bolt inline to the right of title", (
     tester,
@@ -166,12 +166,16 @@ void main() {
       find.byWidgetPredicate(
         (w) =>
             w is Padding &&
-            w.padding == const EdgeInsets.only(bottom: kOnboardingDotsToButtonsGap) &&
+            w.padding ==
+                const EdgeInsets.only(bottom: kOnboardingDotsToButtonsGap) &&
             w.child is Row,
       ),
     );
     expect(fieldBox.bottom, lessThan(dotsBox.top));
-    expect(dotsBox.top - fieldBox.bottom, greaterThanOrEqualTo(kOnboardingNameFieldToDotsGap - 1));
+    expect(
+      dotsBox.top - fieldBox.bottom,
+      greaterThanOrEqualTo(kOnboardingNameFieldToDotsGap - 1),
+    );
   });
 
   testWidgets("skip shows insights page with name field not intro content", (
@@ -188,9 +192,7 @@ void main() {
     expect(find.byType(OnboardingLastNavRow), findsOneWidget);
   });
 
-  testWidgets("back button on last page is not clipped", (
-    tester,
-  ) async {
+  testWidgets("back button on last page is not clipped", (tester) async {
     await pumpOnboarding(tester, surfaceSize: const Size(390, 700));
     await tester.tap(find.text("Bỏ qua"));
     await tester.pumpAndSettle();
@@ -199,6 +201,23 @@ void main() {
     final backBox = tester.getRect(find.text("Quay lại"));
     expect(backBox.top, greaterThanOrEqualTo(navBox.top - 1));
     expect(backBox.bottom, lessThanOrEqualTo(navBox.bottom + 1));
+  });
+
+  testWidgets("empty name validation appears inline under name field", (
+    tester,
+  ) async {
+    await pumpOnboarding(tester, surfaceSize: const Size(390, 700));
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FilledButton));
+    await tester.pump();
+
+    expect(
+      find.text(AppLocalizations.vi.onboardingNameRequired),
+      findsOneWidget,
+    );
+    expect(find.byType(SnackBar), findsNothing);
   });
 
   testWidgets("insights title stays stable when reaching name page", (
@@ -210,7 +229,10 @@ void main() {
     await pumpOnboarding(tester, surfaceSize: phone);
     await tester.tap(find.text("Bỏ qua"));
     await tester.pumpAndSettle();
-    final skipTitleY = tester.getRect(find.text("Quản lý thông minh")).center.dy;
+    final skipTitleY = tester
+        .getRect(find.text("Quản lý thông minh"))
+        .center
+        .dy;
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
@@ -221,7 +243,10 @@ void main() {
       await tester.pumpAndSettle();
     }
     expect(find.byType(TextField), findsOneWidget);
-    final nextTitleY = tester.getRect(find.text("Quản lý thông minh")).center.dy;
+    final nextTitleY = tester
+        .getRect(find.text("Quản lý thông minh"))
+        .center
+        .dy;
     expect(nextTitleY, closeTo(skipTitleY, 6));
   });
 

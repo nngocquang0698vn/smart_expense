@@ -30,7 +30,10 @@ void main() {
   test("build exposes service canNativeInstall", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = FakePwaInstallService(userAgent: kAndroidChromeUa, canNativePrompt: false);
+    service = FakePwaInstallService(
+      userAgent: kAndroidChromeUa,
+      canNativePrompt: false,
+    );
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -43,7 +46,10 @@ void main() {
   test("hides onboarding card when standalone", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = FakePwaInstallService(userAgent: kAndroidChromeUa, isStandalone: true);
+    service = FakePwaInstallService(
+      userAgent: kAndroidChromeUa,
+      isStandalone: true,
+    );
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 
@@ -84,10 +90,7 @@ void main() {
     final notifier = container.read(pwaInstallControllerProvider.notifier);
     await notifier.recordDismiss();
 
-    expect(
-      container.read(pwaInstallControllerProvider).dismissCount,
-      1,
-    );
+    expect(container.read(pwaInstallControllerProvider).dismissCount, 1);
     expect(
       container.read(pwaInstallControllerProvider).canShowAutoPrompt,
       isFalse,
@@ -133,23 +136,29 @@ void main() {
     );
   });
 
-  test("detects platform from user agent when service provides UA in VM", () async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    service = FakePwaInstallService(userAgent: kIosSafariUa);
-    container = createContainer(prefs: prefs);
-    container.listen(pwaInstallControllerProvider, (_, _) {});
+  test(
+    "detects platform from user agent when service provides UA in VM",
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      service = FakePwaInstallService(userAgent: kIosSafariUa);
+      container = createContainer(prefs: prefs);
+      container.listen(pwaInstallControllerProvider, (_, _) {});
 
-    expect(
-      container.read(pwaInstallControllerProvider).platform,
-      PwaPlatformKind.iosSafari,
-    );
-  });
+      expect(
+        container.read(pwaInstallControllerProvider).platform,
+        PwaPlatformKind.iosSafari,
+      );
+    },
+  );
 
   test("refresh updates canNativeInstall from service", () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    service = FakePwaInstallService(userAgent: kAndroidChromeUa, canNativePrompt: false);
+    service = FakePwaInstallService(
+      userAgent: kAndroidChromeUa,
+      canNativePrompt: false,
+    );
     container = createContainer(prefs: prefs);
     container.listen(pwaInstallControllerProvider, (_, _) {});
 

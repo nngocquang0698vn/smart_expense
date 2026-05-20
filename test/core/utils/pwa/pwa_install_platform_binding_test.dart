@@ -10,22 +10,25 @@ import "package:smart_expense/core/utils/pwa/pwa_providers.dart";
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test("FakePwaInstallService iOS UA resolves to iosSafari in controller", () async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    final container = ProviderContainer(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-        pwaInstallServiceProvider.overrideWithValue(
-          FakePwaInstallService(userAgent: kIosSafariUa),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
+  test(
+    "FakePwaInstallService iOS UA resolves to iosSafari in controller",
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          pwaInstallServiceProvider.overrideWithValue(
+            FakePwaInstallService(userAgent: kIosSafariUa),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
 
-    final platform = container.read(pwaInstallControllerProvider).platform;
-    expect(platform, PwaPlatformKind.iosSafari);
-  });
+      final platform = container.read(pwaInstallControllerProvider).platform;
+      expect(platform, PwaPlatformKind.iosSafari);
+    },
+  );
 
   test("FakePwaInstallService Android UA resolves to androidChrome", () async {
     SharedPreferences.setMockInitialValues({});

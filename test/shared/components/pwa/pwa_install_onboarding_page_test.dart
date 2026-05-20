@@ -9,7 +9,10 @@ import "package:smart_expense/shared/components/pwa/pwa_phone_mockup.dart";
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<void> pumpPage(WidgetTester tester, FakePwaInstallService service) async {
+  Future<void> pumpPage(
+    WidgetTester tester,
+    FakePwaInstallService service,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpPwaWidget(

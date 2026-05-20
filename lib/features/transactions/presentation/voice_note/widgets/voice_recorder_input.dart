@@ -6,6 +6,7 @@ import "package:smart_expense/features/transactions/application/voice_note/voice
 import "package:smart_expense/features/transactions/application/voice_note/voice_recorder_controller.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/voice_recording_status.dart";
+import "package:smart_expense/shared/components/app_snack_bar.dart";
 import "package:smart_expense/shared/dialogs/dialogs.dart";
 import "package:smart_expense/features/transactions/presentation/voice_note/widgets/voice_note_preview.dart";
 
@@ -45,9 +46,9 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
   void _syncExistingAudio(AudioAttachmentModel audio) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(voiceRecorderControllerProvider(_config).notifier).useExisting(
-            audio,
-          );
+      ref
+          .read(voiceRecorderControllerProvider(_config).notifier)
+          .useExisting(audio);
     });
   }
 
@@ -79,9 +80,12 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
+    showAppSnackBar(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+      title: "Thông báo",
+      message: message,
+      type: AppSnackBarType.info,
+    );
   }
 
   String _format(Duration duration) {

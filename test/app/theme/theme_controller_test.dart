@@ -43,10 +43,7 @@ void main() {
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
     );
 
-    expect(
-      container.read(themeControllerProvider),
-      const ThemeSettings(),
-    );
+    expect(container.read(themeControllerProvider), const ThemeSettings());
   });
 
   test("update persists and updates state", () async {
@@ -71,7 +68,9 @@ void main() {
   });
 
   test("update with same settings does not write prefs again", () async {
-    final initial = const ThemeSettings(themePreference: AppThemePreference.dark);
+    final initial = const ThemeSettings(
+      themePreference: AppThemePreference.dark,
+    );
     SharedPreferences.setMockInitialValues({
       "themeSettings": json.encode(initial.toJson()),
     });

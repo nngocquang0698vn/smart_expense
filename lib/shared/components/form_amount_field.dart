@@ -15,6 +15,7 @@ class FormAmountField extends ConsumerStatefulWidget {
     this.autofocus = false,
     this.alwaysShowKeypad = false,
     this.onDone,
+    this.errorText,
   });
 
   final int initialAmount;
@@ -25,6 +26,7 @@ class FormAmountField extends ConsumerStatefulWidget {
   final bool alwaysShowKeypad;
 
   final VoidCallback? onDone;
+  final String? errorText;
 
   @override
   ConsumerState<FormAmountField> createState() => _FormAmountFieldState();
@@ -123,6 +125,19 @@ class _FormAmountFieldState extends ConsumerState<FormAmountField> {
               onTripleZero: notifier.appendTripleZero,
               onBackspace: notifier.backspace,
               onDone: _closeKeypad,
+            ),
+          ],
+          if (widget.errorText != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              child: Text(
+                widget.errorText!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ],
