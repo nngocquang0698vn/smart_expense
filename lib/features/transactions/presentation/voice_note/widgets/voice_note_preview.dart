@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/presentation/voice_note/widgets/voice_note_player.dart";
+import "package:smart_expense/shared/design_system/design_system.dart";
 
 class VoiceNotePreview extends StatelessWidget {
   const VoiceNotePreview({
@@ -42,7 +43,7 @@ class VoiceNotePreview extends StatelessWidget {
               child: showActions
                   ? Padding(
                       key: const ValueKey("voice_preview_actions"),
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.only(top: AppSpacing.xs),
                       child: Row(
                         children: [
                           Expanded(
@@ -59,7 +60,7 @@ class VoiceNotePreview extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.xs),
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: onRecordAgain,

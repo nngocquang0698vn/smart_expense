@@ -13,7 +13,8 @@ import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
 import "package:smart_expense/shared/components/app_snack_bar.dart";
 import "package:smart_expense/shared/components/app_voice_note_section.dart";
-import "package:smart_expense/shared/design_system/theme/app_finance_colors.dart";
+import "package:smart_expense/shared/components/amount_keypad.dart";
+import "package:smart_expense/shared/design_system/design_system.dart";
 import "package:smart_expense/features/categories/application/category_selection_resolver.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_picker_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
@@ -73,6 +74,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
   final _draftResolver = const TransactionDraftResolver();
   final _categorySelection = const CategorySelectionResolver();
   TransactionDraftValidationError? _validationError;
+  bool _amountKeypadOpen = false;
 
   bool get _showCamera => !kIsWeb;
 
@@ -329,6 +331,16 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
     return _validationError == error ? _validationMessage(error) : null;
   }
 
+  AmountKeypad _amountKeypad() {
+    final notifier = ref.read(amountInputProvider(_amountKey).notifier);
+    return AmountKeypad(
+      onDigit: notifier.appendDigit,
+      onTripleZero: notifier.appendTripleZero,
+      onBackspace: notifier.backspace,
+      onDone: () => setState(() => _amountKeypadOpen = false),
+    );
+  }
+
   String _validationMessage(TransactionDraftValidationError error) {
     return switch (error) {
       TransactionDraftValidationError.titleRequired =>
@@ -371,129 +383,141 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
 
         final finance = context.financeColors;
 
-        return SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header row with close button
-                TransactionSheetHeader(
-                  title: widget.existing == null
-                      ? context.l10n.addTransaction
-                      : context.l10n.editTransaction,
-                  onClose: _handleClose,
-                ),
-                const SizedBox(height: 14),
+        return TransactionKeypadScaffold(
+          keypadVisible: _amountKeypadOpen,
+          keypad: _amountKeypad(),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header row with close button
+                  TransactionSheetHeader(
+                    title: widget.existing == null
+                        ? context.l10n.addTransaction
+                        : context.l10n.editTransaction,
+                    onClose: _handleClose,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
 
-                TransactionEntryForm(
-                  titleField: AppTextField(
-                    controller: _titleCtrl,
-                    labelText: context.l10n.transactionTitle,
-                    errorText: _validationMessageFor(
-                      TransactionDraftValidationError.titleRequired,
-                    ),
-                  ),
-                  initialAmount: _amountKey,
-                  noteController: _noteCtrl,
-                  isIncome: _income,
-                  onIncomeChanged: (income) => setState(() => _income = income),
-                  onSideChanged: () {
-                    final nextItems = _categorySelection.enabledForSide(
-                      cats,
-                      isIncome: _income,
-                    );
-                    _categoryId = _categorySelection.fallbackId(nextItems);
-                    if (_validationError ==
-                        TransactionDraftValidationError.categoryRequired) {
-                      _validationError = null;
-                    }
-                  },
-                  date: _date,
-                  dateStyle: AppDatePickerStyle.listTile,
-                  onDateChanged: (d) => setState(() => _date = d),
-                  pending: _pending,
-                  onPendingChanged: (v) => setState(() => _pending = v),
-                  images: _images,
-                  showCamera: _showCamera,
-                  onPickImage: _pickImage,
-                  onDeleteImage: _removeImage,
-                  imageThumbnailHeight: 96,
-                  amountErrorText: _validationMessageFor(
-                    TransactionDraftValidationError.amountRequired,
-                  ),
-                  mediaSections: [
-                    AppVoiceNoteSection(
-                      audio: _audio,
-                      showWhenEmpty: true,
-                      onChanged: (audio) => setState(() {
-                        _audio = audio;
-                        if (audio != null) _pending = true;
-                      }),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  categorySection: DropdownButtonFormField<String>(
-                    dropdownColor: finance.sheetBackground,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: finance.fieldText),
-                    // ignore: deprecated_member_use
-                    value: dropdownValue,
-                    items: categoryItems
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Row(
-                              children: [
-                                Icon(c.icon, color: c.color, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  c.name,
-                                  style: TextStyle(color: finance.fieldText),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (v) {
-                      setState(() => _categoryId = v);
-                      _clearValidation(
-                        TransactionDraftValidationError.categoryRequired,
-                      );
-                    },
-                    decoration: InputDecoration(
-                      labelText: context.l10n.category,
+                  TransactionEntryForm(
+                    titleField: AppTextField(
+                      controller: _titleCtrl,
+                      labelText: context.l10n.transactionTitle,
                       errorText: _validationMessageFor(
-                        TransactionDraftValidationError.categoryRequired,
+                        TransactionDraftValidationError.titleRequired,
+                      ),
+                    ),
+                    initialAmount: _amountKey,
+                    noteController: _noteCtrl,
+                    isIncome: _income,
+                    onIncomeChanged: (income) =>
+                        setState(() => _income = income),
+                    onSideChanged: () {
+                      final nextItems = _categorySelection.enabledForSide(
+                        cats,
+                        isIncome: _income,
+                      );
+                      _categoryId = _categorySelection.fallbackId(nextItems);
+                      if (_validationError ==
+                          TransactionDraftValidationError.categoryRequired) {
+                        _validationError = null;
+                      }
+                    },
+                    date: _date,
+                    dateStyle: AppDatePickerStyle.listTile,
+                    onDateChanged: (d) => setState(() => _date = d),
+                    pending: _pending,
+                    onPendingChanged: (v) => setState(() => _pending = v),
+                    images: _images,
+                    showCamera: _showCamera,
+                    onPickImage: _pickImage,
+                    onDeleteImage: _removeImage,
+                    imageThumbnailHeight: 96,
+                    amountErrorText: _validationMessageFor(
+                      TransactionDraftValidationError.amountRequired,
+                    ),
+                    amountKeypadOpen: _amountKeypadOpen,
+                    onAmountTap: () => setState(() => _amountKeypadOpen = true),
+                    onAmountDone: () =>
+                        setState(() => _amountKeypadOpen = false),
+                    mediaSections: [
+                      AppVoiceNoteSection(
+                        audio: _audio,
+                        showWhenEmpty: true,
+                        onChanged: (audio) => setState(() {
+                          _audio = audio;
+                          if (audio != null) _pending = true;
+                        }),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                    categorySection: DropdownButtonFormField<String>(
+                      dropdownColor: finance.sheetBackground,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(color: finance.fieldText),
+                      // ignore: deprecated_member_use
+                      value: dropdownValue,
+                      items: categoryItems
+                          .map(
+                            (c) => DropdownMenuItem(
+                              value: c.id,
+                              child: Row(
+                                children: [
+                                  Icon(c.icon, color: c.color, size: 20),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Text(
+                                    c.name,
+                                    style: TextStyle(color: finance.fieldText),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        setState(() => _categoryId = v);
+                        _clearValidation(
+                          TransactionDraftValidationError.categoryRequired,
+                        );
+                      },
+                      decoration: InputDecoration(
+                        labelText: context.l10n.category,
+                        errorText: _validationMessageFor(
+                          TransactionDraftValidationError.categoryRequired,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.lg),
 
-                // ── Action buttons ───────────────────────────────────────
-                AppPrimaryButton(
-                  label: context.l10n.save,
-                  icon: Icons.save_rounded,
-                  onPressed: () => _saveTransaction(cats),
-                ),
-
-                // Delete (only for existing transactions)
-                if (widget.existing != null) ...[
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: finance.dangerAction,
-                      side: BorderSide(color: finance.dangerAction, width: 1.5),
-                    ),
-                    onPressed: _delete,
-                    icon: const Icon(Icons.delete_outline, size: 18),
-                    label: Text(context.l10n.deleteTransaction),
+                  // ── Action buttons ───────────────────────────────────────
+                  AppPrimaryButton(
+                    label: context.l10n.save,
+                    icon: Icons.save_rounded,
+                    onPressed: () => _saveTransaction(cats),
                   ),
+
+                  // Delete (only for existing transactions)
+                  if (widget.existing != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: finance.dangerAction,
+                        side: BorderSide(
+                          color: finance.dangerAction,
+                          width: 1.5,
+                        ),
+                      ),
+                      onPressed: _delete,
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      label: Text(context.l10n.deleteTransaction),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );

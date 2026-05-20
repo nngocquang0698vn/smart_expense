@@ -42,6 +42,7 @@ class SembastLedgerRepository extends LedgerRepository {
       await _seedCategories();
     }
     await _ensureKhac();
+    await _ensureThuNhap();
     final meta = await _meta.record("app").get(_db);
     if (meta == null) {
       await _meta.record("app").put(_db, {"userName": "", "onboarded": false});
@@ -85,6 +86,28 @@ class SembastLedgerRepository extends LedgerRepository {
     }
   }
 
+  Future<void> _ensureThuNhap() async {
+    final existing = await _categories.find(
+      _db,
+      finder: Finder(
+        filter: Filter.and([
+          Filter.equals("name", "Thu nhập"),
+          Filter.equals("isIncome", true),
+        ]),
+      ),
+    );
+    if (existing.isNotEmpty) return;
+
+    final model = CategoryModel(
+      id: _uuid.v4(),
+      name: "Thu nhập",
+      iconKey: "payments",
+      colorValue: 0xFF4CAF50,
+      isIncome: true,
+    );
+    await _categories.record(model.id).put(_db, model.toMap());
+  }
+
   Future<void> _seedCategories() async {
     final defaults = <CategoryModel>[
       CategoryModel(
@@ -100,6 +123,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "local_grocery_store",
         colorValue: 0xFF2E8B57,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -128,6 +152,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "movie",
         colorValue: 0xFF7C3AED,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -135,6 +160,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "medical_services",
         colorValue: 0xFF0EA5A2,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -142,6 +168,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "card_giftcard",
         colorValue: 0xFFE11D48,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -149,6 +176,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "spa",
         colorValue: 0xFF9333EA,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -156,6 +184,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "work",
         colorValue: 0xFF6B7280,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -163,6 +192,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "flight",
         colorValue: 0xFFF97316,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -170,10 +200,19 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "local_cafe",
         colorValue: 0xFF8B5E3C,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
         name: "Lương",
+        iconKey: "payments",
+        colorValue: 0xFF4CAF50,
+        isIncome: true,
+        enabled: false,
+      ),
+      CategoryModel(
+        id: _uuid.v4(),
+        name: "Thu nhập",
         iconKey: "payments",
         colorValue: 0xFF4CAF50,
         isIncome: true,
@@ -184,6 +223,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "savings",
         colorValue: 0xFF26A69A,
         isIncome: true,
+        enabled: false,
       ),
     ];
     await _db.transaction((txn) async {

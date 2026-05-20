@@ -77,8 +77,8 @@ class AppTextField extends StatelessWidget {
           borderSide: BorderSide(color: cs.primary, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
         ),
       ),
     );

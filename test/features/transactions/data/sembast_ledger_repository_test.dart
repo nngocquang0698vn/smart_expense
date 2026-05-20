@@ -11,16 +11,43 @@ void main() {
     repo = await createFakeLedgerRepository();
   });
 
-  test("ensureDefaults creates Khác categories and meta", () async {
-    final categories = await repo.categories();
-    expect(
-      categories.any((c) => c.id == LedgerRepository.kOtherExpenseId),
-      isTrue,
-    );
+  test(
+    "ensureDefaults creates simplified enabled categories and meta",
+    () async {
+      final categories = await repo.categories();
+      expect(
+        categories.any((c) => c.id == LedgerRepository.kOtherExpenseId),
+        isTrue,
+      );
+      expect(
+        categories.any((c) => c.id == LedgerRepository.kOtherIncomeId),
+        isTrue,
+      );
 
-    final meta = await repo.getMeta();
-    expect(meta.containsKey("onboarded"), isTrue);
-  });
+      final enabledExpenseNames = categories
+          .where((c) => c.enabled && !c.isIncome)
+          .map((c) => c.name)
+          .toSet();
+      expect(
+        enabledExpenseNames,
+        equals({"Ăn uống", "Di chuyển", "Mua sắm", "Hoá đơn", "Khác"}),
+      );
+
+      final enabledIncomeNames = categories
+          .where((c) => c.enabled && c.isIncome)
+          .map((c) => c.name)
+          .toSet();
+      expect(enabledIncomeNames, equals({"Thu nhập", "Khác"}));
+
+      expect(
+        categories.where((c) => !c.enabled).map((c) => c.name).toSet(),
+        containsAll({"Cà phê", "Tạp hoá", "Lương", "Thu nhập khác"}),
+      );
+
+      final meta = await repo.getMeta();
+      expect(meta.containsKey("onboarded"), isTrue);
+    },
+  );
 
   test("addQuick and confirmPending update pending lists", () async {
     final cats = await repo.categories();

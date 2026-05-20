@@ -5,6 +5,7 @@ import "package:just_audio/just_audio.dart";
 
 import "package:smart_expense/features/transactions/data/attachments/voice_player_service.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
+import "package:smart_expense/shared/design_system/design_system.dart";
 
 class VoiceNotePlayer extends StatefulWidget {
   const VoiceNotePlayer({
@@ -168,7 +169,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
           tooltip: "Dừng",
           icon: const Icon(Icons.stop_rounded),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

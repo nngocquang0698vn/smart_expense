@@ -3,6 +3,7 @@ import "package:image_picker/image_picker.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/shared/components/form_amount_field.dart";
+import "package:smart_expense/shared/design_system/design_system.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 import "package:smart_expense/shared/components/app_date_picker.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_image_attachments.dart";
@@ -35,6 +36,9 @@ class TransactionEntryForm extends StatelessWidget {
     this.amountAlwaysShowKeypad = false,
     this.amountAutofocus = false,
     this.amountErrorText,
+    this.amountKeypadOpen = false,
+    this.onAmountTap,
+    this.onAmountDone,
     this.typeToggleFirst = false,
     this.imageThumbnailHeight = 80,
     super.key,
@@ -64,6 +68,9 @@ class TransactionEntryForm extends StatelessWidget {
   final bool amountAlwaysShowKeypad;
   final bool amountAutofocus;
   final String? amountErrorText;
+  final bool amountKeypadOpen;
+  final VoidCallback? onAmountTap;
+  final VoidCallback? onAmountDone;
   final bool typeToggleFirst;
   final double imageThumbnailHeight;
 
@@ -85,19 +92,29 @@ class TransactionEntryForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ...beforeAmount,
-        if (typeToggleFirst) ...[toggle, const SizedBox(height: 14)],
-        if (titleField != null) ...[titleField!, const SizedBox(height: 12)],
+        if (typeToggleFirst) ...[toggle, const SizedBox(height: AppSpacing.sm)],
+        if (titleField != null) ...[
+          titleField!,
+          const SizedBox(height: AppSpacing.sm),
+        ],
         FormAmountField(
           initialAmount: initialAmount,
+          isIncome: isIncome,
           alwaysShowKeypad: amountAlwaysShowKeypad,
           autofocus: amountAutofocus,
           errorText: amountErrorText,
+          keypadOpen: amountKeypadOpen,
+          onTap: onAmountTap,
+          onDone: onAmountDone,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.sm),
         ...afterAmount,
-        if (!typeToggleFirst) ...[toggle, const SizedBox(height: 12)],
+        if (!typeToggleFirst) ...[
+          toggle,
+          const SizedBox(height: AppSpacing.sm),
+        ],
         categorySection,
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.sm),
         AppDatePicker(
           date: date,
           style: dateStyle,
@@ -112,14 +129,17 @@ class TransactionEntryForm extends StatelessWidget {
           value: pending,
           onChanged: onPendingChanged,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xxs),
         AppTextField(
           controller: noteController,
           labelText: context.l10n.noteOptional,
           maxLines: 2,
         ),
-        ...mediaSections,
-        const SizedBox(height: 10),
+        if (mediaSections.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          ...mediaSections,
+        ],
+        const SizedBox(height: AppSpacing.xs),
         TransactionImageAttachments(
           images: images,
           showCamera: showCamera,

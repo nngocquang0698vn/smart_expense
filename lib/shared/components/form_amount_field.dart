@@ -4,7 +4,6 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:smart_expense/core/utils/amount_input.dart";
 import "package:smart_expense/core/utils/amount_input_notifier.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
-import "package:smart_expense/shared/components/amount_keypad.dart";
 
 /// Prominent amount field with custom numeric keypad (no system keyboard).
 class FormAmountField extends ConsumerStatefulWidget {
@@ -16,6 +15,9 @@ class FormAmountField extends ConsumerStatefulWidget {
     this.alwaysShowKeypad = false,
     this.onDone,
     this.errorText,
+    this.keypadOpen = false,
+    this.onTap,
+    this.isIncome = false,
   });
 
   final int initialAmount;
@@ -27,40 +29,26 @@ class FormAmountField extends ConsumerStatefulWidget {
 
   final VoidCallback? onDone;
   final String? errorText;
+  final bool keypadOpen;
+  final VoidCallback? onTap;
+  final bool isIncome;
 
   @override
   ConsumerState<FormAmountField> createState() => _FormAmountFieldState();
 }
 
 class _FormAmountFieldState extends ConsumerState<FormAmountField> {
-  late bool _keypadOpen;
-
-  @override
-  void initState() {
-    super.initState();
-    _keypadOpen = widget.alwaysShowKeypad || widget.autofocus;
-  }
-
   void _openKeypad() {
-    if (_keypadOpen) return;
-    setState(() => _keypadOpen = true);
-  }
-
-  void _closeKeypad() {
-    setState(() => _keypadOpen = false);
-    widget.onDone?.call();
+    widget.onTap?.call();
   }
 
   @override
   Widget build(BuildContext context) {
     final amount = ref.watch(amountInputProvider(widget.initialAmount));
-    final notifier = ref.read(
-      amountInputProvider(widget.initialAmount).notifier,
-    );
     final cs = Theme.of(context).colorScheme;
     final finance = context.financeColors;
     final radius = BorderRadius.circular(AppRadius.lg);
-    final showKeypad = _keypadOpen;
+    final showKeypad = widget.keypadOpen;
 
     final displayStyle =
         widget.style?.copyWith(color: finance.fieldText) ??
@@ -69,79 +57,63 @@ class _FormAmountFieldState extends ConsumerState<FormAmountField> {
           color: finance.fieldText,
         );
 
-    return TapRegion(
-      onTapOutside: (_) {
-        if (_keypadOpen) _closeKeypad();
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Material(
-            color: finance.fieldFill,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          color: finance.fieldFill,
+          borderRadius: radius,
+          child: InkWell(
+            onTap: _openKeypad,
             borderRadius: radius,
-            child: InkWell(
-              onTap: _openKeypad,
-              borderRadius: radius,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: radius,
-                  border: Border.all(
-                    color: showKeypad ? cs.primary : finance.fieldBorder,
-                    width: showKeypad ? 2 : 1,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                border: Border.all(
+                  color: showKeypad ? cs.primary : finance.fieldBorder,
+                  width: showKeypad ? 2 : 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(widget.isIncome ? "+ " : "- ", style: displayStyle),
+                  Flexible(
+                    child: Text(
+                      formatAmountInput(amount),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: displayStyle,
+                    ),
                   ),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 12,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "₫ ",
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: finance.fieldText,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  Text(
+                    " đ",
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: finance.fieldText,
+                      fontWeight: FontWeight.w700,
                     ),
-                    Flexible(
-                      child: Text(
-                        formatAmountInput(amount),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: displayStyle,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-          if (showKeypad) ...[
-            const SizedBox(height: AppSpacing.xs),
-            AmountKeypad(
-              onDigit: notifier.appendDigit,
-              onTripleZero: notifier.appendTripleZero,
-              onBackspace: notifier.backspace,
-              onDone: _closeKeypad,
-            ),
-          ],
-          if (widget.errorText != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Text(
-                widget.errorText!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: cs.error,
-                  fontWeight: FontWeight.w600,
-                ),
+        ),
+        if (widget.errorText != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            child: Text(
+              widget.errorText!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: cs.error,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 }

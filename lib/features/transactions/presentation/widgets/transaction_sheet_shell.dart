@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 
 import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/shared/design_system/design_system.dart";
 
 Future<void> showTransactionFormSheet(
   BuildContext context, {
@@ -18,6 +19,50 @@ Future<void> showTransactionFormSheet(
       child: child,
     ),
   );
+}
+
+const double kTransactionKeypadHeight = 268;
+
+class TransactionKeypadScaffold extends StatelessWidget {
+  const TransactionKeypadScaffold({
+    super.key,
+    required this.keypadVisible,
+    required this.keypad,
+    required this.child,
+  });
+
+  final bool keypadVisible;
+  final Widget keypad;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.95,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: AnimatedPadding(
+              duration: AppDurations.fast,
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(
+                bottom: keypadVisible ? kTransactionKeypadHeight : 0,
+              ),
+              child: child,
+            ),
+          ),
+          AnimatedPositioned(
+            duration: AppDurations.fast,
+            curve: Curves.easeOutCubic,
+            left: 0,
+            right: 0,
+            bottom: keypadVisible ? 0 : -kTransactionKeypadHeight,
+            child: SafeArea(top: false, child: keypad),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class TransactionSheetHeader extends StatelessWidget {
