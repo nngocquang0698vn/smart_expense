@@ -69,14 +69,15 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
   final cats = await repo.categories();
   final categoryLookup = CategoryNameLookup(cats);
   String cat(String name, {required bool isIncome}) {
+    final normalizedName = _normalizedSeedCategory(name, isIncome: isIncome);
     final id = categoryLookup.idFor(
-      name: name,
+      name: normalizedName,
       isIncome: isIncome,
       fallbackName: "Khác",
     );
     if (id == null) {
       throw StateError(
-        "Không tìm thấy danh mục demo cho ${isIncome ? "thu" : "chi"}: $name",
+        "Không tìm thấy danh mục demo cho ${isIncome ? "thu" : "chi"}: $normalizedName",
       );
     }
     return id;
@@ -101,7 +102,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
       at: date,
       pending: false,
       complete: true,
-      note: note,
+      note: _cleanSeedNote(note),
       audio: audio ? await demoAudio() : null,
       images: image ? [await demoImage()] : const [],
     );
@@ -132,7 +133,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
       at: date,
       pending: true,
       complete: amount > 0,
-      note: note,
+      note: _cleanSeedNote(note),
       audio: audio ? await demoAudio() : null,
       images: image ? [await demoImage()] : const [],
     );
@@ -157,7 +158,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Công việc",
     date: d(2026, 2, 3),
-    note: "Trung tâm anh ngữ ILA tháng 2",
+    note: "Trung tâm anh ngữ ILA",
   );
   await add(
     title: "Lương tháng 2",
@@ -333,7 +334,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Mua sắm",
     date: d(2026, 2, 21),
-    note: "Nike Air Max – giảm giá cuối mùa",
+    note: "Nike Air Max – giảm giá",
   );
   await add(
     title: "Cà phê sáng",
@@ -427,7 +428,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Công việc",
     date: d(2026, 3, 3),
-    note: "ILA tháng 3",
+    note: "ILA",
     audio: true,
   );
   await add(
@@ -631,7 +632,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Du lịch",
     date: d(2026, 3, 24),
-    note: "Vé xe + khách sạn + ăn uống 2 ngày",
+    note: "Vé xe + khách sạn + ăn uống",
     audio: true,
   );
   await add(
@@ -713,7 +714,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Công việc",
     date: d(2026, 4, 3),
-    note: "ILA tháng 4 – quyết tâm học đều hơn",
+    note: "ILA – quyết tâm học đều hơn",
     audio: true,
   );
   await add(
@@ -729,7 +730,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Tạp hoá",
     date: d(2026, 4, 6),
-    note: "Mua nguyên liệu nấu ăn cả tuần",
+    note: "Mua nguyên liệu nấu ăn",
   );
   await add(
     title: "Cà phê sáng",
@@ -737,7 +738,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Cà phê",
     date: d(2026, 4, 7),
-    note: "Cắt bớt xuống 1-2 lần/tuần",
+    note: "Cắt bớt số lần mua cà phê",
   );
   await add(
     title: "Tiền điện nước & internet",
@@ -803,7 +804,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Tạp hoá",
     date: d(2026, 4, 16),
-    note: "Mua đủ rau thịt để nấu cả tuần sau",
+    note: "Mua đủ rau thịt để nấu ăn",
   );
   await add(
     title: "Cà phê sáng",
@@ -916,7 +917,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     category: "Công việc",
     date: d(2026, 5, 2),
-    note: "ILA tháng 5",
+    note: "ILA",
     audio: true,
   );
   await add(
@@ -988,7 +989,7 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     isIncome: false,
     date: recent(0),
     audio: true,
-    note: "Ghi chú chi tiêu hôm nay",
+    note: "Ghi chú chi tiêu",
   );
   await addPending(
     title: "Ghi âm giao dịch ${_ts(recent(3))}",
@@ -1072,6 +1073,43 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     audio: true,
     note: "Cần bổ sung thông tin",
   );
+}
+
+String _normalizedSeedCategory(String name, {required bool isIncome}) {
+  if (isIncome) return name == "Khác" ? "Khác" : "Lương";
+
+  return switch (name) {
+    "Ăn uống" || "Cà phê" || "Tạp hoá" => "Ăn uống",
+    "Di chuyển" => "Di chuyển",
+    "Mua sắm" => "Mua sắm",
+    "Hoá đơn" => "Hoá đơn",
+    "Khác" ||
+    "Giải trí" ||
+    "Sức khoẻ" ||
+    "Quà tặng" ||
+    "Làm đẹp" ||
+    "Công việc" ||
+    "Du lịch" => "Khác",
+    _ => "Khác",
+  };
+}
+
+String? _cleanSeedNote(String? note) {
+  if (note == null) return null;
+
+  final normalized = note.toLowerCase();
+  const dateRelatedTerms = [
+    "ngày",
+    "hôm nay",
+    "tuần",
+    "tháng",
+    "mùa",
+    "tết",
+    "valentine",
+  ];
+  if (dateRelatedTerms.any(normalized.contains)) return null;
+
+  return note;
 }
 
 /// Format timestamp for media transaction titles.

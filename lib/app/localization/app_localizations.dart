@@ -398,9 +398,9 @@ const _vi = {
   "pwaIosGuideTitle": "Cài Smart Expense trên iPhone",
   "pwaIosGuideBody":
       "Safari chưa hỗ trợ nút cài tự động. Bạn có thể thêm app vào Màn hình chính theo 3 bước:",
-  "pwaIosGuideStep1": "Nhấn nút Chia sẻ ở thanh dưới Safari.",
+  "pwaIosGuideStep1": "Nhấn nút chia sẻ ở thanh dưới Safari.",
   "pwaIosGuideStep2": "Chọn \"Thêm vào Màn hình chính\".",
-  "pwaIosGuideStep3": "Nhấn \"Thêm\" để hoàn tất.",
+  "pwaIosGuideStep3": "Nhấn nút Thêm (hoặc Add) để hoàn tất.",
   "pwaIosGuideDone": "Tôi đã hiểu",
   "pwaIosShareLabel": "Share",
   "pwaIosAddToHomeLabel": "Add to Home Screen",

@@ -5,6 +5,7 @@ import "package:image_picker/image_picker.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/attachments/image_attachment_list.dart";
+import "package:smart_expense/shared/design_system/design_system.dart";
 
 class TransactionImageAttachments extends StatelessWidget {
   const TransactionImageAttachments({
@@ -38,7 +39,7 @@ class TransactionImageAttachments extends StatelessWidget {
                   label: Text(context.l10n.takePhoto),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.xs),
             ],
             Expanded(
               child: OutlinedButton.icon(
@@ -50,7 +51,7 @@ class TransactionImageAttachments extends StatelessWidget {
           ],
         ),
         if (images.isNotEmpty) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.xs),
           ImageAttachmentList(
             images: images,
             onDelete: onDelete,

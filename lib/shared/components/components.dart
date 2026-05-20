@@ -7,4 +7,5 @@ export "package:smart_expense/shared/components/app_loading_state.dart";
 export "package:smart_expense/shared/components/app_primary_button.dart";
 export "package:smart_expense/shared/components/app_scaffold.dart";
 export "package:smart_expense/shared/components/app_secondary_button.dart";
+export "package:smart_expense/shared/components/app_snack_bar.dart";
 export "package:smart_expense/shared/components/app_text_field.dart";

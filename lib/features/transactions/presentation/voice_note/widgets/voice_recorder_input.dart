@@ -6,6 +6,7 @@ import "package:smart_expense/features/transactions/application/voice_note/voice
 import "package:smart_expense/features/transactions/application/voice_note/voice_recorder_controller.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/voice_recording_status.dart";
+import "package:smart_expense/shared/components/app_snack_bar.dart";
 import "package:smart_expense/shared/dialogs/dialogs.dart";
 import "package:smart_expense/features/transactions/presentation/voice_note/widgets/voice_note_preview.dart";
 
@@ -45,9 +46,9 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
   void _syncExistingAudio(AudioAttachmentModel audio) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(voiceRecorderControllerProvider(_config).notifier).useExisting(
-            audio,
-          );
+      ref
+          .read(voiceRecorderControllerProvider(_config).notifier)
+          .useExisting(audio);
     });
   }
 
@@ -79,9 +80,12 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
+    showAppSnackBar(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+      title: "Thông báo",
+      message: message,
+      type: AppSnackBarType.info,
+    );
   }
 
   String _format(Duration duration) {
@@ -134,7 +138,7 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
         border: Border.all(color: cs.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
           child: _buildContent(recorderState),
@@ -248,7 +252,7 @@ class _IdlePanel extends StatelessWidget {
         Row(
           children: [
             Icon(Icons.mic_none_rounded, color: cs.primary),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.xs),
             Expanded(
               child: Text(
                 "Ghi chú bằng giọng nói",
@@ -265,7 +269,7 @@ class _IdlePanel extends StatelessWidget {
           ],
         ),
         if (error != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             error!,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -320,7 +324,7 @@ class _RecordingPanel extends StatelessWidget {
                 padding: EdgeInsets.zero,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xxs),
             Expanded(
               child: _ScaledRecordingBar(
                 elapsed: elapsed,
@@ -329,7 +333,7 @@ class _RecordingPanel extends StatelessWidget {
                 onTogglePause: saving ? null : (paused ? onResume : onPause),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppSpacing.xs),
             IconButton.filled(
               onPressed: saving ? null : onFinish,
               tooltip: "Hoàn tất ghi âm",
@@ -347,7 +351,7 @@ class _RecordingPanel extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           paused ? "Đang tạm dừng ghi âm" : "Đang ghi âm",
           textAlign: TextAlign.center,

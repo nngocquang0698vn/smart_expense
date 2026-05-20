@@ -13,6 +13,7 @@ import "package:smart_expense/app/theme/theme_controller.dart";
 import "package:smart_expense/app/theme/theme_presets.dart";
 import "package:smart_expense/app/theme/theme_settings.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
+import "package:smart_expense/shared/components/app_snack_bar.dart";
 import "package:smart_expense/core/config/demo_seed.dart";
 import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
 import "package:smart_expense/features/categories/presentation/categories_screen.dart";
@@ -63,9 +64,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _saveName() async {
     await _repo.setUserName(_nameCtrl.text.trim());
     if (mounted) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.nameSaved)));
+        title: "Đã lưu",
+        message: context.l10n.nameSaved,
+        type: AppSnackBarType.success,
+      );
     }
   }
 
@@ -110,20 +114,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       seeded = true;
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        showAppSnackBar(
           context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.genericError)));
+          title: "Chưa thể nạp dữ liệu",
+          message: context.l10n.genericError,
+          type: AppSnackBarType.error,
+        );
       }
     } finally {
       if (mounted) Navigator.of(context).pop(); // dismiss loading
     }
 
     if (!mounted || !seeded) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(context.l10n.demoDataLoaded),
-        duration: Duration(seconds: 3),
-      ),
+    showAppSnackBar(
+      context,
+      title: "Đã nạp dữ liệu",
+      message: context.l10n.demoDataLoaded,
+      type: AppSnackBarType.success,
     );
     // Reload name field
     _load();
@@ -298,9 +305,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return ListTile(
       leading: Icon(
         installed ? Icons.check_circle_outline : Icons.install_mobile_rounded,
-        color: installed
-            ? Theme.of(context).colorScheme.primary
-            : null,
+        color: installed ? Theme.of(context).colorScheme.primary : null,
       ),
       title: Text(
         installed

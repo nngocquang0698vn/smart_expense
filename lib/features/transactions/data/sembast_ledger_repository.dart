@@ -100,6 +100,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "local_grocery_store",
         colorValue: 0xFF2E8B57,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -128,6 +129,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "movie",
         colorValue: 0xFF7C3AED,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -135,6 +137,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "medical_services",
         colorValue: 0xFF0EA5A2,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -142,6 +145,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "card_giftcard",
         colorValue: 0xFFE11D48,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -149,6 +153,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "spa",
         colorValue: 0xFF9333EA,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -156,6 +161,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "work",
         colorValue: 0xFF6B7280,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -163,6 +169,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "flight",
         colorValue: 0xFFF97316,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -170,6 +177,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "local_cafe",
         colorValue: 0xFF8B5E3C,
         isIncome: false,
+        enabled: false,
       ),
       CategoryModel(
         id: _uuid.v4(),
@@ -184,6 +192,7 @@ class SembastLedgerRepository extends LedgerRepository {
         iconKey: "savings",
         colorValue: 0xFF26A69A,
         isIncome: true,
+        enabled: false,
       ),
     ];
     await _db.transaction((txn) async {
@@ -221,7 +230,14 @@ class SembastLedgerRepository extends LedgerRepository {
     return snap
         .map((r) => CategoryModel.fromMap(r.key, r.value).toEntity())
         .toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+      ..sort(_compareCategories);
+  }
+
+  int _compareCategories(LedgerCategory a, LedgerCategory b) {
+    final aIsOther = a.name == "Khác";
+    final bIsOther = b.name == "Khác";
+    if (aIsOther != bIsOther) return aIsOther ? 1 : -1;
+    return a.name.compareTo(b.name);
   }
 
   @override

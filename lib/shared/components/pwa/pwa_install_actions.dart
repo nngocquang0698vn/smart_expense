@@ -24,20 +24,21 @@ abstract final class PwaInstallActions {
       return;
     }
 
-    if (canNative &&
-        (state.platform == PwaPlatformKind.androidChrome ||
-            state.platform == PwaPlatformKind.desktopChromium)) {
+    if (state.platform == PwaPlatformKind.androidChrome ||
+        state.platform == PwaPlatformKind.desktopChromium) {
       final proceed = await PwaAndroidInstallSheet.show(context);
       if (proceed != true || !context.mounted) return;
-      final result = await notifier.install();
-      if (!context.mounted) return;
-      if (result == PwaInstallPromptResult.accepted) {
-        await notifier.onInstallAccepted();
+      if (canNative) {
+        final result = await notifier.install();
+        if (!context.mounted) return;
+        if (result == PwaInstallPromptResult.accepted) {
+          await notifier.onInstallAccepted();
+        }
       }
       return;
     }
 
-    await PwaIosInstallGuideSheet.show(context);
+    await PwaAndroidInstallSheet.show(context);
   }
 
   static Future<void> showPostActionCtaIfNeeded(
