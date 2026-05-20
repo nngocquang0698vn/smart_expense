@@ -14,6 +14,7 @@
   window.addEventListener("appinstalled", function () {
     deferredPrompt = null;
     window.__pwaInstallAvailable = false;
+    window.dispatchEvent(new Event("pwa-installed"));
   });
 
   window.pwaIsStandalone = function () {
@@ -43,5 +44,13 @@
 
   window.pwaCancelInstallAvailable = function (callback) {
     window.removeEventListener("pwa-install-available", callback);
+  };
+
+  window.pwaListenInstalled = function (callback) {
+    window.addEventListener("pwa-installed", callback);
+  };
+
+  window.pwaCancelInstalled = function (callback) {
+    window.removeEventListener("pwa-installed", callback);
   };
 })();

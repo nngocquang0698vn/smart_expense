@@ -54,3 +54,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+.cursor/mcp.json
+.cursor/stitch_download/ios_guide.html
+.cursor/stitch_screen_sample.json
+docs/stitch_pwa_reference.md
+untrack/stitch_smartledger_financial_tracker/emerald_trust/DESIGN.md
+untrack/stitch_smartledger_financial_tracker/h_ng_d_n_c_i_t_ios/code.html
+untrack/stitch_smartledger_financial_tracker/h_ng_d_n_c_i_t_ios/screen.png
+untrack/stitch_smartledger_financial_tracker/onboarding_g_i_c_i_t_nh/code.html
+untrack/stitch_smartledger_financial_tracker/onboarding_g_i_c_i_t_nh/screen.png
+untrack/stitch_smartledger_financial_tracker/onboarding_th_c_i_t_app/code.html
+untrack/stitch_smartledger_financial_tracker/onboarding_th_c_i_t_app/screen.png
+untrack/stitch_smartledger_financial_tracker/y_u_c_u_c_i_t_android/code.html
+untrack/stitch_smartledger_financial_tracker/y_u_c_u_c_i_t_android/screen.png

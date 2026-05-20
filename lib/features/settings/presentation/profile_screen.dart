@@ -6,10 +6,9 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/app/providers.dart";
 import "package:smart_expense/core/constants/app_constants.dart";
-import "package:smart_expense/core/utils/pwa/pwa_install_service.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
-import "package:smart_expense/shared/components/pwa_install_guide_sheet.dart";
+import "package:smart_expense/shared/components/pwa/pwa_install_actions.dart";
 import "package:smart_expense/app/theme/theme_controller.dart";
 import "package:smart_expense/app/theme/theme_presets.dart";
 import "package:smart_expense/app/theme/theme_settings.dart";
@@ -290,31 +289,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   bool _showPwaInstallEntry() {
     if (!kIsWeb) return false;
-    return !ref.read(pwaInstallControllerProvider).isStandalone;
+    return true;
   }
 
   Widget _buildPwaInstallTile(BuildContext context) {
     final state = ref.watch(pwaInstallControllerProvider);
-    final notifier = ref.read(pwaInstallControllerProvider.notifier);
+    final installed = state.isInstalledMode;
     return ListTile(
-      leading: const Icon(Icons.install_mobile_rounded),
-      title: Text(context.l10n.pwaInstallMenuItem),
-      subtitle: Text(context.l10n.pwaInstallMenuSubtitle),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () async {
-        ref.read(pwaInstallControllerProvider.notifier).evaluateBanner();
-        await PwaInstallGuideSheet.show(
-          context,
-          platform: state.platform,
-          showNativeInstall: state.canNativeInstall,
-          onNativeInstall: () async {
-            final result = await notifier.install();
-            if (result == PwaInstallPromptResult.accepted) {
-              await notifier.onInstallAccepted();
-            }
-          },
-        );
-      },
+      leading: Icon(
+        installed ? Icons.check_circle_outline : Icons.install_mobile_rounded,
+        color: installed
+            ? Theme.of(context).colorScheme.primary
+            : null,
+      ),
+      title: Text(
+        installed
+            ? context.l10n.pwaInstallMenuInstalled
+            : context.l10n.pwaInstallMenuItem,
+      ),
+      subtitle: Text(
+        installed
+            ? context.l10n.pwaInstallMenuInstalledSubtitle
+            : context.l10n.pwaInstallMenuSubtitle,
+      ),
+      trailing: installed ? null : const Icon(Icons.chevron_right),
+      onTap: installed
+          ? null
+          : () => PwaInstallActions.requestInstall(context, ref),
     );
   }
 

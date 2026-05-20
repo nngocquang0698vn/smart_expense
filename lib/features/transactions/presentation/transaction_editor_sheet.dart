@@ -22,6 +22,7 @@ import "package:smart_expense/features/transactions/application/transaction_draf
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/shared/components/app_date_picker.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_sheet_shell.dart";
 
 Future<void> showTransactionEditor(
@@ -241,6 +242,15 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
           images: _images,
         ),
       );
+    }
+
+    if (e == null) {
+      await ref
+          .read(pwaInstallControllerProvider.notifier)
+          .onFirstCompleteTransactionSaved(
+            pending: _pending,
+            complete: draft.complete,
+          );
     }
 
     if (!mounted) return;

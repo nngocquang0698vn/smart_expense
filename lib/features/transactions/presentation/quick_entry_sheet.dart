@@ -18,6 +18,7 @@ import "package:smart_expense/features/transactions/application/transaction_draf
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_chips.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
+import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_sheet_shell.dart";
 
 enum QuickEntryMode { tap, voice, receipt }
@@ -194,6 +195,13 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
       audio: _audio,
       images: _images,
     );
+
+    await ref
+        .read(pwaInstallControllerProvider.notifier)
+        .onFirstCompleteTransactionSaved(
+          pending: _pending,
+          complete: draft.complete,
+        );
 
     if (!mounted) return;
     Navigator.pop(context);

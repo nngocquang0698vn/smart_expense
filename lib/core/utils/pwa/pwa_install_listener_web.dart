@@ -6,19 +6,39 @@ external void _jsListenInstallAvailable(JSFunction callback);
 @JS("pwaCancelInstallAvailable")
 external void _jsCancelInstallAvailable(JSFunction callback);
 
-JSFunction? _callback;
+@JS("pwaListenInstalled")
+external void _jsListenInstalled(JSFunction callback);
 
-/// Re-runs PWA banner logic when [beforeinstallprompt] fires (often after page load).
+@JS("pwaCancelInstalled")
+external void _jsCancelInstalled(JSFunction callback);
+
+JSFunction? _availableCallback;
+JSFunction? _installedCallback;
+
 void listenPwaInstallAvailable(void Function() onAvailable) {
   cancelPwaInstallAvailableListener();
-  _callback = onAvailable.toJS;
-  _jsListenInstallAvailable(_callback!);
+  _availableCallback = onAvailable.toJS;
+  _jsListenInstallAvailable(_availableCallback!);
 }
 
 void cancelPwaInstallAvailableListener() {
-  final callback = _callback;
+  final callback = _availableCallback;
   if (callback != null) {
     _jsCancelInstallAvailable(callback);
-    _callback = null;
+    _availableCallback = null;
+  }
+}
+
+void listenPwaInstalled(void Function() onInstalled) {
+  cancelPwaInstalledListener();
+  _installedCallback = onInstalled.toJS;
+  _jsListenInstalled(_installedCallback!);
+}
+
+void cancelPwaInstalledListener() {
+  final callback = _installedCallback;
+  if (callback != null) {
+    _jsCancelInstalled(callback);
+    _installedCallback = null;
   }
 }

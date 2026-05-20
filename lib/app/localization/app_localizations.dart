@@ -165,6 +165,29 @@ class AppLocalizations {
   String get pwaInstallNow => text("pwaInstallNow");
   String get pwaInstallSubtitle => text("pwaInstallSubtitle");
   String get pwaInstallTitle => text("pwaInstallTitle");
+  String get pwaInstallOnboardingHint => text("pwaInstallOnboardingHint");
+  String get pwaInstallCardTitle => text("pwaInstallCardTitle");
+  String get pwaInstallCardBody => text("pwaInstallCardBody");
+  String get pwaInstallAction => text("pwaInstallAction");
+  String get pwaInstallBenefitNative => text("pwaInstallBenefitNative");
+  String get pwaInstallBenefitOffline => text("pwaInstallBenefitOffline");
+  String get pwaInstallBenefitNotify => text("pwaInstallBenefitNotify");
+  String get pwaAndroidOfflineNote => text("pwaAndroidOfflineNote");
+  String get pwaIosGuideTitle => text("pwaIosGuideTitle");
+  String get pwaIosGuideBody => text("pwaIosGuideBody");
+  String get pwaIosGuideStep1 => text("pwaIosGuideStep1");
+  String get pwaIosGuideStep2 => text("pwaIosGuideStep2");
+  String get pwaIosGuideStep3 => text("pwaIosGuideStep3");
+  String get pwaIosGuideDone => text("pwaIosGuideDone");
+  String get pwaIosShareLabel => text("pwaIosShareLabel");
+  String get pwaIosAddToHomeLabel => text("pwaIosAddToHomeLabel");
+  String get pwaInstallMenuInstalled => text("pwaInstallMenuInstalled");
+  String get pwaInstallMenuInstalledSubtitle =>
+      text("pwaInstallMenuInstalledSubtitle");
+  String get pwaAndroidSheetTitle => text("pwaAndroidSheetTitle");
+  String get pwaAndroidSheetBody => text("pwaAndroidSheetBody");
+  String get pwaPostActionTitle => text("pwaPostActionTitle");
+  String get pwaPostActionBody => text("pwaPostActionBody");
   String get quickEntryReceipt => text("quickEntryReceipt");
   String get quickEntryReceiptCaptureSubtitle =>
       text("quickEntryReceiptCaptureSubtitle");
@@ -357,13 +380,40 @@ const _vi = {
   "pwaInstallIosStep2": "Chọn \"Thêm vào Màn hình chính\"",
   "pwaInstallIosStep3": "Nhấn \"Thêm\" để hoàn tất",
   "pwaInstallLater": "Để sau",
-  "pwaInstallMenuItem": "Cài app lên màn hình chính",
-  "pwaInstallMenuSubtitle": "Xem hướng dẫn thêm vào màn hình chính",
   "pwaInstallNever": "Không nhắc lại",
   "pwaInstallNow": "Cài đặt ngay",
   "pwaInstallSubtitle":
       "Truy cập nhanh hơn như một ứng dụng. Dữ liệu vẫn được lưu cục bộ trên thiết bị của bạn.",
   "pwaInstallTitle": "Cài Smart Expense lên màn hình chính",
+  "pwaInstallOnboardingHint":
+      "Bạn có thể cài Smart Expense như app để mở nhanh hơn và hỗ trợ offline.",
+  "pwaInstallCardTitle": "Cài Smart Expense?",
+  "pwaInstallCardBody":
+      "Mở nhanh như app, dùng tốt hơn khi offline và dễ ghi chi tiêu hằng ngày.",
+  "pwaInstallAction": "Cài đặt",
+  "pwaInstallBenefitNative": "Trải nghiệm như app thật",
+  "pwaInstallBenefitOffline": "Dùng offline mượt mà",
+  "pwaInstallBenefitNotify": "Nhận thông báo nhắc nhở",
+  "pwaAndroidOfflineNote": "Hoạt động tốt khi không có mạng",
+  "pwaIosGuideTitle": "Cài Smart Expense trên iPhone",
+  "pwaIosGuideBody":
+      "Safari chưa hỗ trợ nút cài tự động. Bạn có thể thêm app vào Màn hình chính theo 3 bước:",
+  "pwaIosGuideStep1": "Nhấn nút Chia sẻ ở thanh dưới Safari.",
+  "pwaIosGuideStep2": "Chọn \"Thêm vào Màn hình chính\".",
+  "pwaIosGuideStep3": "Nhấn \"Thêm\" để hoàn tất.",
+  "pwaIosGuideDone": "Tôi đã hiểu",
+  "pwaIosShareLabel": "Share",
+  "pwaIosAddToHomeLabel": "Add to Home Screen",
+  "pwaInstallMenuItem": "Cài ứng dụng",
+  "pwaInstallMenuInstalled": "Ứng dụng đã được cài đặt",
+  "pwaInstallMenuInstalledSubtitle": "Smart Expense đã có trên màn hình chính",
+  "pwaInstallMenuSubtitle": "Thêm vào màn hình chính để mở nhanh hơn",
+  "pwaAndroidSheetTitle": "Cài Smart Expense?",
+  "pwaAndroidSheetBody":
+      "Mở nhanh như app, dùng tốt hơn khi offline và dễ ghi chi tiêu hằng ngày.",
+  "pwaPostActionTitle": "Bạn đã sẵn sàng dùng Smart Expense hằng ngày.",
+  "pwaPostActionBody":
+      "Cài app vào màn hình chính để mở nhanh và ghi chi tiêu nhanh hơn.",
   "quickEntryReceipt": "Ảnh hoá đơn",
   "quickEntryTap": "Nhập nhanh",
   "quickEntryVoice": "Ghi âm giao dịch",
