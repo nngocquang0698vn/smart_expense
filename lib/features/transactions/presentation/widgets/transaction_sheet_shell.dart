@@ -37,6 +37,8 @@ class TransactionKeypadScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!keypadVisible) return child;
+
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.95,
       child: Stack(
