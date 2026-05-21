@@ -5,7 +5,7 @@ import "package:image_picker/image_picker.dart";
 import "package:smart_expense/core/utils/amount_input_notifier.dart";
 import "package:smart_expense/core/utils/date_format.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
-import "package:smart_expense/shared/components/app_snack_bar.dart";
+import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
@@ -145,12 +145,7 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
       });
     } catch (_) {
       if (!mounted) return;
-      showAppSnackBar(
-        context,
-        title: "Chưa thể lưu ảnh",
-        message: context.l10n.imageSaveFailed,
-        type: AppSnackBarType.error,
-      );
+      showError(context, context.l10n.imageSaveFailed);
     }
   }
 
@@ -213,24 +208,17 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
           );
     } catch (_) {
       if (!mounted) return;
-      showAppSnackBar(
-        context,
-        title: "Chưa thể lưu",
-        message: "Chưa thể lưu giao dịch. Vui lòng thử lại.",
-        type: AppSnackBarType.error,
-      );
+      showError(context, context.l10n.transactionSaveFailed);
       return;
     }
 
     if (!mounted) return;
     Navigator.pop(context);
-    showAppSnackBar(
+    showSuccess(
       context,
-      title: "Đã lưu",
-      message: _pending
+      _pending
           ? context.l10n.savePendingSuccess
           : context.l10n.saveTransactionSuccess,
-      type: AppSnackBarType.success,
     );
   }
 

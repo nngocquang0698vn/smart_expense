@@ -6,6 +6,7 @@ export "package:smart_expense/shared/design_system/theme/app_theme.dart";
 export "package:smart_expense/shared/design_system/tokens/app_breakpoints.dart";
 export "package:smart_expense/shared/design_system/tokens/app_colors.dart";
 export "package:smart_expense/shared/design_system/tokens/app_durations.dart";
+export "package:smart_expense/shared/design_system/tokens/app_notification_tokens.dart";
 export "package:smart_expense/shared/design_system/tokens/app_radius.dart";
 export "package:smart_expense/shared/design_system/tokens/app_spacing.dart";
 export "package:smart_expense/shared/design_system/tokens/app_typography.dart";

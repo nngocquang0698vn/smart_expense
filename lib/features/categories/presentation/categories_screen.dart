@@ -13,7 +13,7 @@ import "package:smart_expense/shared/components/app_loading_state.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
 import "package:smart_expense/shared/components/app_scaffold.dart";
 import "package:smart_expense/shared/components/app_section_header.dart";
-import "package:smart_expense/shared/components/app_snack_bar.dart";
+import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/features/categories/application/categories_controller.dart";
 import "package:smart_expense/features/categories/application/category_editor_policy.dart";
 
@@ -232,9 +232,8 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
       if (!mounted) return;
       setState(() => _saving = false);
       _showMessage(
-        "Chưa thể lưu danh mục. Vui lòng thử lại.",
-        type: AppSnackBarType.error,
-        title: "Chưa thể lưu",
+        context.l10n.categorySaveFailed,
+        type: AppNotificationType.error,
       );
       return;
     }
@@ -246,9 +245,8 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
       return;
     }
     _showMessage(
-      "Đã lưu danh mục.",
-      type: AppSnackBarType.success,
-      title: "Đã lưu",
+      context.l10n.categorySavedSuccess,
+      type: AppNotificationType.success,
     );
     Navigator.of(context).pop();
   }
@@ -264,8 +262,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     if (!decision.allowed) {
       _showMessage(
         _categoryDeleteMessage(decision.reason),
-        type: AppSnackBarType.warning,
-        title: "Chưa thể xoá",
+        type: AppNotificationType.warning,
       );
       return;
     }
@@ -286,26 +283,33 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     } catch (_) {
       if (!mounted) return;
       _showMessage(
-        "Chưa thể xoá danh mục. Vui lòng thử lại.",
-        type: AppSnackBarType.error,
-        title: "Chưa thể xoá",
+        context.l10n.categoryDeleteFailed,
+        type: AppNotificationType.error,
       );
       return;
     }
+    if (!mounted) return;
     _showMessage(
-      "Đã xoá danh mục.",
-      type: AppSnackBarType.success,
-      title: "Đã xoá",
+      context.l10n.categoryDeletedSuccess,
+      type: AppNotificationType.success,
     );
-    if (mounted) Navigator.of(context).pop();
+    Navigator.of(context).pop();
   }
 
   void _showMessage(
     String message, {
-    AppSnackBarType type = AppSnackBarType.info,
-    String title = "Thông báo",
+    AppNotificationType type = AppNotificationType.info,
   }) {
-    showAppSnackBar(context, title: title, message: message, type: type);
+    switch (type) {
+      case AppNotificationType.success:
+        showSuccess(context, message);
+      case AppNotificationType.error:
+        showError(context, message);
+      case AppNotificationType.warning:
+        showWarning(context, message);
+      case AppNotificationType.info:
+        showInfo(context, message);
+    }
   }
 
   String? _categoryValidationMessage(CategoryValidationError? error) {

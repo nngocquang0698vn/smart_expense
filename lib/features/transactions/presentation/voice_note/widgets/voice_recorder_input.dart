@@ -2,11 +2,12 @@ import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/features/transactions/application/voice_note/voice_recorder_config.dart";
 import "package:smart_expense/features/transactions/application/voice_note/voice_recorder_controller.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/voice_recording_status.dart";
-import "package:smart_expense/shared/components/app_snack_bar.dart";
+import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/shared/dialogs/dialogs.dart";
 import "package:smart_expense/features/transactions/presentation/voice_note/widgets/voice_note_preview.dart";
 
@@ -80,12 +81,7 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
   }
 
   void _showMessage(String message) {
-    showAppSnackBar(
-      context,
-      title: "Thông báo",
-      message: message,
-      type: AppSnackBarType.info,
-    );
+    showInfo(context, message);
   }
 
   String _format(Duration duration) {
@@ -110,9 +106,10 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
 
   Future<void> _confirmDelete() async {
     final ok = await showDeleteVoiceNoteDialog(context);
+    if (!mounted) return;
     if (ok) {
       _remove();
-      _showMessage("Đã xoá ghi âm.");
+      _showMessage(context.l10n.voiceNoteDeleted);
     }
   }
 
@@ -162,8 +159,9 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
         onResume: _controller.resume,
         onCancel: () async {
           await _controller.cancel();
+          if (!mounted) return;
           widget.onChanged(null);
-          _showMessage("Đã huỷ ghi âm.");
+          _showMessage(context.l10n.voiceNoteCanceled);
         },
         onFinish: _finish,
       );
