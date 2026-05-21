@@ -11,7 +11,7 @@ import "package:smart_expense/features/transactions/domain/entities/ledger_trans
 import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
-import "package:smart_expense/shared/components/app_snack_bar.dart";
+import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/shared/components/app_voice_note_section.dart";
 import "package:smart_expense/shared/components/amount_keypad.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
@@ -175,12 +175,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
       });
     } catch (_) {
       if (!mounted) return;
-      showAppSnackBar(
-        context,
-        title: "Chưa thể lưu ảnh",
-        message: context.l10n.imageSaveFailed,
-        type: AppSnackBarType.error,
-      );
+      showError(context, context.l10n.imageSaveFailed);
     }
   }
 
@@ -258,12 +253,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
       }
     } catch (_) {
       if (!mounted) return;
-      showAppSnackBar(
-        context,
-        title: "Chưa thể lưu",
-        message: "Chưa thể lưu giao dịch. Vui lòng thử lại.",
-        type: AppSnackBarType.error,
-      );
+      showError(context, context.l10n.transactionSaveFailed);
       return;
     }
 
@@ -278,15 +268,13 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
 
     if (!mounted) return;
     Navigator.pop(context);
-    showAppSnackBar(
+    showSuccess(
       context,
-      title: "Đã lưu",
-      message: e == null
+      e == null
           ? (_pending
                 ? context.l10n.savePendingSuccess
                 : context.l10n.saveTransactionSuccess)
-          : "Đã cập nhật giao dịch.",
-      type: AppSnackBarType.success,
+          : context.l10n.transactionUpdatedSuccess,
     );
   }
 
@@ -303,22 +291,12 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
       await widget.repo.deleteTransaction(widget.existing!.id);
     } catch (_) {
       if (!mounted) return;
-      showAppSnackBar(
-        context,
-        title: "Chưa thể xoá",
-        message: "Chưa thể xoá giao dịch. Vui lòng thử lại.",
-        type: AppSnackBarType.error,
-      );
+      showError(context, context.l10n.transactionDeleteFailed);
       return;
     }
     if (!mounted) return;
     Navigator.pop(context);
-    showAppSnackBar(
-      context,
-      title: "Đã xoá",
-      message: "Đã xoá giao dịch.",
-      type: AppSnackBarType.success,
-    );
+    showSuccess(context, context.l10n.transactionDeletedSuccess);
   }
 
   void _clearValidation(TransactionDraftValidationError error) {

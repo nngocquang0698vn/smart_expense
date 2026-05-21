@@ -40,10 +40,14 @@ class AppLocalizations {
   String get categoryDisabled => text("categoryDisabled");
   String get categoryIcon => text("categoryIcon");
   String get categoryInUseDeleteDenied => text("categoryInUseDeleteDenied");
+  String get categoryDeleteFailed => text("categoryDeleteFailed");
+  String get categoryDeletedSuccess => text("categoryDeletedSuccess");
   String get categoryName => text("categoryName");
   String get categoryNameRequired => text("categoryNameRequired");
   String get categoryNoun => text("categoryNoun");
   String get categoryRequired => text("categoryRequired");
+  String get categorySaveFailed => text("categorySaveFailed");
+  String get categorySavedSuccess => text("categorySavedSuccess");
   String get categorySubtitle => text("categorySubtitle");
   String get categorySystemDeleteDenied => text("categorySystemDeleteDenied");
   String get close => text("close");
@@ -120,6 +124,10 @@ class AppLocalizations {
   String get noPendingShort => text("noPendingShort");
   String get note => text("note");
   String get noteOptional => text("noteOptional");
+  String get notificationErrorTitle => text("notificationErrorTitle");
+  String get notificationInfoTitle => text("notificationInfoTitle");
+  String get notificationSuccessTitle => text("notificationSuccessTitle");
+  String get notificationWarningTitle => text("notificationWarningTitle");
   String get noTransactions => text("noTransactions");
   String get onboardingBack => text("onboardingBack");
   String get onboardingFastBody => text("onboardingFastBody");
@@ -230,10 +238,16 @@ class AppLocalizations {
   String get titleOptional => text("titleOptional");
   String get titleRequired => text("titleRequired");
   String get transactionDate => text("transactionDate");
+  String get transactionDeleteFailed => text("transactionDeleteFailed");
+  String get transactionDeletedSuccess => text("transactionDeletedSuccess");
   String get transactionNoun => text("transactionNoun");
+  String get transactionSaveFailed => text("transactionSaveFailed");
   String get transactionTitle => text("transactionTitle");
+  String get transactionUpdatedSuccess => text("transactionUpdatedSuccess");
   String get update => text("update");
   String get userNameLabel => text("userNameLabel");
+  String get voiceNoteCanceled => text("voiceNoteCanceled");
+  String get voiceNoteDeleted => text("voiceNoteDeleted");
 }
 
 class _AppLocalizationsDelegate
@@ -300,9 +314,13 @@ const _vi = {
   "categoryIcon": "Biểu tượng",
   "categoryInUseDeleteDenied":
       "Không xoá được: còn giao dịch dùng hạng mục này.",
+  "categoryDeleteFailed": "Chưa thể xoá danh mục. Vui lòng thử lại.",
+  "categoryDeletedSuccess": "Đã xoá danh mục.",
   "categoryName": "Tên hạng mục",
   "categoryNameRequired": "Vui lòng nhập tên hạng mục.",
   "categoryRequired": "Vui lòng chọn hạng mục.",
+  "categorySaveFailed": "Chưa thể lưu danh mục. Vui lòng thử lại.",
+  "categorySavedSuccess": "Đã lưu danh mục.",
   "categorySystemDeleteDenied": "Không thể xoá hạng mục mặc định.",
   "close": "Đóng",
   "confirm": "Xác nhận",
@@ -358,6 +376,10 @@ const _vi = {
   "noPendingShort": "Không có giao dịch chờ",
   "note": "Ghi chú",
   "noteOptional": "Ghi chú (tuỳ chọn)",
+  "notificationErrorTitle": "Có lỗi xảy ra",
+  "notificationInfoTitle": "Thông báo",
+  "notificationSuccessTitle": "Thành công",
+  "notificationWarningTitle": "Cần chú ý",
   "noTransactions": "Chưa có giao dịch nào.",
   "otherCategory": "Khác",
   "pausePlayback": "Tạm dừng",
@@ -444,9 +466,15 @@ const _vi = {
   "titleOptional": "Tiêu đề (tuỳ chọn)",
   "titleRequired": "Vui lòng nhập tên giao dịch.",
   "transactionDate": "Ngày giao dịch",
+  "transactionDeleteFailed": "Chưa thể xoá giao dịch. Vui lòng thử lại.",
+  "transactionDeletedSuccess": "Đã xoá giao dịch.",
   "transactionNoun": "giao dịch",
+  "transactionSaveFailed": "Chưa thể lưu giao dịch. Vui lòng thử lại.",
   "transactionTitle": "Tên giao dịch",
+  "transactionUpdatedSuccess": "Đã cập nhật giao dịch.",
   "update": "Cập nhật",
+  "voiceNoteCanceled": "Đã huỷ ghi âm.",
+  "voiceNoteDeleted": "Đã xoá ghi âm.",
   "appName": "Smart Ledger",
   "loading": "Đang tải dữ liệu...",
   "navHome": "Trang chủ",

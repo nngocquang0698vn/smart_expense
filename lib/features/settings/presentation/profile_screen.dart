@@ -13,7 +13,7 @@ import "package:smart_expense/app/theme/theme_controller.dart";
 import "package:smart_expense/app/theme/theme_presets.dart";
 import "package:smart_expense/app/theme/theme_settings.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
-import "package:smart_expense/shared/components/app_snack_bar.dart";
+import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/core/config/demo_seed.dart";
 import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
 import "package:smart_expense/features/categories/presentation/categories_screen.dart";
@@ -64,12 +64,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _saveName() async {
     await _repo.setUserName(_nameCtrl.text.trim());
     if (mounted) {
-      showAppSnackBar(
-        context,
-        title: "Đã lưu",
-        message: context.l10n.nameSaved,
-        type: AppSnackBarType.success,
-      );
+      showSuccess(context, context.l10n.nameSaved);
     }
   }
 
@@ -114,24 +109,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       seeded = true;
     } catch (_) {
       if (mounted) {
-        showAppSnackBar(
-          context,
-          title: "Chưa thể nạp dữ liệu",
-          message: context.l10n.genericError,
-          type: AppSnackBarType.error,
-        );
+        showError(context, context.l10n.genericError);
       }
     } finally {
       if (mounted) Navigator.of(context).pop(); // dismiss loading
     }
 
     if (!mounted || !seeded) return;
-    showAppSnackBar(
-      context,
-      title: "Đã nạp dữ liệu",
-      message: context.l10n.demoDataLoaded,
-      type: AppSnackBarType.success,
-    );
+    showSuccess(context, context.l10n.demoDataLoaded);
     // Reload name field
     _load();
   }
