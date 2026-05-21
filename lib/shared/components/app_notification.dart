@@ -200,7 +200,6 @@ class _AppNotificationOverlayState extends State<_AppNotificationOverlay> {
                     ),
                   ),
                 ),
-                ),
               );
             },
           ),
