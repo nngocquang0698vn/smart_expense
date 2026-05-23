@@ -53,7 +53,7 @@ class TransactionEntryForm extends StatelessWidget {
     super.key,
   });
 
-  /// Mặc định theo [AttachmentCapturePolicy] (mobile: chụp+chọn, desktop/web: chọn).
+  /// Mặc định theo [AttachmentCapturePolicy] (mobile: chụp+chọn, desktop: chọn).
   final bool? showReceiptCamera;
 
   final int initialAmount;
