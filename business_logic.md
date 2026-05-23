@@ -289,7 +289,7 @@ sequenceDiagram
 
 ### 8.3 Báo cáo (`analytics_screen.dart`)
 
-- Tổng Thu / Chi / Còn lại theo kỳ.
+- Tổng Thu / Chi / Chênh lệch theo kỳ.
 - Toggle **Chi tiêu | Thu nhập** → donut `categoryBreakdown`.
 - Chạm slice / hàng danh mục → bottom sheet `transactionsForCategory`.
 - Chỉ giao dịch **`!pending`**.

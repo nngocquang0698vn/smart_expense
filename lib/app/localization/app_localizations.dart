@@ -517,7 +517,7 @@ const _vi = {
   "record": "Ghi âm",
   "recording": "Đang ghi âm...",
   "recordSuccess": "Ghi âm thành công",
-  "reportBalance": "Còn lại",
+  "reportBalance": "Chênh lệch",
   "reportByCategory": "Theo hạng mục",
   "reportCategoryDetailSubtitle": "Báo cáo chi tiết",
   "reportCategoryTotalLabel": "Tổng trong kỳ",
