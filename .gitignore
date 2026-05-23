@@ -67,3 +67,6 @@ untrack/stitch_smartledger_financial_tracker/onboarding_th_c_i_t_app/code.html
 untrack/stitch_smartledger_financial_tracker/onboarding_th_c_i_t_app/screen.png
 untrack/stitch_smartledger_financial_tracker/y_u_c_u_c_i_t_android/code.html
 untrack/stitch_smartledger_financial_tracker/y_u_c_u_c_i_t_android/screen.png
+# Cursor local/temp artifacts (không commit)
+.cursor/stitch_icon_*.json
+.cursor/stitch_*.json
