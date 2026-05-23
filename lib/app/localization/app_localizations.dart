@@ -231,6 +231,10 @@ class AppLocalizations {
   String get recordSuccess => text("recordSuccess");
   String get reportBalance => text("reportBalance");
   String get reportByCategory => text("reportByCategory");
+  String get reportCategoryDetailSubtitle =>
+      text("reportCategoryDetailSubtitle");
+  String get reportCategoryTotalLabel => text("reportCategoryTotalLabel");
+  String get reportSelectCategoryHint => text("reportSelectCategoryHint");
   String get reportPeriodCustom => text("reportPeriodCustom");
   String get reportPeriodMonth => text("reportPeriodMonth");
   String get reportPeriodQuarter => text("reportPeriodQuarter");
@@ -478,6 +482,9 @@ const _vi = {
   "recordSuccess": "Ghi âm thành công",
   "reportBalance": "Còn lại",
   "reportByCategory": "Theo hạng mục",
+  "reportCategoryDetailSubtitle": "Báo cáo chi tiết",
+  "reportCategoryTotalLabel": "Tổng trong kỳ",
+  "reportSelectCategoryHint": "Chọn một hạng mục để xem chi tiết",
   "reportPeriodCustom": "Tuỳ chọn",
   "reportPeriodMonth": "Tháng",
   "reportPeriodQuarter": "Quý",

@@ -1,3 +1,4 @@
+import "package:smart_expense/features/reports/domain/report_calculations.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
 
 class ReportCategorySlice {
@@ -28,6 +29,10 @@ class ReportViewModel {
   int get balance => income - expense;
 
   int get sliceTotal => slices.fold(0, (sum, slice) => sum + slice.amount);
+
+  /// Phần trăm của một lát so với [sliceTotal] (0…100), an toàn khi tổng = 0.
+  double slicePercent(int amount) =>
+      ReportCalculations.categoryPercent(amount, sliceTotal);
 }
 
 class ReportViewModelBuilder {
