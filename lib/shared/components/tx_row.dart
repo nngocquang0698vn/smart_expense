@@ -4,7 +4,9 @@ import "package:smart_expense/shared/design_system/design_system.dart";
 import "package:smart_expense/core/utils/date_format.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
+import "package:smart_expense/features/transactions/presentation/voice_note/widgets/voice_note_player.dart";
 import "package:smart_expense/shared/components/app_transaction_tile.dart";
 import "package:smart_expense/core/utils/formatters/money.dart";
 
@@ -15,12 +17,16 @@ class TxRow extends StatelessWidget {
     required this.category,
     this.trailing,
     this.onTap,
+    this.showInlineAudioPlayer = false,
   });
 
   final LedgerTransaction transaction;
   final LedgerCategory? category;
   final Widget? trailing;
   final VoidCallback? onTap;
+
+  /// Player ghi âm nhỏ dưới subtitle (danh sách chờ đối soát).
+  final bool showInlineAudioPlayer;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +50,37 @@ class TxRow extends StatelessWidget {
         backgroundColor: color.withValues(alpha: 0.16),
         child: Icon(icon, color: color, size: 22),
       ),
-      title: t.title,
+      title: Row(
+        children: [
+          Flexible(
+            fit: FlexFit.loose,
+            child: Text(
+              t.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (hasAudio) ...[
+            const SizedBox(width: AppSpacing.xxs),
+            Icon(
+              Icons.audiotrack_rounded,
+              size: 15,
+              color: finance.textMuted,
+            ),
+          ],
+          if (hasImages) ...[
+            const SizedBox(width: AppSpacing.xxs),
+            Icon(
+              Icons.image_outlined,
+              size: 15,
+              color: finance.textMuted,
+            ),
+          ],
+        ],
+      ),
       subtitle: Row(
         children: [
           if (disabled)
@@ -76,25 +112,8 @@ class TxRow extends StatelessWidget {
           ),
         ],
       ),
-      supporting: hasAudio || hasImages
-          ? Row(
-              children: [
-                if (hasAudio)
-                  Icon(
-                    Icons.audiotrack,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                if (hasAudio && hasImages)
-                  const SizedBox(width: AppSpacing.xxs),
-                if (hasImages)
-                  Icon(
-                    Icons.image_outlined,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-              ],
-            )
+      footer: showInlineAudioPlayer && t.audio != null
+          ? _InlineAudioPlayerBarrier(audio: t.audio!)
           : null,
       amount: MoneyText(
         t.amountVnd,
@@ -108,40 +127,63 @@ class TxRow extends StatelessWidget {
   }
 }
 
-Widget buildPendingActions({
+/// Chặn tap mở editor khi tương tác với player.
+class _InlineAudioPlayerBarrier extends StatelessWidget {
+  const _InlineAudioPlayerBarrier({required this.audio});
+
+  final AudioAttachmentModel audio;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {},
+      behavior: HitTestBehavior.opaque,
+      child: VoiceNotePlayer(
+        audio: audio,
+        compact: true,
+      ),
+    );
+  }
+}
+
+/// Nút «Xác nhận» nhỏ — chỉ khi giao dịch đủ thông tin.
+Widget? buildPendingConfirmButton({
   required BuildContext context,
   required LedgerTransaction transaction,
   required VoidCallback onConfirm,
-  required VoidCallback onEdit,
 }) {
   final isComplete =
       transaction.amountVnd > 0 && transaction.categoryId.isNotEmpty;
+  if (!isComplete) return null;
 
-  final editBtn = OutlinedButton(
-    style: OutlinedButton.styleFrom(
-      visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-    ),
-    onPressed: onEdit,
-    child: Text(context.l10n.update),
-  );
+  final cs = Theme.of(context).colorScheme;
+  final label = context.l10n.confirm;
 
-  if (!isComplete) return editBtn;
-
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      FilledButton.tonal(
-        style: FilledButton.styleFrom(
-          visualDensity: VisualDensity.compact,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+  return Semantics(
+    button: true,
+    label: label,
+    child: Material(
+      color: cs.primary,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onConfirm,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xxs,
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: cs.onPrimary,
+              fontWeight: AppTypography.bold,
+            ),
+          ),
         ),
-        onPressed: onConfirm,
-        child: Text(context.l10n.confirm),
       ),
-      const SizedBox(width: AppSpacing.xs),
-      editBtn,
-    ],
+    ),
   );
 }
 

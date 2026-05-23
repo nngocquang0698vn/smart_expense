@@ -8,7 +8,7 @@ import "package:smart_expense/features/transactions/application/pending/pending_
 import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/features/transactions/presentation/date_filter_sheet.dart";
 import "package:smart_expense/features/transactions/presentation/transaction_editor_sheet.dart";
-import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
+import "package:smart_expense/features/transactions/application/confirm_pending_flow.dart";
 import "package:smart_expense/shared/components/app_empty_state.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
 import "package:smart_expense/shared/components/tx_row.dart";
@@ -74,15 +74,11 @@ class _PendingContent extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     LedgerTransaction transaction,
-  ) async {
-    final ok = await AppConfirmBottomSheet.show(
-      context,
-      title: context.l10n.confirmPendingTitle,
-      message: context.l10n.confirmPendingMessage,
-    );
-    if (!ok || !context.mounted) return;
-    await ref.read(ledgerRepositoryProvider).confirmPending(transaction.id);
-  }
+  ) => runConfirmPendingFlow(
+    context: context,
+    ref: ref,
+    transactionId: transaction.id,
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -137,11 +133,11 @@ class _PendingContent extends ConsumerWidget {
                 child: TxRow(
                   transaction: transaction,
                   category: categoryMap[transaction.categoryId],
-                  trailing: buildPendingActions(
+                  showInlineAudioPlayer: true,
+                  trailing: buildPendingConfirmButton(
                     context: context,
                     transaction: transaction,
                     onConfirm: () => _confirmPending(context, ref, transaction),
-                    onEdit: () => _openEditor(context, ref, transaction),
                   ),
                   onTap: () => _openEditor(context, ref, transaction),
                 ),

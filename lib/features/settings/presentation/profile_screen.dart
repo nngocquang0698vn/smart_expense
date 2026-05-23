@@ -12,6 +12,7 @@ import "package:smart_expense/shared/components/pwa/pwa_install_actions.dart";
 import "package:smart_expense/app/theme/theme_controller.dart";
 import "package:smart_expense/app/theme/theme_presets.dart";
 import "package:smart_expense/app/theme/theme_settings.dart";
+import "package:smart_expense/features/settings/application/user_preferences_controller.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
 import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/core/config/demo_seed.dart";
@@ -269,12 +270,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           trailing: const Icon(Icons.chevron_right),
           onTap: widget.onOpenPending,
         ),
+        _buildQuickConfirmTile(context),
         ListTile(
           leading: const Icon(Icons.add_circle_outline),
           title: Text(context.l10n.quickTransactionTitle),
           onTap: () => handleAddFab(context, _repo),
         ),
         if (_showPwaInstallEntry()) _buildPwaInstallTile(context),
+        ListTile(
+          leading: const Icon(Icons.dataset_outlined),
+          title: Text(context.l10n.demoSectionTitle),
+          subtitle: Text(context.l10n.demoPersonSummary),
+          onTap: _populateJohny,
+        ),
       ],
     );
   }
@@ -309,68 +317,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildDemoCard(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.demoSectionTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
-                        child: const Text(
-                          "JN",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.demoPersonName,
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            Text(
-                              context.l10n.demoPersonSummary,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.tonal(
-                      onPressed: _populateJohny,
-                      child: Text(context.l10n.demoModeButton),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+  Widget _buildQuickConfirmTile(BuildContext context) {
+    final prefs = ref.watch(userPreferencesControllerProvider);
+    final notifier = ref.read(userPreferencesControllerProvider.notifier);
+
+    return SwitchListTile.adaptive(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      secondary: const Icon(Icons.bolt_outlined),
+      title: Text(context.l10n.quickConfirmPendingTitle),
+      subtitle: Text(context.l10n.quickConfirmPendingSubtitle),
+      value: prefs.quickConfirmPending,
+      onChanged: (v) => notifier.update(
+        prefs.copyWith(quickConfirmPending: v),
       ),
     );
   }
@@ -400,7 +358,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _buildAppearanceSection(context),
                 const Divider(height: 24, indent: 16, endIndent: 16),
                 _buildLeftPanel(context),
-                _buildDemoCard(context),
               ],
             ),
           ),

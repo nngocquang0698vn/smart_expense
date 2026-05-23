@@ -217,6 +217,8 @@ class AppLocalizations {
       text("quickEntryReceiptPickSubtitle");
   String get quickEntryReceiptPickTitle => text("quickEntryReceiptPickTitle");
   String get quickEntryTap => text("quickEntryTap");
+  String get quickConfirmPendingSubtitle => text("quickConfirmPendingSubtitle");
+  String get quickConfirmPendingTitle => text("quickConfirmPendingTitle");
   String get quickEntryTapSubtitle => text("quickEntryTapSubtitle");
   String get quickEntryVoice => text("quickEntryVoice");
   String get quickEntryVoiceSubtitle => text("quickEntryVoiceSubtitle");
@@ -303,6 +305,9 @@ const _vi = {
   "pendingTransactionsSubtitle": "Mở danh sách đối soát",
   "pendingTransactionsTitle": "Giao dịch chờ đối soát",
   "profileTitle": "Cá nhân",
+  "quickConfirmPendingSubtitle":
+      "Ấn Xác nhận là hoàn tất, không hỏi lại",
+  "quickConfirmPendingTitle": "Xác nhận nhanh",
   "quickEntryReceiptCaptureSubtitle": "Lưu ảnh hoá đơn để đối soát sau",
   "quickEntryReceiptCaptureTitle": "Chụp ảnh hoá đơn",
   "quickEntryReceiptPickSubtitle": "Chọn ảnh từ máy để lưu hoá đơn đối soát",

@@ -152,36 +152,47 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
       );
     }
 
+    final compact = widget.compact;
+
     return Row(
       children: [
         IconButton.filledTonal(
           onPressed: _loading ? null : _toggle,
           tooltip: _playing ? "Tạm dừng" : "Phát ghi âm",
+          style: IconButton.styleFrom(
+            fixedSize: Size.square(compact ? 36 : 48),
+            minimumSize: Size.square(compact ? 36 : 48),
+            padding: EdgeInsets.zero,
+          ),
           icon: _loading
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+              ? SizedBox.square(
+                  dimension: compact ? 16 : 18,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(_playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+              : Icon(
+                  _playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  size: compact ? 20 : 24,
+                ),
         ),
-        IconButton(
-          onPressed: _loading || _position == Duration.zero ? null : _stop,
-          tooltip: "Dừng",
-          icon: const Icon(Icons.stop_rounded),
-        ),
-        const SizedBox(width: AppSpacing.xs),
+        if (!compact)
+          IconButton(
+            onPressed: _loading || _position == Duration.zero ? null : _stop,
+            tooltip: "Dừng",
+            icon: const Icon(Icons.stop_rounded),
+          ),
+        SizedBox(width: compact ? AppSpacing.xxs : AppSpacing.xs),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  trackHeight: 6,
-                  thumbShape: const RoundSliderThumbShape(
-                    enabledThumbRadius: 7,
+                  trackHeight: compact ? 4 : 6,
+                  thumbShape: RoundSliderThumbShape(
+                    enabledThumbRadius: compact ? 5 : 7,
                   ),
-                  overlayShape: const RoundSliderOverlayShape(
-                    overlayRadius: 14,
+                  overlayShape: RoundSliderOverlayShape(
+                    overlayRadius: compact ? 10 : 14,
                   ),
                 ),
                 child: Slider(
@@ -189,7 +200,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
                   onChanged: _loading ? null : _seek,
                 ),
               ),
-              if (!widget.compact)
+              if (!compact)
                 Text(
                   "${_format(_position)} / ${_duration == Duration.zero ? "--:--" : _format(_duration)}",
                   style: Theme.of(
