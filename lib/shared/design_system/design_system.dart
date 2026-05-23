@@ -9,4 +9,5 @@ export "package:smart_expense/shared/design_system/tokens/app_durations.dart";
 export "package:smart_expense/shared/design_system/tokens/app_notification_tokens.dart";
 export "package:smart_expense/shared/design_system/tokens/app_radius.dart";
 export "package:smart_expense/shared/design_system/tokens/app_spacing.dart";
+export "package:smart_expense/shared/design_system/tokens/app_transaction_entry_tokens.dart";
 export "package:smart_expense/shared/design_system/tokens/app_typography.dart";

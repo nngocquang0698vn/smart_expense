@@ -295,7 +295,7 @@ const _vi = {
   "quickEntryReceiptCaptureTitle": "Chụp ảnh hoá đơn",
   "quickEntryReceiptPickSubtitle": "Chọn ảnh từ máy để lưu hoá đơn đối soát",
   "quickEntryReceiptPickTitle": "Chọn ảnh hoá đơn",
-  "quickEntryTapSubtitle": "Nhập liệu cực nhanh với một lần chạm",
+  "quickEntryTapSubtitle": "Nhập liệu cực nhanh với vài lần chạm",
   "quickEntryVoiceSubtitle": "Ghi nhanh một bản ghi âm để đối soát sau",
   "quickTransactionTitle": "Thêm giao dịch nhanh",
   "seedColorLabel": "Màu chủ đạo",
@@ -384,7 +384,8 @@ const _vi = {
   "otherCategory": "Khác",
   "pausePlayback": "Tạm dừng",
   "pendingSubtitleDefault": "Bật để chuyển vào danh sách đối soát.",
-  "pendingSubtitleWithMedia": "Có audio/ảnh — nên bật để đối soát sau.",
+  "pendingSubtitleWithMedia":
+      "Đang bận — Đối soát và hoàn thiện giao dịch sau.",
   "pickPhoto": "Chọn ảnh",
   "pickYearTitle": "Chọn năm",
   "playBack": "Nghe lại",

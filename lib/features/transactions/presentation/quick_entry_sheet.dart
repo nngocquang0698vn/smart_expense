@@ -1,5 +1,5 @@
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:smart_expense/core/utils/attachment_capture_policy.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:image_picker/image_picker.dart";
 import "package:smart_expense/core/utils/amount_input_notifier.dart";
@@ -74,9 +74,6 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
 
   bool get _hasMedia => _audio != null || _images.isNotEmpty;
 
-  // Camera available on native platforms only
-  bool get _showCamera => !kIsWeb;
-
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
       ref.read(amountInputProvider(_amountKey)) != _initAmount ||
@@ -99,7 +96,9 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         await _pickImage(
-          _showCamera ? ImageSource.camera : ImageSource.gallery,
+          AttachmentCapturePolicy.showReceiptCameraButton
+              ? ImageSource.camera
+              : ImageSource.gallery,
         );
       });
     }
@@ -139,10 +138,7 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
     try {
       final picked = await _imagePicker.pick(source);
       if (picked == null || !mounted) return;
-      setState(() {
-        _images.add(picked.image);
-        _pending = true;
-      });
+      setState(() => _images.add(picked.image));
     } catch (_) {
       if (!mounted) return;
       showError(context, context.l10n.imageSaveFailed);
@@ -302,8 +298,6 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   TransactionEntryForm(
-                    typeToggleFirst: true,
-                    showSelectedIcon: false,
                     initialAmount: _amountKey,
                     noteController: _noteCtrl,
                     isIncome: _income,
@@ -317,13 +311,7 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                     }),
                     date: _date,
                     onDateChanged: (d) => setState(() => _date = d),
-                    pending: _pending,
-                    onPendingChanged: (v) => setState(() => _pending = v),
-                    pendingSubtitle: _hasMedia
-                        ? context.l10n.pendingSubtitleWithMedia
-                        : context.l10n.pendingSubtitleDefault,
                     images: _images,
-                    showCamera: _showCamera,
                     onPickImage: _pickImage,
                     onDeleteImage: _removeImage,
                     amountAlwaysShowKeypad: widget.mode == QuickEntryMode.tap,
@@ -340,19 +328,13 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                       labelText: context.l10n.titleOptional,
                     ),
                     mediaSections: [
-                      if (widget.mode == QuickEntryMode.voice ||
-                          _audio != null) ...[
-                        AppVoiceNoteSection(
-                          audio: _audio,
-                          autoStartRecording:
-                              widget.mode == QuickEntryMode.voice,
-                          onChanged: (audio) => setState(() {
-                            _audio = audio;
-                            if (audio != null) _pending = true;
-                          }),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                      ],
+                      AppVoiceNoteSection(
+                        audio: _audio,
+                        showWhenEmpty: true,
+                        autoStartRecording:
+                            widget.mode == QuickEntryMode.voice,
+                        onChanged: (audio) => setState(() => _audio = audio),
+                      ),
                     ],
                     categorySection: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -390,6 +372,14 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                         ],
                       ],
                     ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  TransactionPendingSwitch(
+                    pending: _pending,
+                    onChanged: (v) => setState(() => _pending = v),
+                    subtitle: _hasMedia
+                        ? context.l10n.pendingSubtitleWithMedia
+                        : context.l10n.pendingSubtitleDefault,
                   ),
                   const SizedBox(height: AppSpacing.sm),
 

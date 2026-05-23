@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
+import "package:smart_expense/core/utils/attachment_capture_policy.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/shared/components/form_amount_field.dart";
@@ -10,6 +11,9 @@ import "package:smart_expense/features/transactions/presentation/widgets/transac
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_type_toggle.dart";
 
 /// Shared fields for quick entry and full transaction editor sheets.
+///
+/// Thứ tự: tiêu đề → Chi tiêu/Thu nhập → số tiền → danh mục → ngày → ghi chú
+/// → [mediaSections] (ghi âm) → ảnh. Toggle chờ đối soát đặt riêng phía trên nút lưu.
 class TransactionEntryForm extends StatelessWidget {
   const TransactionEntryForm({
     required this.initialAmount,
@@ -18,10 +22,7 @@ class TransactionEntryForm extends StatelessWidget {
     required this.onIncomeChanged,
     required this.date,
     required this.onDateChanged,
-    required this.pending,
-    required this.onPendingChanged,
     required this.images,
-    required this.showCamera,
     required this.onPickImage,
     required this.onDeleteImage,
     required this.categorySection,
@@ -30,34 +31,32 @@ class TransactionEntryForm extends StatelessWidget {
     this.afterAmount = const [],
     this.mediaSections = const [],
     this.onSideChanged,
-    this.showSelectedIcon = true,
     this.dateStyle = AppDatePickerStyle.card,
-    this.pendingSubtitle,
+    this.amountVariant = FormAmountFieldVariant.prominent,
     this.amountAlwaysShowKeypad = false,
     this.amountAutofocus = false,
     this.amountErrorText,
     this.amountKeypadOpen = false,
     this.onAmountTap,
     this.onAmountDone,
-    this.typeToggleFirst = false,
     this.imageThumbnailHeight = 80,
+    this.showReceiptCamera,
     super.key,
   });
+
+  /// Mặc định theo [AttachmentCapturePolicy] (mobile: chụp+chọn, desktop/web: chọn).
+  final bool? showReceiptCamera;
 
   final int initialAmount;
   final TextEditingController noteController;
   final bool isIncome;
   final ValueChanged<bool> onIncomeChanged;
   final VoidCallback? onSideChanged;
-  final bool showSelectedIcon;
+  final FormAmountFieldVariant amountVariant;
   final DateTime date;
   final ValueChanged<DateTime> onDateChanged;
   final AppDatePickerStyle dateStyle;
-  final bool pending;
-  final ValueChanged<bool> onPendingChanged;
-  final String? pendingSubtitle;
   final List<ImageAttachmentModel> images;
-  final bool showCamera;
   final ValueChanged<ImageSource> onPickImage;
   final ValueChanged<ImageAttachmentModel> onDeleteImage;
   final Widget categorySection;
@@ -71,33 +70,31 @@ class TransactionEntryForm extends StatelessWidget {
   final bool amountKeypadOpen;
   final VoidCallback? onAmountTap;
   final VoidCallback? onAmountDone;
-  final bool typeToggleFirst;
   final double imageThumbnailHeight;
 
-  Widget _typeToggle() {
-    return TransactionTypeToggle(
-      isIncome: isIncome,
-      showSelectedIcon: showSelectedIcon,
-      onChanged: (income) {
-        onIncomeChanged(income);
-        onSideChanged?.call();
-      },
-    );
-  }
+  bool get _showReceiptCamera =>
+      showReceiptCamera ?? AttachmentCapturePolicy.showReceiptCameraButton;
 
   @override
   Widget build(BuildContext context) {
-    final toggle = _typeToggle();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ...beforeAmount,
-        if (typeToggleFirst) ...[toggle, const SizedBox(height: AppSpacing.sm)],
         if (titleField != null) ...[
           titleField!,
           const SizedBox(height: AppSpacing.sm),
         ],
+        TransactionTypeToggle(
+          isIncome: isIncome,
+          onChanged: (income) {
+            onIncomeChanged(income);
+            onSideChanged?.call();
+          },
+        ),
+        const SizedBox(height: AppSpacing.sm),
         FormAmountField(
+          variant: amountVariant,
           initialAmount: initialAmount,
           isIncome: isIncome,
           alwaysShowKeypad: amountAlwaysShowKeypad,
@@ -109,10 +106,6 @@ class TransactionEntryForm extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         ...afterAmount,
-        if (!typeToggleFirst) ...[
-          toggle,
-          const SizedBox(height: AppSpacing.sm),
-        ],
         categorySection,
         const SizedBox(height: AppSpacing.sm),
         AppDatePicker(
@@ -120,34 +113,52 @@ class TransactionEntryForm extends StatelessWidget {
           style: dateStyle,
           onDateChanged: onDateChanged,
         ),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(context.l10n.pending),
-          subtitle: Text(
-            pendingSubtitle ?? "Bật nếu cần xem lại giao dịch này sau.",
-          ),
-          value: pending,
-          onChanged: onPendingChanged,
-        ),
-        const SizedBox(height: AppSpacing.xxs),
+        const SizedBox(height: AppSpacing.sm),
         AppTextField(
           controller: noteController,
           labelText: context.l10n.noteOptional,
           maxLines: 2,
         ),
         if (mediaSections.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
           ...mediaSections,
         ],
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.sm),
         TransactionImageAttachments(
           images: images,
-          showCamera: showCamera,
+          showCamera: _showReceiptCamera,
           onPick: onPickImage,
           onDelete: onDeleteImage,
           thumbnailHeight: imageThumbnailHeight,
         ),
       ],
+    );
+  }
+}
+
+/// Toggle chờ đối soát — đặt ngay trên nút lưu giao dịch.
+class TransactionPendingSwitch extends StatelessWidget {
+  const TransactionPendingSwitch({
+    required this.pending,
+    required this.onChanged,
+    this.subtitle,
+    super.key,
+  });
+
+  final bool pending;
+  final ValueChanged<bool> onChanged;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(context.l10n.pending),
+      subtitle: Text(
+        subtitle ?? context.l10n.pendingSubtitleDefault,
+      ),
+      value: pending,
+      onChanged: onChanged,
     );
   }
 }

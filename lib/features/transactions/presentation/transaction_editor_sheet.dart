@@ -1,5 +1,4 @@
 import "package:smart_expense/features/categories/presentation/category_visuals.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:image_picker/image_picker.dart";
@@ -76,7 +75,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
   TransactionDraftValidationError? _validationError;
   bool _amountKeypadOpen = false;
 
-  bool get _showCamera => !kIsWeb;
+  bool get _hasMedia => _audio != null || _images.isNotEmpty;
 
   // Snapshots for dirty detection
   late String _initTitle;
@@ -169,10 +168,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
     try {
       final picked = await _imagePicker.pick(source);
       if (picked == null || !mounted) return;
-      setState(() {
-        _images.add(picked.image);
-        _pending = true;
-      });
+      setState(() => _images.add(picked.image));
     } catch (_) {
       if (!mounted) return;
       showError(context, context.l10n.imageSaveFailed);
@@ -406,10 +402,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                     date: _date,
                     dateStyle: AppDatePickerStyle.listTile,
                     onDateChanged: (d) => setState(() => _date = d),
-                    pending: _pending,
-                    onPendingChanged: (v) => setState(() => _pending = v),
                     images: _images,
-                    showCamera: _showCamera,
                     onPickImage: _pickImage,
                     onDeleteImage: _removeImage,
                     imageThumbnailHeight: 96,
@@ -424,12 +417,8 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                       AppVoiceNoteSection(
                         audio: _audio,
                         showWhenEmpty: true,
-                        onChanged: (audio) => setState(() {
-                          _audio = audio;
-                          if (audio != null) _pending = true;
-                        }),
+                        onChanged: (audio) => setState(() => _audio = audio),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
                     ],
                     categorySection: DropdownButtonFormField<String>(
                       dropdownColor: finance.sheetBackground,
@@ -469,7 +458,15 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.sm),
+                  TransactionPendingSwitch(
+                    pending: _pending,
+                    onChanged: (v) => setState(() => _pending = v),
+                    subtitle: _hasMedia
+                        ? context.l10n.pendingSubtitleWithMedia
+                        : context.l10n.pendingSubtitleDefault,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
 
                   // ── Action buttons ───────────────────────────────────────
                   AppPrimaryButton(

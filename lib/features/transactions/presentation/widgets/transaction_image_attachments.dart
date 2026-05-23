@@ -1,8 +1,8 @@
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 
 import "package:smart_expense/app/localization/app_localizations.dart";
+import "package:smart_expense/core/utils/attachment_capture_policy.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/attachments/image_attachment_list.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
@@ -13,19 +13,22 @@ class TransactionImageAttachments extends StatelessWidget {
     required this.images,
     required this.onPick,
     required this.onDelete,
-    this.showCamera = true,
+    this.showCamera,
     this.thumbnailHeight = 80,
   });
 
   final List<ImageAttachmentModel> images;
   final ValueChanged<ImageSource> onPick;
   final ValueChanged<ImageAttachmentModel> onDelete;
-  final bool showCamera;
+
+  /// `null` → [AttachmentCapturePolicy.showReceiptCameraButton].
+  final bool? showCamera;
   final double thumbnailHeight;
 
   @override
   Widget build(BuildContext context) {
-    final showCameraButton = showCamera && !kIsWeb;
+    final showCameraButton =
+        showCamera ?? AttachmentCapturePolicy.showReceiptCameraButton;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
