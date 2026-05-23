@@ -171,14 +171,13 @@ class AppLocalizations {
   String transactionImageCount(int current, int max) => text(
     "transactionImageCount",
   ).replaceAll("{current}", "$current").replaceAll("{max}", "$max");
-  String get transactionImageLimitReached => text("transactionImageLimitReached");
-  String transactionImagePartialPick(int skipped) => text(
-    "transactionImagePartialPick",
-  ).replaceAll("{count}", "$skipped");
-  String get pendingSelectTransactionHint => text("pendingSelectTransactionHint");
+  String get transactionImageLimitReached =>
+      text("transactionImageLimitReached");
+  String transactionImagePartialPick(int skipped) =>
+      text("transactionImagePartialPick").replaceAll("{count}", "$skipped");
+  String get pendingSelectTransactionHint =>
+      text("pendingSelectTransactionHint");
   String get pendingReconciliationDone => text("pendingReconciliationDone");
-  String get pendingSkip => text("pendingSkip");
-  String get pendingSkipTransaction => text("pendingSkipTransaction");
   String get pendingPrevious => text("pendingPrevious");
   String get pendingNext => text("pendingNext");
   String get pendingFilterAll => text("pendingFilterAll");
@@ -451,8 +450,6 @@ const _vi = {
       "Chỉ thêm được một phần ảnh đã chọn (bỏ qua {count} ảnh vì vượt giới hạn 5 ảnh).",
   "pendingSelectTransactionHint": "Chọn một giao dịch để đối soát",
   "pendingReconciliationDone": "Đã hết giao dịch trong bộ lọc hiện tại",
-  "pendingSkip": "Bỏ qua",
-  "pendingSkipTransaction": "Bỏ qua giao dịch",
   "pendingPrevious": "Trước",
   "pendingNext": "Sau",
   "pendingFilterAll": "Tất cả",

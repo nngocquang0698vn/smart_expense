@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
-import "package:smart_expense/core/utils/formatters/money.dart";
 import "package:smart_expense/features/reports/application/report_view_model.dart";
 import "package:smart_expense/features/reports/presentation/widgets/report_category_row.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";

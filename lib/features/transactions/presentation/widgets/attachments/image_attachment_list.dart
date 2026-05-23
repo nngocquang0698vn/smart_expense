@@ -34,14 +34,14 @@ class ImageAttachmentList extends StatelessWidget {
         itemBuilder: (context, index) {
           if (index < images.length) {
             final image = images[index];
-          return _ImageAttachmentTile(
-            key: ValueKey(image.id),
-            image: image,
-            images: images,
-            imageIndex: index,
-            size: height,
-            onDelete: () => onDelete(image),
-          );
+            return _ImageAttachmentTile(
+              key: ValueKey(image.id),
+              image: image,
+              images: images,
+              imageIndex: index,
+              size: height,
+              onDelete: () => onDelete(image),
+            );
           }
           return trailing[index - images.length];
         },
@@ -105,6 +105,9 @@ class _ImageAttachmentTileState extends State<_ImageAttachmentTile> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final previewHint = context.l10n.imagePreviewTapHint;
+    final decodeSize = (widget.size * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(1, 512);
     return Stack(
       children: [
         FutureBuilder<Uint8List>(
@@ -129,6 +132,8 @@ class _ImageAttachmentTileState extends State<_ImageAttachmentTile> {
                 snapshot.data!,
                 width: widget.size,
                 height: widget.size,
+                cacheWidth: decodeSize,
+                cacheHeight: decodeSize,
                 fit: BoxFit.cover,
               );
             }
@@ -143,7 +148,7 @@ class _ImageAttachmentTileState extends State<_ImageAttachmentTile> {
                   borderRadius: BorderRadius.circular(8),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: thumb,
+                    child: RepaintBoundary(child: thumb),
                   ),
                 ),
               ),

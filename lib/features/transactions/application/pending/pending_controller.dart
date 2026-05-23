@@ -16,26 +16,28 @@ final pendingControllerProvider =
     );
 
 class PendingState {
-  const PendingState({
+  PendingState({
     required this.filter,
     required this.viewModel,
     this.attachmentFilter = PendingAttachmentFilter.all,
     this.selectedTransactionId,
-  });
+    List<LedgerTransaction>? filteredTransactions,
+  }) : filteredTransactions =
+           filteredTransactions ??
+           filterPendingByAttachment(viewModel.transactions, attachmentFilter);
 
   const PendingState.initial()
     : filter = const DateFilterSelection(preset: DateFilterPreset.thisMonth),
       viewModel = const PendingViewModel.initial(),
       attachmentFilter = PendingAttachmentFilter.all,
-      selectedTransactionId = null;
+      selectedTransactionId = null,
+      filteredTransactions = const [];
 
   final DateFilterSelection filter;
   final PendingViewModel viewModel;
   final PendingAttachmentFilter attachmentFilter;
   final String? selectedTransactionId;
-
-  List<LedgerTransaction> get filteredTransactions =>
-      filterPendingByAttachment(viewModel.transactions, attachmentFilter);
+  final List<LedgerTransaction> filteredTransactions;
 
   LedgerTransaction? get selectedTransaction {
     final id = selectedTransactionId;
@@ -52,13 +54,19 @@ class PendingState {
     PendingAttachmentFilter? attachmentFilter,
     Object? selectedTransactionId = _unset,
   }) {
+    final nextViewModel = viewModel ?? this.viewModel;
+    final nextAttachmentFilter = attachmentFilter ?? this.attachmentFilter;
+    final reuseFiltered =
+        identical(nextViewModel, this.viewModel) &&
+        nextAttachmentFilter == this.attachmentFilter;
     return PendingState(
       filter: filter ?? this.filter,
-      viewModel: viewModel ?? this.viewModel,
-      attachmentFilter: attachmentFilter ?? this.attachmentFilter,
+      viewModel: nextViewModel,
+      attachmentFilter: nextAttachmentFilter,
       selectedTransactionId: selectedTransactionId == _unset
           ? this.selectedTransactionId
           : selectedTransactionId as String?,
+      filteredTransactions: reuseFiltered ? filteredTransactions : null,
     );
   }
 
@@ -80,11 +88,13 @@ class PendingController extends AsyncNotifier<PendingState> {
     return initial;
   }
 
-  Future<void> reload() async {
+  Future<void> reload({bool showLoading = false}) async {
     final current = state.value ?? const PendingState.initial();
-    state = AsyncData(
-      current.copyWith(viewModel: current.viewModel.copyWith(loading: true)),
-    );
+    if (showLoading) {
+      state = AsyncData(
+        current.copyWith(viewModel: current.viewModel.copyWith(loading: true)),
+      );
+    }
     final next = await AsyncValue.guard(() => _load(current));
     if (ref.mounted) state = next;
   }
@@ -112,10 +122,7 @@ class PendingController extends AsyncNotifier<PendingState> {
       selectedId: current.selectedTransactionId,
     );
     state = AsyncData(
-      current.copyWith(
-        attachmentFilter: filter,
-        selectedTransactionId: nextId,
-      ),
+      current.copyWith(attachmentFilter: filter, selectedTransactionId: nextId),
     );
   }
 

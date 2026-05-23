@@ -1,5 +1,3 @@
-import "dart:typed_data";
-
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 
@@ -22,10 +20,8 @@ Future<void> showImageAttachmentPreview(
     barrierDismissible: true,
     barrierColor: Colors.black.withValues(alpha: 0.92),
     useSafeArea: true,
-    builder: (ctx) => ImageAttachmentPreviewDialog(
-      images: images,
-      initialIndex: index,
-    ),
+    builder: (ctx) =>
+        ImageAttachmentPreviewDialog(images: images, initialIndex: index),
   );
 }
 
@@ -268,7 +264,6 @@ class _SideNavButton extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _PreviewMessage extends StatelessWidget {

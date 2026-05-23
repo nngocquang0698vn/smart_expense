@@ -4,7 +4,6 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/app/providers.dart";
 import "package:smart_expense/features/transactions/application/pending/pending_attachment_filter.dart";
-import "package:smart_expense/features/transactions/application/pending/pending_controller.dart";
 import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
 import "package:smart_expense/features/transactions/presentation/pending/widgets/pending_editor_action_bar.dart";
 import "package:smart_expense/features/transactions/presentation/pending/widgets/pending_transaction_nav_buttons.dart";
@@ -128,9 +127,6 @@ class _PendingReconciliationDetailPanelState
             repo: repo,
             existing: tx,
             presentation: TransactionEditorPresentation.embedded,
-            onSaved: () {
-              ref.read(pendingControllerProvider.notifier).reload();
-            },
             footerActions: PendingEditorActionBar(
               onSave: () => _editorKey.currentState?.saveTransaction(),
               onDelete: () => _editorKey.currentState?.deleteTransaction(),

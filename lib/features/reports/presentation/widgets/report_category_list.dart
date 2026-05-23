@@ -42,6 +42,7 @@ class ReportCategoryList extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         for (var i = 0; i < slices.length; i++)
           ReportCategoryRow(
+            key: ValueKey("report-category-${slices[i].id}"),
             slice: slices[i],
             isIncome: isIncome,
             highlighted: touchedIndex == i,

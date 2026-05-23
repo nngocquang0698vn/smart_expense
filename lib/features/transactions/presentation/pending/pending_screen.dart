@@ -255,7 +255,7 @@ class _PendingContentState extends ConsumerState<_PendingContent> {
             ),
           )
         else
-          ..._transactionSlivers(
+          _transactionSliver(
             context,
             filtered: filtered,
             categoryMap: viewModel.categoryMap,
@@ -263,9 +263,7 @@ class _PendingContentState extends ConsumerState<_PendingContent> {
             onSelect: _selectTransaction,
             onConfirm: _confirmPending,
           ),
-        const SliverToBoxAdapter(
-          child: SizedBox(height: AppInsets.listBottom),
-        ),
+        const SliverToBoxAdapter(child: SizedBox(height: AppInsets.listBottom)),
       ],
     );
   }
@@ -300,7 +298,7 @@ class _PendingListPane extends StatelessWidget {
 
     return CustomScrollView(
       slivers: [
-        ..._transactionSlivers(
+        _transactionSliver(
           context,
           filtered: filtered,
           categoryMap: viewModel.categoryMap,
@@ -308,15 +306,13 @@ class _PendingListPane extends StatelessWidget {
           onSelect: onSelect,
           onConfirm: onConfirm,
         ),
-        const SliverToBoxAdapter(
-          child: SizedBox(height: AppInsets.listBottom),
-        ),
+        const SliverToBoxAdapter(child: SizedBox(height: AppInsets.listBottom)),
       ],
     );
   }
 }
 
-List<Widget> _transactionSlivers(
+Widget _transactionSliver(
   BuildContext context, {
   required List<LedgerTransaction> filtered,
   required Map<String, LedgerCategory> categoryMap,
@@ -324,22 +320,23 @@ List<Widget> _transactionSlivers(
   required Future<void> Function(String) onSelect,
   required Future<void> Function(LedgerTransaction) onConfirm,
 }) {
-  final buckets = groupByDay(filtered);
-  return [
-    for (final bucket in buckets) ...[
-      SliverToBoxAdapter(
-        child: TxDayHeader(
-          day: bucket.day,
-          totalVnd: bucket.items.fold(
-            0,
-            (sum, transaction) => sum + transaction.amountVnd,
-          ),
-          count: bucket.items.length,
-        ),
-      ),
-      ...bucket.items.map(
-        (transaction) => SliverToBoxAdapter(
-          key: ValueKey("pending-${transaction.id}"),
+  final entries = _pendingListEntries(filtered);
+  return SliverList(
+    delegate: SliverChildBuilderDelegate(
+      (context, index) {
+        final entry = entries[index];
+        final transaction = entry.transaction;
+        if (transaction == null) {
+          return TxDayHeader(
+            key: entry.key,
+            day: entry.day!,
+            totalVnd: entry.totalVnd,
+            count: entry.count,
+          );
+        }
+
+        return KeyedSubtree(
+          key: entry.key,
           child: TxRow(
             key: ValueKey(transaction.id),
             transaction: transaction,
@@ -353,8 +350,56 @@ List<Widget> _transactionSlivers(
             ),
             onTap: () => onSelect(transaction.id),
           ),
+        );
+      },
+      childCount: entries.length,
+      findChildIndexCallback: (key) {
+        for (var i = 0; i < entries.length; i++) {
+          if (entries[i].key == key) return i;
+        }
+        return null;
+      },
+    ),
+  );
+}
+
+List<_PendingListEntry> _pendingListEntries(List<LedgerTransaction> filtered) {
+  final buckets = groupByDay(filtered);
+  return [
+    for (final bucket in buckets) ...[
+      _PendingListEntry.header(
+        day: bucket.day,
+        totalVnd: bucket.items.fold(
+          0,
+          (sum, transaction) => sum + transaction.amountVnd,
         ),
+        count: bucket.items.length,
       ),
+      ...bucket.items.map(_PendingListEntry.transaction),
     ],
   ];
+}
+
+class _PendingListEntry {
+  const _PendingListEntry.header({
+    required this.day,
+    required this.totalVnd,
+    required this.count,
+  }) : transaction = null;
+
+  const _PendingListEntry.transaction(this.transaction)
+    : day = null,
+      totalVnd = 0,
+      count = 0;
+
+  final DateTime? day;
+  final int totalVnd;
+  final int count;
+  final LedgerTransaction? transaction;
+
+  Key get key {
+    final tx = transaction;
+    if (tx != null) return ValueKey("pending-${tx.id}");
+    return ValueKey("pending-day-${day!.microsecondsSinceEpoch}");
+  }
 }
