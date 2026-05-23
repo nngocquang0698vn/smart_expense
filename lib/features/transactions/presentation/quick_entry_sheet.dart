@@ -10,7 +10,6 @@ import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
-import "package:smart_expense/shared/components/app_voice_note_section.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_picker_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
@@ -285,17 +284,12 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
         return TransactionKeypadScaffold(
           keypadVisible: _amountKeypadOpen,
           keypad: _amountKeypad(),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── Header with close button ──────────────────────────────
-                  TransactionSheetHeader(
-                    title: sheetTitle,
-                    onClose: _handleClose,
-                  ),
+          child: TransactionSheetScrollBody(
+            children: [
+              TransactionSheetHeader(
+                title: sheetTitle,
+                onClose: _handleClose,
+              ),
                   const SizedBox(height: AppSpacing.sm),
                   TransactionEntryForm(
                     initialAmount: _amountKey,
@@ -314,28 +308,42 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                     images: _images,
                     onPickImage: _pickImage,
                     onDeleteImage: _removeImage,
+                    audio: _audio,
+                    onAudioChanged: (audio) => setState(() => _audio = audio),
+                    autoStartVoiceRecording:
+                        widget.mode == QuickEntryMode.voice,
                     amountAlwaysShowKeypad: widget.mode == QuickEntryMode.tap,
                     amountAutofocus: widget.mode == QuickEntryMode.tap,
                     amountErrorText: _validationMessageFor(
                       TransactionDraftValidationError.amountRequired,
                     ),
                     amountKeypadOpen: _amountKeypadOpen,
-                    onAmountTap: () => setState(() => _amountKeypadOpen = true),
+                    onAmountTap: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      setState(() => _amountKeypadOpen = true);
+                    },
                     onAmountDone: () =>
                         setState(() => _amountKeypadOpen = false),
-                    titleField: AppTextField(
-                      controller: _titleCtrl,
-                      labelText: context.l10n.titleOptional,
-                    ),
-                    mediaSections: [
-                      AppVoiceNoteSection(
-                        audio: _audio,
-                        showWhenEmpty: true,
-                        autoStartRecording:
-                            widget.mode == QuickEntryMode.voice,
-                        onChanged: (audio) => setState(() => _audio = audio),
+                    onDismissAmountKeypad: () {
+                      if (_amountKeypadOpen) {
+                        setState(() => _amountKeypadOpen = false);
+                      }
+                    },
+                    titleField: Focus(
+                      onFocusChange: (focused) {
+                        if (focused && _amountKeypadOpen) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              setState(() => _amountKeypadOpen = false);
+                            }
+                          });
+                        }
+                      },
+                      child: AppTextField(
+                        controller: _titleCtrl,
+                        labelText: context.l10n.titleOptional,
                       ),
-                    ],
+                    ),
                     categorySection: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -384,14 +392,12 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                   const SizedBox(height: AppSpacing.sm),
 
                   // ── Action buttons ────────────────────────────────────────
-                  AppPrimaryButton(
-                    label: context.l10n.saveTransaction,
-                    icon: Icons.save_rounded,
-                    onPressed: () => _save(cats),
-                  ),
-                ],
+              AppPrimaryButton(
+                label: context.l10n.saveTransaction,
+                icon: Icons.save_rounded,
+                onPressed: () => _save(cats),
               ),
-            ),
+            ],
           ),
         );
       },

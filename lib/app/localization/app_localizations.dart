@@ -124,6 +124,16 @@ class AppLocalizations {
   String get noPendingShort => text("noPendingShort");
   String get note => text("note");
   String get noteOptional => text("noteOptional");
+  String get noteVoiceHelper => text("noteVoiceHelper");
+  String get micRecordNote => text("micRecordNote");
+  String get micStopRecording => text("micStopRecording");
+  String get micRecordAgain => text("micRecordAgain");
+  String get voiceNoteRecorded => text("voiceNoteRecorded");
+  String get voiceNoteSaving => text("voiceNoteSaving");
+  String get voiceNoteRecording => text("voiceNoteRecording");
+  String get voiceNotePaused => text("voiceNotePaused");
+  String get replaceVoiceNoteTitle => text("replaceVoiceNoteTitle");
+  String get replaceVoiceNoteMessage => text("replaceVoiceNoteMessage");
   String get notificationErrorTitle => text("notificationErrorTitle");
   String get notificationInfoTitle => text("notificationInfoTitle");
   String get notificationSuccessTitle => text("notificationSuccessTitle");
@@ -376,6 +386,18 @@ const _vi = {
   "noPendingShort": "Không có giao dịch chờ",
   "note": "Ghi chú",
   "noteOptional": "Ghi chú (tuỳ chọn)",
+  "noteVoiceHelper":
+      "Đang vội? Bấm micro để ghi âm nhanh, rồi đối soát và hoàn thiện giao dịch sau.",
+  "micRecordNote": "Ghi âm ghi chú",
+  "micStopRecording": "Dừng ghi âm",
+  "micRecordAgain": "Ghi âm lại",
+  "voiceNoteRecorded": "Đã ghi âm",
+  "voiceNoteSaving": "Đang lưu ghi âm…",
+  "voiceNoteRecording": "Đang ghi âm",
+  "voiceNotePaused": "Đang tạm dừng ghi âm",
+  "replaceVoiceNoteTitle": "Ghi âm lại?",
+  "replaceVoiceNoteMessage":
+      "Bản ghi hiện tại sẽ bị thay thế. Bạn có muốn tiếp tục?",
   "notificationErrorTitle": "Có lỗi xảy ra",
   "notificationInfoTitle": "Thông báo",
   "notificationSuccessTitle": "Thành công",

@@ -2,8 +2,9 @@ import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 import "package:smart_expense/core/utils/attachment_capture_policy.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
-import "package:smart_expense/shared/components/app_text_field.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/shared/components/form_amount_field.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_note_input.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 import "package:smart_expense/shared/components/app_date_picker.dart";
@@ -12,8 +13,8 @@ import "package:smart_expense/features/transactions/presentation/widgets/transac
 
 /// Shared fields for quick entry and full transaction editor sheets.
 ///
-/// Thứ tự: tiêu đề → Chi tiêu/Thu nhập → số tiền → danh mục → ngày → ghi chú
-/// → [mediaSections] (ghi âm) → ảnh. Toggle chờ đối soát đặt riêng phía trên nút lưu.
+/// Thứ tự: tiêu đề → Chi tiêu/Thu nhập → số tiền → danh mục → ngày → ghi chú+ghi âm
+/// → ảnh. Toggle chờ đối soát đặt riêng phía trên nút lưu.
 class TransactionEntryForm extends StatelessWidget {
   const TransactionEntryForm({
     required this.initialAmount,
@@ -25,12 +26,15 @@ class TransactionEntryForm extends StatelessWidget {
     required this.images,
     required this.onPickImage,
     required this.onDeleteImage,
+    required this.onAudioChanged,
     required this.categorySection,
+    this.audio,
     this.titleField,
     this.beforeAmount = const [],
     this.afterAmount = const [],
-    this.mediaSections = const [],
     this.onSideChanged,
+    this.autoStartVoiceRecording = false,
+    this.onDismissAmountKeypad,
     this.dateStyle = AppDatePickerStyle.card,
     this.amountVariant = FormAmountFieldVariant.prominent,
     this.amountAlwaysShowKeypad = false,
@@ -59,11 +63,14 @@ class TransactionEntryForm extends StatelessWidget {
   final List<ImageAttachmentModel> images;
   final ValueChanged<ImageSource> onPickImage;
   final ValueChanged<ImageAttachmentModel> onDeleteImage;
+  final AudioAttachmentModel? audio;
+  final ValueChanged<AudioAttachmentModel?> onAudioChanged;
+  final bool autoStartVoiceRecording;
+  final VoidCallback? onDismissAmountKeypad;
   final Widget categorySection;
   final Widget? titleField;
   final List<Widget> beforeAmount;
   final List<Widget> afterAmount;
-  final List<Widget> mediaSections;
   final bool amountAlwaysShowKeypad;
   final bool amountAutofocus;
   final String? amountErrorText;
@@ -114,15 +121,14 @@ class TransactionEntryForm extends StatelessWidget {
           onDateChanged: onDateChanged,
         ),
         const SizedBox(height: AppSpacing.sm),
-        AppTextField(
-          controller: noteController,
-          labelText: context.l10n.noteOptional,
-          maxLines: 2,
+        TransactionNoteInput(
+          noteController: noteController,
+          audio: audio,
+          onAudioChanged: onAudioChanged,
+          autoStartRecording: autoStartVoiceRecording,
+          amountKeypadOpen: amountKeypadOpen,
+          onDismissAmountKeypad: onDismissAmountKeypad,
         ),
-        if (mediaSections.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.sm),
-          ...mediaSections,
-        ],
         const SizedBox(height: AppSpacing.sm),
         TransactionImageAttachments(
           images: images,

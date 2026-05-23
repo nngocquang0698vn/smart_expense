@@ -77,3 +77,25 @@ Future<bool> showDeleteVoiceNoteDialog(BuildContext context) async {
   );
   return result == true;
 }
+
+/// Returns `true` if the user confirmed replacing the current voice note.
+Future<bool> showReplaceVoiceNoteDialog(BuildContext context) async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(context.l10n.replaceVoiceNoteTitle),
+      content: Text(context.l10n.replaceVoiceNoteMessage),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text(context.l10n.keepVoiceNote),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(context.l10n.reRecord),
+        ),
+      ],
+    ),
+  );
+  return result == true;
+}

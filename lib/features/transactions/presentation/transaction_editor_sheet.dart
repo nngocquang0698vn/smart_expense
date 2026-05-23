@@ -11,7 +11,6 @@ import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
 import "package:smart_expense/shared/components/app_notification.dart";
-import "package:smart_expense/shared/components/app_voice_note_section.dart";
 import "package:smart_expense/shared/components/amount_keypad.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
 import "package:smart_expense/features/categories/application/category_selection_resolver.dart";
@@ -360,27 +359,34 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
         return TransactionKeypadScaffold(
           keypadVisible: _amountKeypadOpen,
           keypad: _amountKeypad(),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Header row with close button
-                  TransactionSheetHeader(
-                    title: widget.existing == null
-                        ? context.l10n.addTransaction
-                        : context.l10n.editTransaction,
-                    onClose: _handleClose,
-                  ),
+          child: TransactionSheetScrollBody(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            children: [
+              TransactionSheetHeader(
+                title: widget.existing == null
+                    ? context.l10n.addTransaction
+                    : context.l10n.editTransaction,
+                onClose: _handleClose,
+              ),
                   const SizedBox(height: AppSpacing.sm),
 
                   TransactionEntryForm(
-                    titleField: AppTextField(
-                      controller: _titleCtrl,
-                      labelText: context.l10n.transactionTitle,
-                      errorText: _validationMessageFor(
-                        TransactionDraftValidationError.titleRequired,
+                    titleField: Focus(
+                      onFocusChange: (focused) {
+                        if (focused && _amountKeypadOpen) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              setState(() => _amountKeypadOpen = false);
+                            }
+                          });
+                        }
+                      },
+                      child: AppTextField(
+                        controller: _titleCtrl,
+                        labelText: context.l10n.transactionTitle,
+                        errorText: _validationMessageFor(
+                          TransactionDraftValidationError.titleRequired,
+                        ),
                       ),
                     ),
                     initialAmount: _amountKey,
@@ -405,21 +411,24 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                     images: _images,
                     onPickImage: _pickImage,
                     onDeleteImage: _removeImage,
+                    audio: _audio,
+                    onAudioChanged: (audio) => setState(() => _audio = audio),
                     imageThumbnailHeight: 96,
                     amountErrorText: _validationMessageFor(
                       TransactionDraftValidationError.amountRequired,
                     ),
                     amountKeypadOpen: _amountKeypadOpen,
-                    onAmountTap: () => setState(() => _amountKeypadOpen = true),
+                    onAmountTap: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      setState(() => _amountKeypadOpen = true);
+                    },
                     onAmountDone: () =>
                         setState(() => _amountKeypadOpen = false),
-                    mediaSections: [
-                      AppVoiceNoteSection(
-                        audio: _audio,
-                        showWhenEmpty: true,
-                        onChanged: (audio) => setState(() => _audio = audio),
-                      ),
-                    ],
+                    onDismissAmountKeypad: () {
+                      if (_amountKeypadOpen) {
+                        setState(() => _amountKeypadOpen = false);
+                      }
+                    },
                     categorySection: DropdownButtonFormField<String>(
                       dropdownColor: finance.sheetBackground,
                       style: Theme.of(
@@ -491,9 +500,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                       label: Text(context.l10n.deleteTransaction),
                     ),
                   ],
-                ],
-              ),
-            ),
+            ],
           ),
         );
       },
