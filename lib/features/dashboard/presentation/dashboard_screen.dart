@@ -403,12 +403,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final viewModel = _viewModel;
     final buckets = groupByDay(viewModel.history);
     if (buckets.isEmpty && !viewModel.loadingMore) {
-      return [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppInsets.screenH),
-          child: Text(context.l10n.noDataForFilter),
-        ),
-      ];
+      return [AppEmptyState(message: context.l10n.noDataForFilter)];
     }
     return [
       for (final b in buckets) ...[
@@ -435,10 +430,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (buckets.isEmpty && !viewModel.loadingMore) {
       return [
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppInsets.screenH),
-            child: Text(context.l10n.noDataForFilter),
-          ),
+          child: AppEmptyState(message: context.l10n.noDataForFilter),
         ),
       ];
     }
