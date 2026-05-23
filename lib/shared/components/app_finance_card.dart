@@ -10,6 +10,7 @@ class AppFinanceCard extends StatelessWidget {
     this.margin = EdgeInsets.zero,
     this.onTap,
     this.backgroundColor,
+    this.highlighted = false,
   });
 
   final Widget child;
@@ -18,13 +19,21 @@ class AppFinanceCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? backgroundColor;
 
+  /// Viền đậm kiểu input đang focus (vd. giao dịch đang chọn).
+  final bool highlighted;
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final color =
         backgroundColor ??
         Theme.of(context).cardTheme.color ??
-        Theme.of(context).colorScheme.surface;
+        cs.surface;
+    final borderColor = highlighted
+        ? cs.primary
+        : (isDark ? AppColors.darkSurfaceAlt : AppColors.border);
+    final borderWidth = highlighted ? 2.0 : 1.0;
 
     final content = Container(
       width: double.infinity,
@@ -33,9 +42,7 @@ class AppFinanceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(
-          color: isDark ? AppColors.darkSurfaceAlt : AppColors.border,
-        ),
+        border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),

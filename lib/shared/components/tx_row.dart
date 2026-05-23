@@ -18,6 +18,7 @@ class TxRow extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.showInlineAudioPlayer = false,
+    this.selected = false,
   });
 
   final LedgerTransaction transaction;
@@ -27,6 +28,7 @@ class TxRow extends StatelessWidget {
 
   /// Player ghi âm nhỏ dưới subtitle (danh sách chờ đối soát).
   final bool showInlineAudioPlayer;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +48,7 @@ class TxRow extends StatelessWidget {
 
     return AppTransactionTile(
       onTap: onTap,
+      highlighted: selected,
       leading: CircleAvatar(
         backgroundColor: color.withValues(alpha: 0.16),
         child: Icon(icon, color: color, size: 22),

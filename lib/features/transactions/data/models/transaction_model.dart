@@ -62,13 +62,25 @@ class TransactionModel {
       complete: map["complete"]! as bool,
       note: map["note"] as String?,
       audio: AudioAttachmentModel.fromMap(map["audio"]),
-      images:
-          (map["images"] as List?)
-              ?.map(ImageAttachmentModel.fromMap)
-              .whereType<ImageAttachmentModel>()
-              .toList() ??
-          const [],
+      images: _imagesFromMap(map),
     );
+  }
+
+  static List<ImageAttachmentModel> _imagesFromMap(Map<String, Object?> map) {
+    final fromList =
+        (map["images"] as List?)
+            ?.map(ImageAttachmentModel.fromMap)
+            .whereType<ImageAttachmentModel>()
+            .toList() ??
+        const <ImageAttachmentModel>[];
+    if (fromList.isNotEmpty) return fromList;
+
+    final legacy = map["image"] ?? map["receiptImage"];
+    if (legacy is Map) {
+      final single = ImageAttachmentModel.fromMap(legacy);
+      if (single != null) return [single];
+    }
+    return const [];
   }
 
   static const _unset = Object();

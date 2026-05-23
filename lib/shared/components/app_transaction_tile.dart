@@ -13,6 +13,8 @@ class AppTransactionTile extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.footer,
+    this.backgroundColor,
+    this.highlighted = false,
   });
 
   final Widget leading;
@@ -22,6 +24,8 @@ class AppTransactionTile extends StatelessWidget {
   final Widget? trailing;
   final Widget? footer;
   final VoidCallback? onTap;
+  final Color? backgroundColor;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +33,8 @@ class AppTransactionTile extends StatelessWidget {
       margin: AppInsets.cardMargin,
       padding: AppInsets.cardPadding,
       onTap: onTap,
+      backgroundColor: backgroundColor,
+      highlighted: highlighted,
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,

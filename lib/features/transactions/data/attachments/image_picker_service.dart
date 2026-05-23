@@ -14,6 +14,18 @@ class PickedImageAttachment {
   final Uint8List bytes;
 }
 
+class MultiPickImageResult {
+  const MultiPickImageResult({
+    required this.picked,
+    required this.userSelectedCount,
+    this.truncatedByLimit = false,
+  });
+
+  final List<PickedImageAttachment> picked;
+  final int userSelectedCount;
+  final bool truncatedByLimit;
+}
+
 class ImagePickerService {
   ImagePickerService({ImagePicker? picker, ImageStorageService? storage})
     : _picker = picker ?? ImagePicker(),
@@ -33,7 +45,39 @@ class ImagePickerService {
       requestFullMetadata: false,
     );
     if (file == null) return null;
+    return _processFile(file);
+  }
 
+  /// Chọn nhiều ảnh từ thư viện (Web/Android). [limit] = số ảnh tối đa nhận.
+  Future<MultiPickImageResult> pickMultipleFromGallery({required int limit}) async {
+    if (limit <= 0) {
+      return const MultiPickImageResult(picked: [], userSelectedCount: 0);
+    }
+
+    final files = await _picker.pickMultiImage(
+      maxWidth: maxWidth,
+      imageQuality: jpegQuality,
+      requestFullMetadata: false,
+    );
+    if (files.isEmpty) {
+      return const MultiPickImageResult(picked: [], userSelectedCount: 0);
+    }
+
+    final userSelectedCount = files.length;
+    final capped = files.take(limit).toList();
+    final picked = <PickedImageAttachment>[];
+    for (final file in capped) {
+      final attachment = await _processFile(file);
+      if (attachment != null) picked.add(attachment);
+    }
+    return MultiPickImageResult(
+      picked: picked,
+      userSelectedCount: userSelectedCount,
+      truncatedByLimit: userSelectedCount > limit,
+    );
+  }
+
+  Future<PickedImageAttachment?> _processFile(XFile file) async {
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty) {
       throw StateError("Ảnh đang trống. Vui lòng chọn ảnh khác.");

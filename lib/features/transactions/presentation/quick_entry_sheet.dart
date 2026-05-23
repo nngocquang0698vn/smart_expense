@@ -10,6 +10,7 @@ import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
+import "package:smart_expense/features/transactions/application/transaction_image_actions.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_picker_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
@@ -136,13 +137,17 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
   // ── Image picking ──────────────────────────────────────────────────────────
 
   Future<void> _pickImage(ImageSource source) async {
-    try {
-      final picked = await _imagePicker.pick(source);
-      if (picked == null || !mounted) return;
-      setState(() => _images.add(picked.image));
-    } catch (_) {
-      if (!mounted) return;
-      showError(context, context.l10n.imageSaveFailed);
+    final outcome = await TransactionImageActions.pickAndAdd(
+      context: context,
+      picker: _imagePicker,
+      source: source,
+      currentImageCount: _images.length,
+    );
+    if (!mounted) return;
+    TransactionImageActions.notifyOutcome(context, outcome);
+    if (outcome.status == TransactionImagePickStatus.added ||
+        outcome.status == TransactionImagePickStatus.addedPartial) {
+      setState(() => _images.addAll(outcome.images));
     }
   }
 
