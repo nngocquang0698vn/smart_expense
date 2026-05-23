@@ -108,6 +108,8 @@ class AppLocalizations {
   String get historyTitle => text("historyTitle");
   String get homeTitle => text("homeTitle");
   String get imageSaveFailed => text("imageSaveFailed");
+  String get imagePreviewLoadFailed => text("imagePreviewLoadFailed");
+  String get imagePreviewTapHint => text("imagePreviewTapHint");
   String get income => text("income");
   String get keepVoiceNote => text("keepVoiceNote");
   String get loading => text("loading");
@@ -124,6 +126,16 @@ class AppLocalizations {
   String get noPendingShort => text("noPendingShort");
   String get note => text("note");
   String get noteOptional => text("noteOptional");
+  String get noteVoiceHelper => text("noteVoiceHelper");
+  String get micRecordNote => text("micRecordNote");
+  String get micStopRecording => text("micStopRecording");
+  String get micRecordAgain => text("micRecordAgain");
+  String get voiceNoteRecorded => text("voiceNoteRecorded");
+  String get voiceNoteSaving => text("voiceNoteSaving");
+  String get voiceNoteRecording => text("voiceNoteRecording");
+  String get voiceNotePaused => text("voiceNotePaused");
+  String get replaceVoiceNoteTitle => text("replaceVoiceNoteTitle");
+  String get replaceVoiceNoteMessage => text("replaceVoiceNoteMessage");
   String get notificationErrorTitle => text("notificationErrorTitle");
   String get notificationInfoTitle => text("notificationInfoTitle");
   String get notificationSuccessTitle => text("notificationSuccessTitle");
@@ -205,6 +217,8 @@ class AppLocalizations {
       text("quickEntryReceiptPickSubtitle");
   String get quickEntryReceiptPickTitle => text("quickEntryReceiptPickTitle");
   String get quickEntryTap => text("quickEntryTap");
+  String get quickConfirmPendingSubtitle => text("quickConfirmPendingSubtitle");
+  String get quickConfirmPendingTitle => text("quickConfirmPendingTitle");
   String get quickEntryTapSubtitle => text("quickEntryTapSubtitle");
   String get quickEntryVoice => text("quickEntryVoice");
   String get quickEntryVoiceSubtitle => text("quickEntryVoiceSubtitle");
@@ -291,11 +305,14 @@ const _vi = {
   "pendingTransactionsSubtitle": "Mở danh sách đối soát",
   "pendingTransactionsTitle": "Giao dịch chờ đối soát",
   "profileTitle": "Cá nhân",
+  "quickConfirmPendingSubtitle":
+      "Ấn Xác nhận là hoàn tất, không hỏi lại",
+  "quickConfirmPendingTitle": "Xác nhận nhanh",
   "quickEntryReceiptCaptureSubtitle": "Lưu ảnh hoá đơn để đối soát sau",
   "quickEntryReceiptCaptureTitle": "Chụp ảnh hoá đơn",
   "quickEntryReceiptPickSubtitle": "Chọn ảnh từ máy để lưu hoá đơn đối soát",
   "quickEntryReceiptPickTitle": "Chọn ảnh hoá đơn",
-  "quickEntryTapSubtitle": "Nhập liệu cực nhanh với một lần chạm",
+  "quickEntryTapSubtitle": "Nhập liệu cực nhanh với vài lần chạm",
   "quickEntryVoiceSubtitle": "Ghi nhanh một bản ghi âm để đối soát sau",
   "quickTransactionTitle": "Thêm giao dịch nhanh",
   "seedColorLabel": "Màu chủ đạo",
@@ -367,6 +384,8 @@ const _vi = {
   "editTransaction": "Sửa giao dịch",
   "genericError": "Đã có lỗi xảy ra. Vui lòng thử lại.",
   "imageSaveFailed": "Không thể lưu ảnh. Vui lòng thử lại.",
+  "imagePreviewLoadFailed": "Không tải được ảnh. Vui lòng thử lại.",
+  "imagePreviewTapHint": "Nhấn để xem ảnh gốc",
   "keepVoiceNote": "Giữ lại",
   "newCategory": "Hạng mục mới",
   "noCategories": "Chưa có hạng mục nào.",
@@ -376,6 +395,18 @@ const _vi = {
   "noPendingShort": "Không có giao dịch chờ",
   "note": "Ghi chú",
   "noteOptional": "Ghi chú (tuỳ chọn)",
+  "noteVoiceHelper":
+      "Đang vội? Bấm micro để ghi âm nhanh, rồi đối soát và hoàn thiện giao dịch sau.",
+  "micRecordNote": "Ghi âm ghi chú",
+  "micStopRecording": "Dừng ghi âm",
+  "micRecordAgain": "Ghi âm lại",
+  "voiceNoteRecorded": "Đã ghi âm",
+  "voiceNoteSaving": "Đang lưu ghi âm…",
+  "voiceNoteRecording": "Đang ghi âm",
+  "voiceNotePaused": "Đang tạm dừng ghi âm",
+  "replaceVoiceNoteTitle": "Ghi âm lại?",
+  "replaceVoiceNoteMessage":
+      "Bản ghi hiện tại sẽ bị thay thế. Bạn có muốn tiếp tục?",
   "notificationErrorTitle": "Có lỗi xảy ra",
   "notificationInfoTitle": "Thông báo",
   "notificationSuccessTitle": "Thành công",
@@ -384,7 +415,8 @@ const _vi = {
   "otherCategory": "Khác",
   "pausePlayback": "Tạm dừng",
   "pendingSubtitleDefault": "Bật để chuyển vào danh sách đối soát.",
-  "pendingSubtitleWithMedia": "Có audio/ảnh — nên bật để đối soát sau.",
+  "pendingSubtitleWithMedia":
+      "Đang bận — Đối soát và hoàn thiện giao dịch sau.",
   "pickPhoto": "Chọn ảnh",
   "pickYearTitle": "Chọn năm",
   "playBack": "Nghe lại",

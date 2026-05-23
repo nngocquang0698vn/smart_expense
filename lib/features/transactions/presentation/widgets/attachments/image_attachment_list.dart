@@ -2,8 +2,10 @@ import "dart:typed_data";
 
 import "package:flutter/material.dart";
 
+import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/attachments/image_attachment_preview.dart";
 
 class ImageAttachmentList extends StatelessWidget {
   const ImageAttachmentList({
@@ -27,10 +29,12 @@ class ImageAttachmentList extends StatelessWidget {
         itemCount: images.length,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
+          final image = images[index];
           return _ImageAttachmentTile(
-            image: images[index],
+            key: ValueKey(image.id),
+            image: image,
             size: height,
-            onDelete: () => onDelete(images[index]),
+            onDelete: () => onDelete(image),
           );
         },
       ),
@@ -40,6 +44,7 @@ class ImageAttachmentList extends StatelessWidget {
 
 class _ImageAttachmentTile extends StatefulWidget {
   const _ImageAttachmentTile({
+    super.key,
     required this.image,
     required this.size,
     required this.onDelete,
@@ -76,38 +81,58 @@ class _ImageAttachmentTileState extends State<_ImageAttachmentTile> {
     return Uint8List.fromList(bytes);
   }
 
+  void _openPreview(BuildContext context) {
+    showImageAttachmentPreview(context, image: widget.image);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final previewHint = context.l10n.imagePreviewTapHint;
     return Stack(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: FutureBuilder<Uint8List>(
-            future: _bytes,
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return _ImageStateBox(
-                  size: widget.size,
-                  icon: Icons.broken_image_outlined,
-                  label: "Lỗi ảnh",
-                );
-              }
-              if (!snapshot.hasData) {
-                return _ImageStateBox(
-                  size: widget.size,
-                  icon: Icons.image_outlined,
-                  label: "Đang tải",
-                );
-              }
-              return Image.memory(
+        FutureBuilder<Uint8List>(
+          future: _bytes,
+          builder: (context, snapshot) {
+            final canPreview = snapshot.hasData && !snapshot.hasError;
+            Widget thumb;
+            if (snapshot.hasError) {
+              thumb = _ImageStateBox(
+                size: widget.size,
+                icon: Icons.broken_image_outlined,
+                label: "Lỗi ảnh",
+              );
+            } else if (!snapshot.hasData) {
+              thumb = _ImageStateBox(
+                size: widget.size,
+                icon: Icons.image_outlined,
+                label: "Đang tải",
+              );
+            } else {
+              thumb = Image.memory(
                 snapshot.data!,
                 width: widget.size,
                 height: widget.size,
                 fit: BoxFit.cover,
               );
-            },
-          ),
+            }
+
+            return Semantics(
+              button: canPreview,
+              label: canPreview ? previewHint : null,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: canPreview ? () => _openPreview(context) : null,
+                  borderRadius: BorderRadius.circular(8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: thumb,
+                  ),
+                ),
+              ),
+            );
+          },
         ),
         Positioned(
           top: 2,

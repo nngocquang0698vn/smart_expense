@@ -11,7 +11,7 @@ import "package:smart_expense/shared/components/tx_row.dart";
 import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
-import "package:smart_expense/shared/components/app_confirm_bottom_sheet.dart";
+import "package:smart_expense/features/transactions/application/confirm_pending_flow.dart";
 import "package:smart_expense/shared/components/app_empty_state.dart";
 import "package:smart_expense/features/transactions/presentation/date_filter_sheet.dart";
 import "package:smart_expense/features/transactions/presentation/transaction_editor_sheet.dart";
@@ -88,21 +88,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     existing: t,
   );
 
-  Future<void> _confirmPending(LedgerTransaction t) async {
-    final ok = await AppConfirmBottomSheet.show(
-      context,
-      title: context.l10n.confirmPendingTitle,
-      message: context.l10n.confirmPendingMessage,
-    );
-    if (!ok || !mounted) return;
-    await ref.read(ledgerRepositoryProvider).confirmPending(t.id);
-  }
+  Future<void> _confirmPending(LedgerTransaction t) =>
+      runConfirmPendingFlow(context: context, ref: ref, transactionId: t.id);
 
-  Widget _pendingTrailing(LedgerTransaction t) => buildPendingActions(
+  Widget? _pendingTrailing(LedgerTransaction t) => buildPendingConfirmButton(
     context: context,
     transaction: t,
     onConfirm: () => _confirmPending(t),
-    onEdit: () => _openEditor(t),
   );
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -211,8 +203,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         _PendingSubheader(items: pendingAll),
                         ...pendingAll.map(
                           (t) => TxRow(
+                            key: ValueKey("dashboard-pending-${t.id}"),
                             transaction: t,
                             category: catMap[t.categoryId],
+                            showInlineAudioPlayer: true,
                             trailing: _pendingTrailing(t),
                             onTap: () => _openEditor(t),
                           ),
@@ -354,9 +348,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             SliverToBoxAdapter(child: _PendingSubheader(items: pendingAll)),
             ...pendingPreview.map(
               (t) => SliverToBoxAdapter(
+                key: ValueKey("dashboard-pending-preview-${t.id}"),
                 child: TxRow(
+                  key: ValueKey(t.id),
                   transaction: t,
                   category: catMap[t.categoryId],
+                  showInlineAudioPlayer: true,
                   trailing: _pendingTrailing(t),
                   onTap: () => _openEditor(t),
                 ),
@@ -422,6 +419,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         ...b.items.map(
           (t) => TxRow(
+            key: ValueKey("dashboard-history-${t.id}"),
             transaction: t,
             category: catMap[t.categoryId],
             onTap: () => _openEditor(t),
@@ -455,7 +453,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         ...b.items.map(
           (t) => SliverToBoxAdapter(
+            key: ValueKey("dashboard-history-sliver-${t.id}"),
             child: TxRow(
+              key: ValueKey(t.id),
               transaction: t,
               category: catMap[t.categoryId],
               onTap: () => _openEditor(t),

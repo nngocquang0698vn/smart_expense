@@ -1,5 +1,5 @@
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:smart_expense/core/utils/attachment_capture_policy.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:image_picker/image_picker.dart";
 import "package:smart_expense/core/utils/amount_input_notifier.dart";
@@ -10,7 +10,6 @@ import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
-import "package:smart_expense/shared/components/app_voice_note_section.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_picker_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
@@ -18,7 +17,7 @@ import "package:smart_expense/features/transactions/domain/entities/attachments/
 import "package:smart_expense/features/transactions/application/transaction_draft_validator.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/shared/components/amount_keypad.dart";
-import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_chips.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_section.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_sheet_shell.dart";
@@ -52,6 +51,8 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
 
   final _titleCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
+  final Object _voiceRecorderSessionId = Object();
+  late final Future<List<LedgerCategory>> _categoriesFuture;
 
   bool _income = false;
   bool _pending = false;
@@ -74,9 +75,6 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
 
   bool get _hasMedia => _audio != null || _images.isNotEmpty;
 
-  // Camera available on native platforms only
-  bool get _showCamera => !kIsWeb;
-
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
       ref.read(amountInputProvider(_amountKey)) != _initAmount ||
@@ -87,6 +85,9 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
   @override
   void initState() {
     super.initState();
+    _categoriesFuture = widget.repo.categories().then(
+      (list) => list.where((c) => c.enabled).toList(),
+    );
     _pending = widget.mode != QuickEntryMode.tap;
     _amountKeypadOpen = widget.mode == QuickEntryMode.tap;
 
@@ -99,7 +100,9 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         await _pickImage(
-          _showCamera ? ImageSource.camera : ImageSource.gallery,
+          AttachmentCapturePolicy.showReceiptCameraButton
+              ? ImageSource.camera
+              : ImageSource.gallery,
         );
       });
     }
@@ -107,9 +110,6 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
     // Snapshot initial values so we can detect dirty state
     _initTitle = _titleCtrl.text;
     _initAmount = _amountKey;
-
-    _titleCtrl.addListener(() => setState(() {}));
-    _noteCtrl.addListener(() => setState(() {}));
   }
 
   @override
@@ -139,10 +139,7 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
     try {
       final picked = await _imagePicker.pick(source);
       if (picked == null || !mounted) return;
-      setState(() {
-        _images.add(picked.image);
-        _pending = true;
-      });
+      setState(() => _images.add(picked.image));
     } catch (_) {
       if (!mounted) return;
       showError(context, context.l10n.imageSaveFailed);
@@ -260,15 +257,12 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
     ref.listen(amountInputProvider(_amountKey), (_, next) {
       if (_validationError == TransactionDraftValidationError.amountRequired &&
           next > 0) {
-        _validationError = null;
+        setState(() => _validationError = null);
       }
-      setState(() {});
     });
 
     return FutureBuilder<List<LedgerCategory>>(
-      future: widget.repo.categories().then(
-        (list) => list.where((c) => c.enabled).toList(),
-      ),
+      future: _categoriesFuture,
       builder: (context, snap) {
         if (!snap.hasData) {
           return const Padding(
@@ -289,119 +283,99 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
         return TransactionKeypadScaffold(
           keypadVisible: _amountKeypadOpen,
           keypad: _amountKeypad(),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── Header with close button ──────────────────────────────
-                  TransactionSheetHeader(
-                    title: sheetTitle,
-                    onClose: _handleClose,
+          child: TransactionSheetScrollBody(
+            compact: true,
+            children: [
+              TransactionSheetHeader(title: sheetTitle, onClose: _handleClose),
+              const SizedBox(height: AppSpacing.xs),
+              TransactionEntryForm(
+                density: TransactionFormDensity.compact,
+                initialAmount: _amountKey,
+                noteController: _noteCtrl,
+                isIncome: _income,
+                onIncomeChanged: (income) => setState(() {
+                  _income = income;
+                  _categoryId = null;
+                  if (_validationError ==
+                      TransactionDraftValidationError.categoryRequired) {
+                    _validationError = null;
+                  }
+                }),
+                date: _date,
+                onDateChanged: (d) => setState(() => _date = d),
+                images: _images,
+                onPickImage: _pickImage,
+                onDeleteImage: _removeImage,
+                audio: _audio,
+                onAudioChanged: (audio) => setState(() => _audio = audio),
+                voiceRecorderSessionId: _voiceRecorderSessionId,
+                autoStartVoiceRecording: widget.mode == QuickEntryMode.voice,
+                amountAlwaysShowKeypad: widget.mode == QuickEntryMode.tap,
+                amountAutofocus: widget.mode == QuickEntryMode.tap,
+                amountErrorText: _validationMessageFor(
+                  TransactionDraftValidationError.amountRequired,
+                ),
+                amountKeypadOpen: _amountKeypadOpen,
+                onAmountTap: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  setState(() => _amountKeypadOpen = true);
+                },
+                onAmountDone: () => setState(() => _amountKeypadOpen = false),
+                onDismissAmountKeypad: () {
+                  if (_amountKeypadOpen) {
+                    setState(() => _amountKeypadOpen = false);
+                  }
+                },
+                titleField: Focus(
+                  onFocusChange: (focused) {
+                    if (focused && _amountKeypadOpen) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          setState(() => _amountKeypadOpen = false);
+                        }
+                      });
+                    }
+                  },
+                  child: AppTextField(
+                    controller: _titleCtrl,
+                    labelText: context.l10n.titleOptional,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TransactionEntryForm(
-                    typeToggleFirst: true,
-                    showSelectedIcon: false,
-                    initialAmount: _amountKey,
-                    noteController: _noteCtrl,
-                    isIncome: _income,
-                    onIncomeChanged: (income) => setState(() {
-                      _income = income;
-                      _categoryId = null;
-                      if (_validationError ==
-                          TransactionDraftValidationError.categoryRequired) {
-                        _validationError = null;
-                      }
-                    }),
-                    date: _date,
-                    onDateChanged: (d) => setState(() => _date = d),
-                    pending: _pending,
-                    onPendingChanged: (v) => setState(() => _pending = v),
-                    pendingSubtitle: _hasMedia
-                        ? context.l10n.pendingSubtitleWithMedia
-                        : context.l10n.pendingSubtitleDefault,
-                    images: _images,
-                    showCamera: _showCamera,
-                    onPickImage: _pickImage,
-                    onDeleteImage: _removeImage,
-                    amountAlwaysShowKeypad: widget.mode == QuickEntryMode.tap,
-                    amountAutofocus: widget.mode == QuickEntryMode.tap,
-                    amountErrorText: _validationMessageFor(
-                      TransactionDraftValidationError.amountRequired,
-                    ),
-                    amountKeypadOpen: _amountKeypadOpen,
-                    onAmountTap: () => setState(() => _amountKeypadOpen = true),
-                    onAmountDone: () =>
-                        setState(() => _amountKeypadOpen = false),
-                    titleField: AppTextField(
-                      controller: _titleCtrl,
-                      labelText: context.l10n.titleOptional,
-                    ),
-                    mediaSections: [
-                      if (widget.mode == QuickEntryMode.voice ||
-                          _audio != null) ...[
-                        AppVoiceNoteSection(
-                          audio: _audio,
-                          autoStartRecording:
-                              widget.mode == QuickEntryMode.voice,
-                          onChanged: (audio) => setState(() {
-                            _audio = audio;
-                            if (audio != null) _pending = true;
-                          }),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                      ],
-                    ],
-                    categorySection: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          context.l10n.category,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        TransactionCategoryChips(
-                          categories: cats,
-                          isIncome: _income,
-                          selectedId: _categoryId,
-                          onSelected: (id) {
-                            setState(() => _categoryId = id);
-                            _clearValidation(
-                              TransactionDraftValidationError.categoryRequired,
-                            );
-                          },
-                        ),
-                        if (_validationError ==
-                            TransactionDraftValidationError
-                                .categoryRequired) ...[
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            _validationMessage(
-                              TransactionDraftValidationError.categoryRequired,
-                            ),
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.error,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // ── Action buttons ────────────────────────────────────────
-                  AppPrimaryButton(
-                    label: context.l10n.saveTransaction,
-                    icon: Icons.save_rounded,
-                    onPressed: () => _save(cats),
-                  ),
-                ],
+                ),
+                categorySection: TransactionCategorySection(
+                  categories: cats,
+                  includeSelectedFrom: cats,
+                  isIncome: _income,
+                  selectedId: _categoryId,
+                  onSelected: (id) {
+                    setState(() => _categoryId = id);
+                    _clearValidation(
+                      TransactionDraftValidationError.categoryRequired,
+                    );
+                  },
+                  errorText:
+                      _validationError ==
+                          TransactionDraftValidationError.categoryRequired
+                      ? _validationMessage(
+                          TransactionDraftValidationError.categoryRequired,
+                        )
+                      : null,
+                ),
               ),
-            ),
+              const SizedBox(height: AppSpacing.xs),
+              TransactionPendingSwitch(
+                pending: _pending,
+                onChanged: (v) => setState(() => _pending = v),
+                subtitle: _hasMedia
+                    ? context.l10n.pendingSubtitleWithMedia
+                    : context.l10n.pendingSubtitleDefault,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              AppPrimaryButton(
+                label: context.l10n.saveTransaction,
+                icon: Icons.save_rounded,
+                onPressed: () => _save(cats),
+              ),
+            ],
           ),
         );
       },

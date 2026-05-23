@@ -1,10 +1,11 @@
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
 import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/core/utils/attachment_capture_policy.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/features/transactions/presentation/quick_entry_sheet.dart";
+import "package:smart_expense/shared/design_system/tokens/app_transaction_entry_tokens.dart";
 
 Future<void> handleAddFab(BuildContext context, LedgerRepository repo) async {
   final choice = await _showAddOptionsSheet(context);
@@ -19,70 +20,95 @@ Future<QuickEntryMode?> _showAddOptionsSheet(BuildContext context) {
     context: context,
     showDragHandle: true,
     backgroundColor: surface,
-    builder: (ctx) {
-      final cs = Theme.of(ctx).colorScheme;
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    ctx.l10n.quickTransactionTitle,
-                    style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              _OptionCard(
-                icon: Icons.touch_app,
-                title: ctx.l10n.quickEntryTap,
-                subtitle: ctx.l10n.quickEntryTapSubtitle,
-                background: cs.primary,
-                foreground: cs.onPrimary,
-                onTap: () => Navigator.pop(ctx, QuickEntryMode.tap),
-              ),
-              const SizedBox(height: 10),
-              _OptionCard(
-                icon: Icons.mic,
-                title: ctx.l10n.record,
-                subtitle: ctx.l10n.quickEntryVoiceSubtitle,
-                background: cs.primaryContainer,
-                foreground: cs.onPrimaryContainer,
-                onTap: () => Navigator.pop(ctx, QuickEntryMode.voice),
-              ),
-              const SizedBox(height: 10),
-              // Show receipt on all platforms; web gets gallery-only picker
-              _OptionCard(
-                icon: kIsWeb
-                    ? Icons.photo_library_outlined
-                    : Icons.photo_camera,
-                title: kIsWeb
-                    ? ctx.l10n.quickEntryReceiptPickTitle
-                    : ctx.l10n.quickEntryReceiptCaptureTitle,
-                subtitle: kIsWeb
-                    ? ctx.l10n.quickEntryReceiptPickSubtitle
-                    : ctx.l10n.quickEntryReceiptCaptureSubtitle,
-                background: cs.primaryContainer,
-                foreground: cs.onPrimaryContainer,
-                onTap: () => Navigator.pop(ctx, QuickEntryMode.receipt),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
+    builder: (ctx) => QuickAddOptionsSheet(
+      onSelected: (mode) => Navigator.pop(ctx, mode),
+      onClose: () => Navigator.pop(ctx),
+    ),
   );
+}
+
+/// Nội dung bottom sheet Thêm nhanh (Stitch — thẻ nền lợt).
+class QuickAddOptionsSheet extends StatelessWidget {
+  const QuickAddOptionsSheet({
+    super.key,
+    required this.onSelected,
+    required this.onClose,
+  });
+
+  final ValueChanged<QuickEntryMode> onSelected;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final cs = Theme.of(context).colorScheme;
+    final cardBg = AppTransactionEntryTokens.quickAddCard(brightness);
+    final titleColor = cs.primary;
+    final subtitleColor = AppTransactionEntryTokens.quickAddSubtitle(brightness);
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Text(
+                  context.l10n.quickTransactionTitle,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _OptionCard(
+              icon: Icons.touch_app_rounded,
+              title: context.l10n.quickEntryTap,
+              subtitle: context.l10n.quickEntryTapSubtitle,
+              background: cardBg,
+              titleColor: titleColor,
+              subtitleColor: subtitleColor,
+              onTap: () => onSelected(QuickEntryMode.tap),
+            ),
+            const SizedBox(height: 10),
+            _OptionCard(
+              icon: Icons.mic_rounded,
+              title: context.l10n.record,
+              subtitle: context.l10n.quickEntryVoiceSubtitle,
+              background: cardBg,
+              titleColor: titleColor,
+              subtitleColor: subtitleColor,
+              onTap: () => onSelected(QuickEntryMode.voice),
+            ),
+            const SizedBox(height: 10),
+            _OptionCard(
+              icon: AttachmentCapturePolicy.showReceiptCameraButton
+                  ? Icons.photo_camera_outlined
+                  : Icons.photo_library_outlined,
+              title: AttachmentCapturePolicy.showReceiptCameraButton
+                  ? context.l10n.quickEntryReceiptCaptureTitle
+                  : context.l10n.quickEntryReceiptPickTitle,
+              subtitle: AttachmentCapturePolicy.showReceiptCameraButton
+                  ? context.l10n.quickEntryReceiptCaptureSubtitle
+                  : context.l10n.quickEntryReceiptPickSubtitle,
+              background: cardBg,
+              titleColor: titleColor,
+              subtitleColor: subtitleColor,
+              onTap: () => onSelected(QuickEntryMode.receipt),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _OptionCard extends StatelessWidget {
@@ -91,7 +117,8 @@ class _OptionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.background,
-    required this.foreground,
+    required this.titleColor,
+    required this.subtitleColor,
     required this.onTap,
   });
 
@@ -99,15 +126,12 @@ class _OptionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color background;
-  final Color foreground;
+  final Color titleColor;
+  final Color subtitleColor;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final avatarBg = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.92);
     return Material(
       color: background,
       borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -119,8 +143,9 @@ class _OptionCard extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: avatarBg,
-                child: Icon(icon, color: foreground),
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                radius: 24,
+                child: Icon(icon, color: titleColor, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -130,7 +155,7 @@ class _OptionCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: foreground,
+                        color: titleColor,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -138,7 +163,8 @@ class _OptionCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: foreground.withValues(alpha: 0.85),
+                        color: subtitleColor,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],

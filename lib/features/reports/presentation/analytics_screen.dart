@@ -43,7 +43,19 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
-  int _touchedIndex = -1;
+  final ValueNotifier<int> _touchedIndex = ValueNotifier<int>(-1);
+
+  @override
+  void dispose() {
+    _touchedIndex.dispose();
+    super.dispose();
+  }
+
+  void _resetTouchedIndex() {
+    if (_touchedIndex.value != -1) {
+      _touchedIndex.value = -1;
+    }
+  }
 
   Future<void> _pickCustomRange(ReportState state) async {
     final now = DateTime.now();
@@ -56,7 +68,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           DateTimeRange(start: DateTime(now.year, now.month, 1), end: now),
     );
     if (r != null) {
-      setState(() => _touchedIndex = -1);
+      _resetTouchedIndex();
       await ref.read(reportControllerProvider.notifier).selectCustomRange(r);
     }
   }
@@ -133,7 +145,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       selected: state.period == p,
                       onSelected: (v) async {
                         if (!v) return;
-                        setState(() => _touchedIndex = -1);
+                        _resetTouchedIndex();
                         if (p == AnalyticsPeriod.custom) {
                           await _pickCustomRange(state);
                         } else {
@@ -217,7 +229,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     selected: !incomeSide,
                     color: context.financeColors.expenseAmount,
                     onTap: () {
-                      setState(() => _touchedIndex = -1);
+                      _resetTouchedIndex();
                       ref
                           .read(reportControllerProvider.notifier)
                           .selectIncomeSide(false);
@@ -232,7 +244,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     selected: incomeSide,
                     color: context.financeColors.incomeAmount,
                     onTap: () {
-                      setState(() => _touchedIndex = -1);
+                      _resetTouchedIndex();
                       ref
                           .read(reportControllerProvider.notifier)
                           .selectIncomeSide(true);
@@ -272,65 +284,77 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         else if (!loading) ...[
           SliverToBoxAdapter(
             child: Center(
-              child: SizedBox(
-                // Extra space around the donut so badges don't get clipped.
-                width: 300,
-                height: 300,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    PieChart(
-                      PieChartData(
-                        sectionsSpace: 3,
-                        centerSpaceRadius: 72,
-                        pieTouchData: PieTouchData(
-                          touchCallback:
-                              (FlTouchEvent event, pieTouchResponse) {
-                                final idx =
-                                    pieTouchResponse
-                                        ?.touchedSection
-                                        ?.touchedSectionIndex ??
-                                    -1;
-                                if (event is FlLongPressEnd ||
-                                    event is FlPanEndEvent ||
-                                    event is FlTapUpEvent) {
-                                  setState(() => _touchedIndex = -1);
-                                } else {
-                                  setState(() => _touchedIndex = idx);
-                                }
-                              },
-                        ),
-                        sections: _buildSections(slices, sumSlice),
-                      ),
-                      duration: const Duration(milliseconds: 400),
-                    ),
-                    // Center label
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: _touchedIndex >= 0 && _touchedIndex < slices.length
-                          ? _DonutCenter(
-                              key: ValueKey(_touchedIndex),
-                              cat: slices[_touchedIndex].category,
-                              pct: sumSlice > 0
-                                  ? 100 *
-                                        slices[_touchedIndex].amount /
-                                        sumSlice
-                                  : 0,
-                              amount: slices[_touchedIndex].amount,
-                              isIncome: incomeSide,
-                            )
-                          : _DonutCenterIdle(
-                              key: const ValueKey("idle"),
-                              label: incomeSide
-                                  ? context.l10n.income
-                                  : context.l10n.expense,
-                              total: sumSlice,
-                              count: slices.length,
-                              isIncome: incomeSide,
+              child: ValueListenableBuilder<int>(
+                valueListenable: _touchedIndex,
+                builder: (context, touchedIndex, _) {
+                  return SizedBox(
+                    // Extra space around the donut so badges don't get clipped.
+                    width: 300,
+                    height: 300,
+                    child: RepaintBoundary(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          PieChart(
+                            PieChartData(
+                              sectionsSpace: 3,
+                              centerSpaceRadius: 72,
+                              pieTouchData: PieTouchData(
+                                touchCallback:
+                                    (FlTouchEvent event, pieTouchResponse) {
+                                      final idx =
+                                          pieTouchResponse
+                                              ?.touchedSection
+                                              ?.touchedSectionIndex ??
+                                          -1;
+                                      if (event is FlLongPressEnd ||
+                                          event is FlPanEndEvent ||
+                                          event is FlTapUpEvent) {
+                                        _resetTouchedIndex();
+                                      } else if (_touchedIndex.value != idx) {
+                                        _touchedIndex.value = idx;
+                                      }
+                                    },
+                              ),
+                              sections: _buildSections(
+                                slices,
+                                sumSlice,
+                                touchedIndex,
+                              ),
                             ),
+                            duration: const Duration(milliseconds: 400),
+                          ),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child:
+                                touchedIndex >= 0 &&
+                                    touchedIndex < slices.length
+                                ? _DonutCenter(
+                                    key: ValueKey(touchedIndex),
+                                    cat: slices[touchedIndex].category,
+                                    pct: sumSlice > 0
+                                        ? 100 *
+                                              slices[touchedIndex].amount /
+                                              sumSlice
+                                        : 0,
+                                    amount: slices[touchedIndex].amount,
+                                    isIncome: incomeSide,
+                                  )
+                                : _DonutCenterIdle(
+                                    key: const ValueKey("idle"),
+                                    label: incomeSide
+                                        ? context.l10n.income
+                                        : context.l10n.expense,
+                                    total: sumSlice,
+                                    count: slices.length,
+                                    isIncome: incomeSide,
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),
@@ -354,15 +378,20 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           // ── LedgerCategory rows ────────────────────────────────────────────────
           for (var i = 0; i < slices.length; i++)
             SliverToBoxAdapter(
-              child: _CategoryRow(
-                slice: slices[i],
-                sumSlice: sumSlice,
-                isIncome: incomeSide,
-                highlighted: _touchedIndex == i,
-                onTap: () => _openCategoryDrillDown(
-                  slices[i].id,
-                  slices[i].category.name,
-                ),
+              child: ValueListenableBuilder<int>(
+                valueListenable: _touchedIndex,
+                builder: (context, touchedIndex, _) {
+                  return _CategoryRow(
+                    slice: slices[i],
+                    sumSlice: sumSlice,
+                    isIncome: incomeSide,
+                    highlighted: touchedIndex == i,
+                    onTap: () => _openCategoryDrillDown(
+                      slices[i].id,
+                      slices[i].category.name,
+                    ),
+                  );
+                },
               ),
             ),
         ],
@@ -375,12 +404,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   List<PieChartSectionData> _buildSections(
     List<ReportCategorySlice> slices,
     int sumSlice,
+    int touchedIndex,
   ) {
     double cumPct = 0;
     return List.generate(slices.length, (i) {
       final pct = sumSlice > 0 ? 100.0 * slices[i].amount / sumSlice : 0.0;
       cumPct += pct;
-      final isTouched = _touchedIndex == i;
+      final isTouched = touchedIndex == i;
       // Hide badge for very small segments unless touched.
       final showBadge = pct >= 5 || isTouched;
       return PieChartSectionData(
