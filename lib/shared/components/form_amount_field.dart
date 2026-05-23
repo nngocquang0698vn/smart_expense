@@ -22,6 +22,7 @@ class FormAmountField extends ConsumerStatefulWidget {
     this.keypadOpen = false,
     this.onTap,
     this.isIncome = false,
+    this.compact = false,
   });
 
   final int initialAmount;
@@ -34,6 +35,7 @@ class FormAmountField extends ConsumerStatefulWidget {
   final bool keypadOpen;
   final VoidCallback? onTap;
   final bool isIncome;
+  final bool compact;
 
   @override
   ConsumerState<FormAmountField> createState() => _FormAmountFieldState();
@@ -85,7 +87,9 @@ class _FormAmountFieldState extends ConsumerState<FormAmountField> {
         onTap: _openKeypad,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          padding: EdgeInsets.symmetric(
+            vertical: widget.compact ? AppSpacing.sm : AppSpacing.md,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

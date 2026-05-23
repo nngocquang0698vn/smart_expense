@@ -11,6 +11,9 @@ import "package:smart_expense/shared/components/app_date_picker.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_image_attachments.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_type_toggle.dart";
 
+/// Khoảng cách giữa các khối trong form giao dịch.
+enum TransactionFormDensity { comfortable, compact }
+
 /// Shared fields for quick entry and full transaction editor sheets.
 ///
 /// Thứ tự: tiêu đề → Chi tiêu/Thu nhập → số tiền → danh mục → ngày → ghi chú+ghi âm
@@ -45,6 +48,7 @@ class TransactionEntryForm extends StatelessWidget {
     this.onAmountDone,
     this.imageThumbnailHeight = 80,
     this.showReceiptCamera,
+    this.density = TransactionFormDensity.comfortable,
     super.key,
   });
 
@@ -78,9 +82,17 @@ class TransactionEntryForm extends StatelessWidget {
   final VoidCallback? onAmountTap;
   final VoidCallback? onAmountDone;
   final double imageThumbnailHeight;
+  final TransactionFormDensity density;
 
   bool get _showReceiptCamera =>
       showReceiptCamera ?? AttachmentCapturePolicy.showReceiptCameraButton;
+
+  double get _sectionGap =>
+      density == TransactionFormDensity.compact
+          ? AppSpacing.xs
+          : AppSpacing.sm;
+
+  bool get _compact => density == TransactionFormDensity.compact;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +102,7 @@ class TransactionEntryForm extends StatelessWidget {
         ...beforeAmount,
         if (titleField != null) ...[
           titleField!,
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: _sectionGap),
         ],
         TransactionTypeToggle(
           isIncome: isIncome,
@@ -99,7 +111,7 @@ class TransactionEntryForm extends StatelessWidget {
             onSideChanged?.call();
           },
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: _sectionGap),
         FormAmountField(
           variant: amountVariant,
           initialAmount: initialAmount,
@@ -110,17 +122,18 @@ class TransactionEntryForm extends StatelessWidget {
           keypadOpen: amountKeypadOpen,
           onTap: onAmountTap,
           onDone: onAmountDone,
+          compact: _compact,
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: _sectionGap),
         ...afterAmount,
         categorySection,
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: _sectionGap),
         AppDatePicker(
           date: date,
           style: dateStyle,
           onDateChanged: onDateChanged,
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: _sectionGap),
         TransactionNoteInput(
           noteController: noteController,
           audio: audio,
@@ -129,7 +142,7 @@ class TransactionEntryForm extends StatelessWidget {
           amountKeypadOpen: amountKeypadOpen,
           onDismissAmountKeypad: onDismissAmountKeypad,
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: _sectionGap),
         TransactionImageAttachments(
           images: images,
           showCamera: _showReceiptCamera,

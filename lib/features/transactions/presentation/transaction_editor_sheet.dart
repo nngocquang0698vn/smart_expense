@@ -1,4 +1,3 @@
-import "package:smart_expense/features/categories/presentation/category_visuals.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:image_picker/image_picker.dart";
@@ -20,7 +19,7 @@ import "package:smart_expense/features/transactions/domain/entities/attachments/
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/application/transaction_draft_validator.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
-import "package:smart_expense/shared/components/app_date_picker.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_section.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_sheet_shell.dart";
@@ -349,10 +348,6 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
           cats,
           isIncome: _income,
         );
-        final dropdownValue = _categorySelection.selectedValueOrNull(
-          selectedId: _categoryId,
-          items: categoryItems,
-        );
 
         final finance = context.financeColors;
 
@@ -360,6 +355,7 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
           keypadVisible: _amountKeypadOpen,
           keypad: _amountKeypad(),
           child: TransactionSheetScrollBody(
+            compact: true,
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
               TransactionSheetHeader(
@@ -368,9 +364,9 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                     : context.l10n.editTransaction,
                 onClose: _handleClose,
               ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  TransactionEntryForm(
+              const SizedBox(height: AppSpacing.xs),
+              TransactionEntryForm(
+                    density: TransactionFormDensity.compact,
                     titleField: Focus(
                       onFocusChange: (focused) {
                         if (focused && _amountKeypadOpen) {
@@ -406,14 +402,13 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                       }
                     },
                     date: _date,
-                    dateStyle: AppDatePickerStyle.listTile,
                     onDateChanged: (d) => setState(() => _date = d),
                     images: _images,
                     onPickImage: _pickImage,
                     onDeleteImage: _removeImage,
                     audio: _audio,
                     onAudioChanged: (audio) => setState(() => _audio = audio),
-                    imageThumbnailHeight: 96,
+                    imageThumbnailHeight: 80,
                     amountErrorText: _validationMessageFor(
                       TransactionDraftValidationError.amountRequired,
                     ),
@@ -429,55 +424,32 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                         setState(() => _amountKeypadOpen = false);
                       }
                     },
-                    categorySection: DropdownButtonFormField<String>(
-                      dropdownColor: finance.sheetBackground,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: finance.fieldText),
-                      // ignore: deprecated_member_use
-                      value: dropdownValue,
-                      items: categoryItems
-                          .map(
-                            (c) => DropdownMenuItem(
-                              value: c.id,
-                              child: Row(
-                                children: [
-                                  Icon(c.icon, color: c.color, size: 20),
-                                  const SizedBox(width: AppSpacing.xs),
-                                  Text(
-                                    c.name,
-                                    style: TextStyle(color: finance.fieldText),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) {
-                        setState(() => _categoryId = v);
+                    categorySection: TransactionCategorySection(
+                      categories: categoryItems,
+                      includeSelectedFrom: cats,
+                      isIncome: _income,
+                      selectedId: _categoryId,
+                      onSelected: (id) {
+                        setState(() => _categoryId = id);
                         _clearValidation(
                           TransactionDraftValidationError.categoryRequired,
                         );
                       },
-                      decoration: InputDecoration(
-                        labelText: context.l10n.category,
-                        errorText: _validationMessageFor(
-                          TransactionDraftValidationError.categoryRequired,
-                        ),
+                      errorText: _validationMessageFor(
+                        TransactionDraftValidationError.categoryRequired,
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TransactionPendingSwitch(
+              const SizedBox(height: AppSpacing.xs),
+              TransactionPendingSwitch(
                     pending: _pending,
                     onChanged: (v) => setState(() => _pending = v),
                     subtitle: _hasMedia
                         ? context.l10n.pendingSubtitleWithMedia
                         : context.l10n.pendingSubtitleDefault,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // ── Action buttons (một hàng khi sửa giao dịch) ───────────
+              const SizedBox(height: AppSpacing.xs),
+              // ── Action buttons (một hàng khi sửa giao dịch) ───────────
                   if (widget.existing == null)
                     AppPrimaryButton(
                       label: context.l10n.save,

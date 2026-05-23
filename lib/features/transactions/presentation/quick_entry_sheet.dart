@@ -17,7 +17,7 @@ import "package:smart_expense/features/transactions/domain/entities/attachments/
 import "package:smart_expense/features/transactions/application/transaction_draft_validator.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/shared/components/amount_keypad.dart";
-import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_chips.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_section.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_sheet_shell.dart";
@@ -285,13 +285,15 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
           keypadVisible: _amountKeypadOpen,
           keypad: _amountKeypad(),
           child: TransactionSheetScrollBody(
+            compact: true,
             children: [
               TransactionSheetHeader(
                 title: sheetTitle,
                 onClose: _handleClose,
               ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TransactionEntryForm(
+              const SizedBox(height: AppSpacing.xs),
+              TransactionEntryForm(
+                    density: TransactionFormDensity.compact,
                     initialAmount: _amountKey,
                     noteController: _noteCtrl,
                     isIncome: _income,
@@ -344,54 +346,34 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                         labelText: context.l10n.titleOptional,
                       ),
                     ),
-                    categorySection: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          context.l10n.category,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        TransactionCategoryChips(
-                          categories: cats,
-                          isIncome: _income,
-                          selectedId: _categoryId,
-                          onSelected: (id) {
-                            setState(() => _categoryId = id);
-                            _clearValidation(
+                    categorySection: TransactionCategorySection(
+                      categories: cats,
+                      includeSelectedFrom: cats,
+                      isIncome: _income,
+                      selectedId: _categoryId,
+                      onSelected: (id) {
+                        setState(() => _categoryId = id);
+                        _clearValidation(
+                          TransactionDraftValidationError.categoryRequired,
+                        );
+                      },
+                      errorText: _validationError ==
+                              TransactionDraftValidationError.categoryRequired
+                          ? _validationMessage(
                               TransactionDraftValidationError.categoryRequired,
-                            );
-                          },
-                        ),
-                        if (_validationError ==
-                            TransactionDraftValidationError
-                                .categoryRequired) ...[
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            _validationMessage(
-                              TransactionDraftValidationError.categoryRequired,
-                            ),
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.error,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ],
-                      ],
+                            )
+                          : null,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TransactionPendingSwitch(
+              const SizedBox(height: AppSpacing.xs),
+              TransactionPendingSwitch(
                     pending: _pending,
                     onChanged: (v) => setState(() => _pending = v),
                     subtitle: _hasMedia
                         ? context.l10n.pendingSubtitleWithMedia
                         : context.l10n.pendingSubtitleDefault,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // ── Action buttons ────────────────────────────────────────
+              const SizedBox(height: AppSpacing.xs),
               AppPrimaryButton(
                 label: context.l10n.saveTransaction,
                 icon: Icons.save_rounded,

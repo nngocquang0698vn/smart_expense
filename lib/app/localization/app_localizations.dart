@@ -108,6 +108,8 @@ class AppLocalizations {
   String get historyTitle => text("historyTitle");
   String get homeTitle => text("homeTitle");
   String get imageSaveFailed => text("imageSaveFailed");
+  String get imagePreviewLoadFailed => text("imagePreviewLoadFailed");
+  String get imagePreviewTapHint => text("imagePreviewTapHint");
   String get income => text("income");
   String get keepVoiceNote => text("keepVoiceNote");
   String get loading => text("loading");
@@ -377,6 +379,8 @@ const _vi = {
   "editTransaction": "Sửa giao dịch",
   "genericError": "Đã có lỗi xảy ra. Vui lòng thử lại.",
   "imageSaveFailed": "Không thể lưu ảnh. Vui lòng thử lại.",
+  "imagePreviewLoadFailed": "Không tải được ảnh. Vui lòng thử lại.",
+  "imagePreviewTapHint": "Nhấn để xem ảnh gốc",
   "keepVoiceNote": "Giữ lại",
   "newCategory": "Hạng mục mới",
   "noCategories": "Chưa có hạng mục nào.",

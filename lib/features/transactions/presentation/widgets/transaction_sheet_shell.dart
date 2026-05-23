@@ -124,10 +124,22 @@ class TransactionSheetScrollBody extends StatelessWidget {
     super.key,
     required this.children,
     this.padding = const EdgeInsets.fromLTRB(20, 8, 20, 28),
+    this.compact = false,
   });
 
   final List<Widget> children;
   final EdgeInsets padding;
+  final bool compact;
+
+  EdgeInsets get _effectivePadding {
+    if (!compact) return padding;
+    return EdgeInsets.fromLTRB(
+      padding.left,
+      6,
+      padding.right,
+      padding.bottom - 8 > 12 ? padding.bottom - 8 : 12,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +149,7 @@ class TransactionSheetScrollBody extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxH),
         child: SingleChildScrollView(
-          padding: padding,
+          padding: _effectivePadding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
