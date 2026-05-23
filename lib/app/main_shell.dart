@@ -49,6 +49,19 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   int _page = 0;
   bool _pwaBootstrapped = false;
+  final _pageStackKey = GlobalKey(debugLabel: "main-page-stack");
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      DashboardScreen(onOpenPendingTab: _goPending),
+      const PendingScreen(),
+      const AnalyticsScreen(),
+      ProfileScreen(onOpenPending: _goPending),
+    ];
+  }
 
   void _goPending() => setState(() => _page = 1);
 
@@ -89,12 +102,6 @@ class _MainShellState extends ConsumerState<MainShell> {
     _bootstrapPwaIfNeeded();
     final repo = ref.watch(ledgerRepositoryProvider);
     final l10n = context.l10n;
-    final pages = [
-      DashboardScreen(onOpenPendingTab: _goPending),
-      const PendingScreen(),
-      const AnalyticsScreen(),
-      ProfileScreen(onOpenPending: _goPending),
-    ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -104,38 +111,34 @@ class _MainShellState extends ConsumerState<MainShell> {
               (item) => PillNavItem(icon: item.icon, label: item.labelOf(l10n)),
             )
             .toList(growable: false);
-        return isMobile
-            ? _MobileShell(
-                page: _page,
-                pages: pages,
-                navItems: navItems,
-                onSelect: _selectPage,
-                onFab: () => handleAddFab(context, repo),
-              )
-            : _DesktopShell(
-                page: _page,
-                pages: pages,
-                navItems: navItems,
-                onSelect: _selectPage,
-                onFab: () => handleAddFab(context, repo),
-              );
+        return _ResponsiveShell(
+          isMobile: isMobile,
+          page: _page,
+          pageStackKey: _pageStackKey,
+          pages: _pages,
+          navItems: navItems,
+          onSelect: _selectPage,
+          onFab: () => handleAddFab(context, repo),
+        );
       },
     );
   }
 }
 
-// ── Mobile shell ──────────────────────────────────────────────────────────────
-
-class _MobileShell extends StatelessWidget {
-  const _MobileShell({
+class _ResponsiveShell extends StatelessWidget {
+  const _ResponsiveShell({
+    required this.isMobile,
     required this.page,
+    required this.pageStackKey,
     required this.pages,
     required this.navItems,
     required this.onSelect,
     required this.onFab,
   });
 
+  final bool isMobile;
   final int page;
+  final GlobalKey pageStackKey;
   final List<Widget> pages;
   final List<PillNavItem> navItems;
   final ValueChanged<int> onSelect;
@@ -148,90 +151,81 @@ class _MobileShell extends StatelessWidget {
     final sysBtm = MediaQuery.of(context).viewPadding.bottom.clamp(0.0, 60.0);
     // PillNavBar intrinsic height: 8(top) + 56(row) + 8(bottom) = 72 px.
     final navBarHeight = 72.0 + 12.0 + sysBtm;
-
-    return Scaffold(
-      extendBody: true,
-      body: IndexedStack(index: page, children: pages),
-      bottomNavigationBar: SizedBox(
-        height: navBarHeight,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 0, 16, 12.0 + sysBtm),
-          child: PillNavBar(
-            currentIndex: page,
-            items: navItems,
-            onSelect: onSelect,
-            fab: FabCenter(onPressed: onFab),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Desktop shell ─────────────────────────────────────────────────────────────
-
-class _DesktopShell extends StatelessWidget {
-  const _DesktopShell({
-    required this.page,
-    required this.pages,
-    required this.navItems,
-    required this.onSelect,
-    required this.onFab,
-  });
-
-  final int page;
-  final List<Widget> pages;
-  final List<PillNavItem> navItems;
-  final ValueChanged<int> onSelect;
-  final VoidCallback onFab;
-
-  @override
-  Widget build(BuildContext context) {
     final now = DateTime.now();
-
     final cs = Theme.of(context).colorScheme;
     final contentColor =
         Theme.of(context).extension<AppLayoutTheme>()?.desktopContentColor ??
         cs.surface;
 
     return Scaffold(
+      extendBody: isMobile,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
+        top: !isMobile,
+        bottom: !isMobile,
         child: Stack(
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Sidebar(
-                  now: now,
-                  items: navItems,
-                  selectedIndex: page,
-                  onSelect: onSelect,
+                SizedBox(
+                  width: isMobile ? 0 : 288,
+                  child: isMobile
+                      ? const SizedBox.shrink()
+                      : _Sidebar(
+                          now: now,
+                          items: navItems,
+                          selectedIndex: page,
+                          onSelect: onSelect,
+                        ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: isMobile ? 0 : 12),
                 Expanded(
                   child: Container(
-                    margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
-                    decoration: BoxDecoration(
-                      color: contentColor,
-                      borderRadius: BorderRadius.circular(16),
+                    margin: isMobile
+                        ? EdgeInsets.zero
+                        : const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                    decoration: isMobile
+                        ? null
+                        : BoxDecoration(
+                            color: contentColor,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                    child: IndexedStack(
+                      key: pageStackKey,
+                      index: page,
+                      children: pages,
                     ),
-                    child: IndexedStack(index: page, children: pages),
                   ),
                 ),
               ],
             ),
-            Positioned(
-              right: 24,
-              bottom: 24,
-              child: FloatingActionButton(
-                onPressed: onFab,
-                child: const Icon(Icons.add),
+            if (!isMobile)
+              Positioned(
+                right: 24,
+                bottom: 24,
+                child: FloatingActionButton(
+                  onPressed: onFab,
+                  child: const Icon(Icons.add),
+                ),
               ),
-            ),
           ],
         ),
       ),
+      bottomNavigationBar: isMobile
+          ? SizedBox(
+              height: navBarHeight,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 12.0 + sysBtm),
+                child: PillNavBar(
+                  currentIndex: page,
+                  items: navItems,
+                  onSelect: onSelect,
+                  fab: FabCenter(onPressed: onFab),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }
