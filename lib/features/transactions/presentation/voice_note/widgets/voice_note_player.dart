@@ -30,21 +30,32 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   bool _playing = false;
-  bool _loading = true;
+  bool _loaded = false;
+  bool _loading = false;
+  int _loadEpoch = 0;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _duration = widget.audio.duration;
     _listen();
-    unawaited(_load());
   }
 
   @override
   void didUpdateWidget(covariant VoiceNotePlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.audio.id != widget.audio.id) {
-      unawaited(_load());
+      _loadEpoch++;
+      unawaited(_player.reset());
+      setState(() {
+        _loaded = false;
+        _loading = false;
+        _error = null;
+        _position = Duration.zero;
+        _duration = widget.audio.duration;
+        _playing = false;
+      });
     }
   }
 
@@ -57,7 +68,11 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
     _subscriptions.add(
       _player.durationStream.listen((duration) {
         if (mounted) {
-          setState(() => _duration = duration ?? Duration.zero);
+          setState(() {
+            _duration = _loaded
+                ? duration ?? widget.audio.duration
+                : widget.audio.duration;
+          });
         }
       }),
     );
@@ -73,21 +88,32 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
     );
   }
 
-  Future<void> _load() async {
+  Future<bool> _load() async {
+    if (_loaded) return true;
+    if (_loading) return false;
+    final epoch = ++_loadEpoch;
     setState(() {
       _loading = true;
       _error = null;
       _position = Duration.zero;
-      _duration = Duration.zero;
+      _duration = widget.audio.duration;
       _playing = false;
     });
     try {
       await _player.load(widget.audio);
+      if (!mounted || epoch != _loadEpoch) return false;
+      setState(() {
+        _loaded = true;
+        _loading = false;
+        _duration = _player.duration ?? widget.audio.duration;
+      });
+      return true;
     } catch (_) {
       _error = "Không thể phát ghi âm này.";
       widget.onError?.call(_error!);
     }
     if (mounted) setState(() => _loading = false);
+    return false;
   }
 
   Future<void> _toggle() async {
@@ -96,6 +122,8 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
       if (_playing) {
         await _player.pause();
       } else {
+        final loaded = await _load();
+        if (!loaded) return;
         if (_duration > Duration.zero && _position >= _duration) {
           await _player.seek(Duration.zero);
         }
@@ -107,7 +135,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
   }
 
   Future<void> _seek(double value) async {
-    if (_duration == Duration.zero) return;
+    if (!_loaded || _duration == Duration.zero) return;
     final target = Duration(
       milliseconds: (_duration.inMilliseconds * value).round(),
     );
@@ -115,7 +143,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
   }
 
   Future<void> _stop() async {
-    if (_loading || _error != null) return;
+    if (!_loaded || _loading || _error != null) return;
     await _player.stop();
     await _player.seek(Duration.zero);
   }
@@ -176,7 +204,9 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
         ),
         if (!compact)
           IconButton(
-            onPressed: _loading || _position == Duration.zero ? null : _stop,
+            onPressed: !_loaded || _loading || _position == Duration.zero
+                ? null
+                : _stop,
             tooltip: "Dừng",
             icon: const Icon(Icons.stop_rounded),
           ),
@@ -197,7 +227,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
                 ),
                 child: Slider(
                   value: progress,
-                  onChanged: _loading ? null : _seek,
+                  onChanged: !_loaded || _loading ? null : _seek,
                 ),
               ),
               if (!compact)

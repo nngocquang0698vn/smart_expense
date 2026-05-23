@@ -29,10 +29,12 @@ class ImageAttachmentList extends StatelessWidget {
         itemCount: images.length,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
+          final image = images[index];
           return _ImageAttachmentTile(
-            image: images[index],
+            key: ValueKey(image.id),
+            image: image,
             size: height,
-            onDelete: () => onDelete(images[index]),
+            onDelete: () => onDelete(image),
           );
         },
       ),
@@ -42,6 +44,7 @@ class ImageAttachmentList extends StatelessWidget {
 
 class _ImageAttachmentTile extends StatefulWidget {
   const _ImageAttachmentTile({
+    super.key,
     required this.image,
     required this.size,
     required this.onDelete,

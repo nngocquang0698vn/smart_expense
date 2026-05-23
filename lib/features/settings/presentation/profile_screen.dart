@@ -32,8 +32,10 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameCtrl = TextEditingController();
+  final _nameFocus = FocusNode();
   late final LedgerRepository _repo;
   late final StreamSubscription<void> _repoSubscription;
+  String _loadedName = "";
   bool _loading = true;
 
   @override
@@ -47,6 +49,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void dispose() {
     _repoSubscription.cancel();
+    _nameFocus.dispose();
     _nameCtrl.dispose();
     super.dispose();
   }
@@ -56,14 +59,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _load() async {
     final m = await _repo.getMeta();
     if (!mounted) return;
+    final loadedName = (m["userName"] as String?) ?? "";
     setState(() {
-      _nameCtrl.text = (m["userName"] as String?) ?? "";
+      final hasLocalEdit = _nameCtrl.text != _loadedName;
+      if (!_nameFocus.hasFocus && !hasLocalEdit) {
+        _nameCtrl.text = loadedName;
+      }
+      _loadedName = loadedName;
       _loading = false;
     });
   }
 
   Future<void> _saveName() async {
-    await _repo.setUserName(_nameCtrl.text.trim());
+    final nextName = _nameCtrl.text.trim();
+    await _repo.setUserName(nextName);
+    _loadedName = nextName;
     if (mounted) {
       showSuccess(context, context.l10n.nameSaved);
     }
@@ -235,6 +245,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Expanded(
                     child: TextField(
                       controller: _nameCtrl,
+                      focusNode: _nameFocus,
                       decoration: InputDecoration(
                         labelText: context.l10n.userNameLabel,
                         isDense: true,
@@ -327,9 +338,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       title: Text(context.l10n.quickConfirmPendingTitle),
       subtitle: Text(context.l10n.quickConfirmPendingSubtitle),
       value: prefs.quickConfirmPending,
-      onChanged: (v) => notifier.update(
-        prefs.copyWith(quickConfirmPending: v),
-      ),
+      onChanged: (v) => notifier.update(prefs.copyWith(quickConfirmPending: v)),
     );
   }
 

@@ -37,6 +37,7 @@ class TransactionEntryForm extends StatelessWidget {
     this.afterAmount = const [],
     this.onSideChanged,
     this.autoStartVoiceRecording = false,
+    this.voiceRecorderSessionId,
     this.onDismissAmountKeypad,
     this.dateStyle = AppDatePickerStyle.card,
     this.amountVariant = FormAmountFieldVariant.prominent,
@@ -70,6 +71,7 @@ class TransactionEntryForm extends StatelessWidget {
   final AudioAttachmentModel? audio;
   final ValueChanged<AudioAttachmentModel?> onAudioChanged;
   final bool autoStartVoiceRecording;
+  final Object? voiceRecorderSessionId;
   final VoidCallback? onDismissAmountKeypad;
   final Widget categorySection;
   final Widget? titleField;
@@ -88,9 +90,7 @@ class TransactionEntryForm extends StatelessWidget {
       showReceiptCamera ?? AttachmentCapturePolicy.showReceiptCameraButton;
 
   double get _sectionGap =>
-      density == TransactionFormDensity.compact
-          ? AppSpacing.xs
-          : AppSpacing.sm;
+      density == TransactionFormDensity.compact ? AppSpacing.xs : AppSpacing.sm;
 
   bool get _compact => density == TransactionFormDensity.compact;
 
@@ -100,10 +100,7 @@ class TransactionEntryForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ...beforeAmount,
-        if (titleField != null) ...[
-          titleField!,
-          SizedBox(height: _sectionGap),
-        ],
+        if (titleField != null) ...[titleField!, SizedBox(height: _sectionGap)],
         TransactionTypeToggle(
           isIncome: isIncome,
           onChanged: (income) {
@@ -138,6 +135,7 @@ class TransactionEntryForm extends StatelessWidget {
           noteController: noteController,
           audio: audio,
           onAudioChanged: onAudioChanged,
+          recorderSessionId: voiceRecorderSessionId,
           autoStartRecording: autoStartVoiceRecording,
           amountKeypadOpen: amountKeypadOpen,
           onDismissAmountKeypad: onDismissAmountKeypad,
@@ -173,9 +171,7 @@ class TransactionPendingSwitch extends StatelessWidget {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(context.l10n.pending),
-      subtitle: Text(
-        subtitle ?? context.l10n.pendingSubtitleDefault,
-      ),
+      subtitle: Text(subtitle ?? context.l10n.pendingSubtitleDefault),
       value: pending,
       onChanged: onChanged,
     );

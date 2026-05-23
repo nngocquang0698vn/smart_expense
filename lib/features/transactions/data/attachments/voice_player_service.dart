@@ -43,6 +43,13 @@ class VoicePlayerService {
     }
   }
 
+  Future<void> reset() async {
+    final source = _source;
+    _source = null;
+    await _player.stop();
+    await VoicePlaybackSourceService.release(source);
+  }
+
   Future<void> play() => _player.play();
   Future<void> pause() => _player.pause();
   Future<void> stop() => _player.stop();

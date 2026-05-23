@@ -130,7 +130,9 @@ class _PendingContent extends ConsumerWidget {
             ),
             ...bucket.items.map(
               (transaction) => SliverToBoxAdapter(
+                key: ValueKey("pending-${transaction.id}"),
                 child: TxRow(
+                  key: ValueKey(transaction.id),
                   transaction: transaction,
                   category: categoryMap[transaction.categoryId],
                   showInlineAudioPlayer: true,

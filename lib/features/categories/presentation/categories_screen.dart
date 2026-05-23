@@ -69,6 +69,7 @@ class CategoriesScreen extends ConsumerWidget {
                         AppSectionHeader(title: context.l10n.expense),
                         for (final category in viewModel.expense)
                           _CategoryTile(
+                            key: ValueKey(category.id),
                             category: category,
                             isSystem: viewModel.isSystem(category),
                             onToggle: () => ref
@@ -81,6 +82,7 @@ class CategoriesScreen extends ConsumerWidget {
                         AppSectionHeader(title: context.l10n.income),
                         for (final category in viewModel.income)
                           _CategoryTile(
+                            key: ValueKey(category.id),
                             category: category,
                             isSystem: viewModel.isSystem(category),
                             onToggle: () => ref
@@ -111,6 +113,7 @@ class CategoriesScreen extends ConsumerWidget {
 
 class _CategoryTile extends StatelessWidget {
   const _CategoryTile({
+    super.key,
     required this.category,
     required this.isSystem,
     required this.onToggle,

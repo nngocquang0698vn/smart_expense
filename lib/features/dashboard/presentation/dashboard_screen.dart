@@ -88,11 +88,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     existing: t,
   );
 
-  Future<void> _confirmPending(LedgerTransaction t) => runConfirmPendingFlow(
-    context: context,
-    ref: ref,
-    transactionId: t.id,
-  );
+  Future<void> _confirmPending(LedgerTransaction t) =>
+      runConfirmPendingFlow(context: context, ref: ref, transactionId: t.id);
 
   Widget? _pendingTrailing(LedgerTransaction t) => buildPendingConfirmButton(
     context: context,
@@ -206,6 +203,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         _PendingSubheader(items: pendingAll),
                         ...pendingAll.map(
                           (t) => TxRow(
+                            key: ValueKey("dashboard-pending-${t.id}"),
                             transaction: t,
                             category: catMap[t.categoryId],
                             showInlineAudioPlayer: true,
@@ -350,7 +348,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             SliverToBoxAdapter(child: _PendingSubheader(items: pendingAll)),
             ...pendingPreview.map(
               (t) => SliverToBoxAdapter(
+                key: ValueKey("dashboard-pending-preview-${t.id}"),
                 child: TxRow(
+                  key: ValueKey(t.id),
                   transaction: t,
                   category: catMap[t.categoryId],
                   showInlineAudioPlayer: true,
@@ -419,6 +419,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         ...b.items.map(
           (t) => TxRow(
+            key: ValueKey("dashboard-history-${t.id}"),
             transaction: t,
             category: catMap[t.categoryId],
             onTap: () => _openEditor(t),
@@ -452,7 +453,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         ...b.items.map(
           (t) => SliverToBoxAdapter(
+            key: ValueKey("dashboard-history-sliver-${t.id}"),
             child: TxRow(
+              key: ValueKey(t.id),
               transaction: t,
               category: catMap[t.categoryId],
               onTap: () => _openEditor(t),

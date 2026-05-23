@@ -19,6 +19,7 @@ class TransactionNoteInput extends ConsumerStatefulWidget {
     required this.noteController,
     required this.onAudioChanged,
     this.audio,
+    this.recorderSessionId,
     this.autoStartRecording = false,
     this.maxRecordDuration = const Duration(minutes: 3),
     this.amountKeypadOpen = false,
@@ -29,6 +30,7 @@ class TransactionNoteInput extends ConsumerStatefulWidget {
   final TextEditingController noteController;
   final AudioAttachmentModel? audio;
   final ValueChanged<AudioAttachmentModel?> onAudioChanged;
+  final Object? recorderSessionId;
   final bool autoStartRecording;
   final Duration maxRecordDuration;
 
@@ -46,7 +48,7 @@ class TransactionNoteInput extends ConsumerStatefulWidget {
 class _TransactionNoteInputState extends ConsumerState<TransactionNoteInput> {
   static const _micTapSize = 44.0;
 
-  final Object _sessionId = Object();
+  late final Object _sessionId;
   final FocusNode _noteFocus = FocusNode();
   bool _autoStarted = false;
   bool _focusNoteAfterKeypadDismiss = false;
@@ -64,6 +66,7 @@ class _TransactionNoteInputState extends ConsumerState<TransactionNoteInput> {
   @override
   void initState() {
     super.initState();
+    _sessionId = widget.recorderSessionId ?? Object();
     _noteFocus.addListener(_onNoteFocusChanged);
     if (widget.audio != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -203,8 +206,7 @@ class _TransactionNoteInputState extends ConsumerState<TransactionNoteInput> {
       return;
     }
 
-    final hasAudio =
-        recorderState.voiceNote != null || widget.audio != null;
+    final hasAudio = recorderState.voiceNote != null || widget.audio != null;
     if (hasAudio) {
       final replace = await showReplaceVoiceNoteDialog(context);
       if (!mounted || !replace) return;
@@ -246,9 +248,9 @@ class _TransactionNoteInputState extends ConsumerState<TransactionNoteInput> {
     final isActiveRecording = isRecording || isPaused || isSaving;
 
     final attached = recorderState.voiceNote?.audio ?? widget.audio;
-    final systemKeyboardVisible =
-        MediaQuery.viewInsetsOf(context).bottom > 0;
-    final showNoteHelper = !isActiveRecording &&
+    final systemKeyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final showNoteHelper =
+        !isActiveRecording &&
         attached == null &&
         !widget.amountKeypadOpen &&
         !_noteFocus.hasFocus &&
@@ -261,9 +263,7 @@ class _TransactionNoteInputState extends ConsumerState<TransactionNoteInput> {
         ? l10n.micStopRecording
         : (attached != null ? l10n.micRecordAgain : l10n.micRecordNote);
 
-    final micIcon = isActiveRecording
-        ? Icons.stop_rounded
-        : Icons.mic_rounded;
+    final micIcon = isActiveRecording ? Icons.stop_rounded : Icons.mic_rounded;
     final micColor = isActiveRecording ? cs.error : cs.primary;
     final micBackground = isActiveRecording
         ? cs.error.withValues(alpha: 0.12)
@@ -310,23 +310,24 @@ class _TransactionNoteInputState extends ConsumerState<TransactionNoteInput> {
                           focusNode: _noteFocus,
                           onTap: _handleNoteTap,
                           maxLines: 3,
-                        minLines: 1,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: finance.fieldText,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        cursorColor: cs.primary,
-                        decoration: InputDecoration(
-                          hintText: l10n.noteOptional,
-                          hintStyle: TextStyle(color: finance.textHint),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm,
+                          minLines: 1,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: finance.fieldText,
+                                fontWeight: FontWeight.w500,
+                              ),
+                          cursorColor: cs.primary,
+                          decoration: InputDecoration(
+                            hintText: l10n.noteOptional,
+                            hintStyle: TextStyle(color: finance.textHint),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.sm,
+                            ),
+                            isDense: true,
                           ),
-                          isDense: true,
-                        ),
                         ),
                       ),
                     ),
@@ -415,10 +416,7 @@ class _TransactionNoteInputState extends ConsumerState<TransactionNoteInput> {
 
 /// Thanh tiến trình 15s lặp (giống implementation cũ, chiều cao gọn).
 class _CompactLoopProgressBar extends StatelessWidget {
-  const _CompactLoopProgressBar({
-    required this.elapsed,
-    required this.paused,
-  });
+  const _CompactLoopProgressBar({required this.elapsed, required this.paused});
 
   static const _loopDuration = Duration(seconds: 15);
   static const _barHeight = 8.0;
@@ -549,19 +547,12 @@ class _AudioPlaybackSection extends StatelessWidget {
               tooltip: l10n.deleteVoiceNote,
               visualDensity: VisualDensity.compact,
               iconSize: 18,
-              constraints: const BoxConstraints(
-                minWidth: 44,
-                minHeight: 44,
-              ),
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               icon: Icon(Icons.close_rounded, color: finance.textHint),
             ),
           ],
         ),
-        VoiceNotePlayer(
-          audio: audio,
-          compact: true,
-          onError: onPlaybackError,
-        ),
+        VoiceNotePlayer(audio: audio, compact: true, onError: onPlaybackError),
       ],
     );
   }
