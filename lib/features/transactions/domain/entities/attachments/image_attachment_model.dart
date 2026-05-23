@@ -2,6 +2,7 @@ class ImageAttachmentModel {
   const ImageAttachmentModel({
     required this.id,
     this.path,
+    this.bundleAssetPath,
     required this.mimeType,
     required this.extension,
     required this.fileSize,
@@ -13,6 +14,9 @@ class ImageAttachmentModel {
 
   final String id;
   final String? path;
+
+  /// Flutter asset path for bundled seed/demo images (stable across Web deploy).
+  final String? bundleAssetPath;
   final String mimeType;
   final String extension;
   final int fileSize;
@@ -24,6 +28,7 @@ class ImageAttachmentModel {
   Map<String, Object?> toMap() => {
     "id": id,
     "path": path,
+    "bundleAssetPath": bundleAssetPath,
     "mimeType": mimeType,
     "extension": extension,
     "fileSize": fileSize,
@@ -38,6 +43,7 @@ class ImageAttachmentModel {
     return ImageAttachmentModel(
       id: raw["id"] as String,
       path: raw["path"] as String?,
+      bundleAssetPath: raw["bundleAssetPath"] as String?,
       mimeType: raw["mimeType"] as String? ?? "image/jpeg",
       extension: raw["extension"] as String? ?? ".jpg",
       fileSize: (raw["fileSize"] as num?)?.toInt() ?? 0,

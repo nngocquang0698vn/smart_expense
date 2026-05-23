@@ -32,7 +32,7 @@ class VoicePlayerService {
     await VoicePlaybackSourceService.release(_source);
     _source = await VoicePlaybackSourceService.create(
       bytes,
-      contentType: AudioStorageHelper.contentTypeForBytes(bytes),
+      contentType: _playbackContentType(audio, bytes),
     );
 
     final source = _source!;
@@ -58,5 +58,11 @@ class VoicePlayerService {
   Future<void> dispose() async {
     await _player.dispose();
     await VoicePlaybackSourceService.release(_source);
+  }
+
+  String _playbackContentType(AudioAttachmentModel audio, List<int> bytes) {
+    final mime = audio.mimeType.trim();
+    if (mime.isNotEmpty && mime != "audio/*") return mime;
+    return AudioStorageHelper.contentTypeForBytes(bytes);
   }
 }

@@ -1,14 +1,8 @@
-import "dart:ui" as ui;
-
-import "package:flutter/services.dart";
-
-import "package:smart_expense/core/storage/audio_storage_helper.dart";
+import "package:smart_expense/core/seed/seed_attachments.dart";
 import "package:smart_expense/features/categories/application/category_selection_resolver.dart";
-import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
+import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
-import "package:smart_expense/features/transactions/data/attachments/audio_storage_service.dart";
-import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 
 /// Clears all transactions, sets the username to "Johny Nguyễn", and seeds
 /// realistic income/expense records spanning ~3 months.
@@ -38,32 +32,10 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
   // "today - N days" for pending entries
   DateTime recent(int daysAgo) => today.subtract(Duration(days: daysAgo));
 
-  // ── Load demo media assets ────────────────────────────────────────────────
-  final audioBytes = await rootBundle.load("assets/demo/audio_demo.mp3");
-  final audioData = audioBytes.buffer.asUint8List();
-  final audioStorage = AudioStorageService();
-  Future<AudioAttachmentModel> demoAudio() {
-    return audioStorage.saveRecording(
-      bytes: audioData,
-      duration: const Duration(seconds: 8),
-      mimeType: AudioStorageHelper.contentTypeForBytes(audioData),
-      extension: AudioStorageHelper.extensionForBytes(audioData),
-    );
-  }
-
-  final imageBytes = await rootBundle.load("assets/demo/bill_demo.jpg");
-  final imageData = imageBytes.buffer.asUint8List();
-  final imageSize = await _imageSize(imageData);
-  final imageStorage = ImageStorageService();
-  Future<ImageAttachmentModel> demoImage() {
-    return imageStorage.save(
-      bytes: imageData,
-      mimeType: "image/jpeg",
-      extension: ".jpg",
-      width: imageSize.width,
-      height: imageSize.height,
-    );
-  }
+  // ── Bundled seed media (stable on Web/PWA; no IndexedDB copy at seed time) ─
+  final seedMedia = await SeedAttachments.loadMeta();
+  AudioAttachmentModel demoAudio() => seedMedia.voiceNote();
+  ImageAttachmentModel demoImage() => seedMedia.billImage();
 
   // ── Category lookup ───────────────────────────────────────────────────────
   final cats = await repo.categories();
@@ -103,8 +75,8 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
       pending: false,
       complete: true,
       note: _cleanSeedNote(note),
-      audio: audio ? await demoAudio() : null,
-      images: image ? [await demoImage()] : const [],
+      audio: audio ? demoAudio() : null,
+      images: image ? [demoImage()] : const [],
     );
   }
 
@@ -120,11 +92,6 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     bool audio = false,
     bool image = false,
   }) async {
-    if (!audio && !image) {
-      throw ArgumentError(
-        "Pending demo transaction must include audio or image: $title",
-      );
-    }
     await repo.addQuick(
       title: title,
       amountVnd: amount,
@@ -134,8 +101,8 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
       pending: true,
       complete: amount > 0,
       note: _cleanSeedNote(note),
-      audio: audio ? await demoAudio() : null,
-      images: image ? [await demoImage()] : const [],
+      audio: audio ? demoAudio() : null,
+      images: image ? [demoImage()] : const [],
     );
   }
 
@@ -1037,15 +1004,14 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     note: "Hoá đơn bệnh viện – chưa xác nhận số tiền",
   );
 
-  // 4 quick entries (mix of complete / incomplete)
+  // 2 ghi nhanh (không đính kèm) — lọc «Không có đính kèm»
   await addPending(
     title: "Grab đi làm",
     amount: 95000,
     category: "Di chuyển",
     isIncome: false,
     date: recent(2),
-    image: true,
-    note: "Cần xác nhận lại",
+    note: "Ghi nhanh, chưa có hoá đơn",
   );
   await addPending(
     title: "Cà phê buổi sáng",
@@ -1053,17 +1019,21 @@ Future<void> populateJohnyData(LedgerRepository repo) async {
     category: "Cà phê",
     isIncome: false,
     date: recent(5),
-    image: true,
   );
+
+  // 1 giao dịch có cả ghi âm + ảnh
   await addPending(
-    title: "Mua sắm",
+    title: "Siêu thị ${_ts(recent(7))}",
     amount: 0,
-    category: "Mua sắm",
+    category: "Tạp hoá",
     isIncome: false,
     date: recent(7),
     audio: true,
-    note: "Chưa nhớ số tiền",
+    image: true,
+    note: "Cần xác nhận số tiền từ hoá đơn",
   );
+
+  // 1 ghi âm thiếu số tiền
   await addPending(
     title: "Chi phí khác",
     amount: 0,
@@ -1121,12 +1091,3 @@ String _ts(DateTime dt) {
   return "$d/$m $h:$min";
 }
 
-Future<({int width, int height})> _imageSize(Uint8List bytes) async {
-  final codec = await ui.instantiateImageCodec(bytes);
-  final frame = await codec.getNextFrame();
-  final image = frame.image;
-  final size = (width: image.width, height: image.height);
-  image.dispose();
-  codec.dispose();
-  return size;
-}

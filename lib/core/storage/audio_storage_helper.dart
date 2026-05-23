@@ -28,10 +28,14 @@ abstract final class AudioStorageHelper {
   }
 
   static bool isMp3(List<int> bytes) {
-    return bytes.length >= 3 &&
+    if (bytes.length >= 3 &&
         bytes[0] == 0x49 &&
         bytes[1] == 0x44 &&
-        bytes[2] == 0x33;
+        bytes[2] == 0x33) {
+      return true;
+    }
+    if (bytes.length < 2) return false;
+    return bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0;
   }
 
   static bool isOgg(List<int> bytes) {

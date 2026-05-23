@@ -4,6 +4,7 @@ import "dart:async";
 import "dart:html" as html;
 import "dart:typed_data";
 
+import "package:smart_expense/core/attachments/bundle_attachment_reader.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 
 class ImageStorageService {
@@ -49,6 +50,10 @@ class ImageStorageService {
   }
 
   Future<List<int>> read(ImageAttachmentModel image) async {
+    final bundlePath = image.bundleAssetPath;
+    if (bundlePath != null && bundlePath.isNotEmpty) {
+      return BundleAttachmentReader.read(bundlePath);
+    }
     final db = await _open();
     final tx = db.transaction(_storeName, "readonly");
     final raw = await tx.objectStore(_storeName).getObject(image.id);
