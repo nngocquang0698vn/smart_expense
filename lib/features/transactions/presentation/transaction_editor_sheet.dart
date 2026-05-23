@@ -477,29 +477,53 @@ class _EditorBodyState extends ConsumerState<_EditorBody> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
 
-                  // ── Action buttons ───────────────────────────────────────
-                  AppPrimaryButton(
-                    label: context.l10n.save,
-                    icon: Icons.save_rounded,
-                    onPressed: () => _saveTransaction(cats),
-                  ),
-
-                  // Delete (only for existing transactions)
-                  if (widget.existing != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: finance.dangerAction,
-                        side: BorderSide(
-                          color: finance.dangerAction,
-                          width: 1.5,
+                  // ── Action buttons (một hàng khi sửa giao dịch) ───────────
+                  if (widget.existing == null)
+                    AppPrimaryButton(
+                      label: context.l10n.save,
+                      icon: Icons.save_rounded,
+                      onPressed: () => _saveTransaction(cats),
+                    )
+                  else
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: AppPrimaryButton(
+                              label: context.l10n.save,
+                              icon: Icons.save_rounded,
+                              onPressed: () => _saveTransaction(cats),
+                            ),
+                          ),
                         ),
-                      ),
-                      onPressed: _delete,
-                      icon: const Icon(Icons.delete_outline, size: 18),
-                      label: Text(context.l10n.deleteTransaction),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          flex: 2,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: finance.dangerAction,
+                              side: BorderSide(
+                                color: finance.dangerAction,
+                                width: 1.5,
+                              ),
+                              minimumSize: const Size(0, 52),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm,
+                              ),
+                            ),
+                            onPressed: _delete,
+                            icon: const Icon(Icons.delete_outline, size: 18),
+                            label: Text(
+                              context.l10n.deleteTransaction,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
             ],
           ),
         );
