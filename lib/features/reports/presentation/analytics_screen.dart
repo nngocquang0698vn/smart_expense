@@ -6,7 +6,7 @@ import "package:smart_expense/core/utils/formatters/money.dart";
 import "package:smart_expense/features/reports/application/report_category_detail_args.dart";
 import "package:smart_expense/features/reports/application/report_controller.dart";
 import "package:smart_expense/features/reports/application/report_view_model.dart";
-import "package:smart_expense/features/reports/presentation/category_report_detail_screen.dart";
+import "package:smart_expense/features/reports/presentation/widgets/category_report_detail_body.dart";
 import "package:smart_expense/features/reports/presentation/widgets/category_report_detail_panel.dart";
 import "package:smart_expense/features/reports/presentation/widgets/report_breakdown_panel.dart";
 import "package:smart_expense/features/reports/presentation/widgets/report_period_chips.dart";
@@ -57,20 +57,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   }
 
   void _onCategoryTap(ReportState state, ReportCategorySlice slice) {
-    final args = ReportCategoryDetailArgs(
-      category: slice.category,
-      isIncomeSide: state.incomeSide,
-      period: state.period,
-      customRange: state.customRange,
-      totalAmountVnd: slice.amount,
-    );
+    ref.read(reportControllerProvider.notifier).selectCategory(slice.id);
+  }
 
-    if (_useMasterDetail(context)) {
-      ref.read(reportControllerProvider.notifier).selectCategory(slice.id);
-      return;
-    }
-
-    Navigator.of(context).push(CategoryReportDetailScreen.route(args));
+  void _closeCategoryDetail() {
+    ref.read(reportControllerProvider.notifier).clearSelectedCategory();
   }
 
   @override
@@ -112,7 +103,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                flex: 6,
+                flex: 7,
                 child: _ReportMasterScroll(
                   state: state,
                   touchedIndex: _touchedIndex,
@@ -124,12 +115,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
               const VerticalDivider(width: 1),
               Expanded(
-                flex: 5,
+                flex: 4,
                 child: CategoryReportDetailPanel(
                   args: detailArgs,
-                  onClose: () => ref
-                      .read(reportControllerProvider.notifier)
-                      .clearSelectedCategory(),
+                  onClose: _closeCategoryDetail,
                 ),
               ),
             ],
