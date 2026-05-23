@@ -2,6 +2,7 @@ class AudioAttachmentModel {
   const AudioAttachmentModel({
     required this.id,
     this.path,
+    this.bundleAssetPath,
     required this.durationMs,
     required this.createdAt,
     required this.mimeType,
@@ -11,6 +12,9 @@ class AudioAttachmentModel {
 
   final String id;
   final String? path;
+
+  /// Flutter asset path for bundled seed/demo audio (stable across Web deploy).
+  final String? bundleAssetPath;
   final int durationMs;
   final DateTime createdAt;
   final String mimeType;
@@ -22,6 +26,7 @@ class AudioAttachmentModel {
   Map<String, Object?> toMap() => {
     "id": id,
     "path": path,
+    "bundleAssetPath": bundleAssetPath,
     "durationMs": durationMs,
     "createdAt": createdAt.toIso8601String(),
     "mimeType": mimeType,
@@ -34,6 +39,7 @@ class AudioAttachmentModel {
     return AudioAttachmentModel(
       id: raw["id"] as String,
       path: raw["path"] as String?,
+      bundleAssetPath: raw["bundleAssetPath"] as String?,
       durationMs: (raw["durationMs"] as num?)?.toInt() ?? 0,
       createdAt:
           DateTime.tryParse(raw["createdAt"] as String? ?? "") ??

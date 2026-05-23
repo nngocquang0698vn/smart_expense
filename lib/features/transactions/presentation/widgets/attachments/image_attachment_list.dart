@@ -13,29 +13,37 @@ class ImageAttachmentList extends StatelessWidget {
     required this.images,
     required this.onDelete,
     this.height = 88,
+    this.trailing = const [],
   });
 
   final List<ImageAttachmentModel> images;
   final ValueChanged<ImageAttachmentModel> onDelete;
   final double height;
+  final List<Widget> trailing;
 
   @override
   Widget build(BuildContext context) {
-    if (images.isEmpty) return const SizedBox.shrink();
+    if (images.isEmpty && trailing.isEmpty) return const SizedBox.shrink();
+    final trailingCount = trailing.length;
     return SizedBox(
       height: height,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: images.length,
+        itemCount: images.length + trailingCount,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final image = images[index];
-          return _ImageAttachmentTile(
-            key: ValueKey(image.id),
-            image: image,
-            size: height,
-            onDelete: () => onDelete(image),
-          );
+          if (index < images.length) {
+            final image = images[index];
+            return _ImageAttachmentTile(
+              key: ValueKey(image.id),
+              image: image,
+              images: images,
+              imageIndex: index,
+              size: height,
+              onDelete: () => onDelete(image),
+            );
+          }
+          return trailing[index - images.length];
         },
       ),
     );
@@ -46,11 +54,15 @@ class _ImageAttachmentTile extends StatefulWidget {
   const _ImageAttachmentTile({
     super.key,
     required this.image,
+    required this.images,
+    required this.imageIndex,
     required this.size,
     required this.onDelete,
   });
 
   final ImageAttachmentModel image;
+  final List<ImageAttachmentModel> images;
+  final int imageIndex;
   final double size;
   final VoidCallback onDelete;
 
@@ -82,13 +94,20 @@ class _ImageAttachmentTileState extends State<_ImageAttachmentTile> {
   }
 
   void _openPreview(BuildContext context) {
-    showImageAttachmentPreview(context, image: widget.image);
+    showImageAttachmentPreview(
+      context,
+      images: widget.images,
+      initialIndex: widget.imageIndex,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final previewHint = context.l10n.imagePreviewTapHint;
+    final decodeSize = (widget.size * MediaQuery.devicePixelRatioOf(context))
+        .round()
+        .clamp(1, 512);
     return Stack(
       children: [
         FutureBuilder<Uint8List>(
@@ -113,6 +132,8 @@ class _ImageAttachmentTileState extends State<_ImageAttachmentTile> {
                 snapshot.data!,
                 width: widget.size,
                 height: widget.size,
+                cacheWidth: decodeSize,
+                cacheHeight: decodeSize,
                 fit: BoxFit.cover,
               );
             }
@@ -127,7 +148,7 @@ class _ImageAttachmentTileState extends State<_ImageAttachmentTile> {
                   borderRadius: BorderRadius.circular(8),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: thumb,
+                    child: RepaintBoundary(child: thumb),
                   ),
                 ),
               ),

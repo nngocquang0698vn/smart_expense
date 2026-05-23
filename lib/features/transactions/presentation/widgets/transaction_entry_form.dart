@@ -168,12 +168,36 @@ class TransactionPendingSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(context.l10n.pending),
-      subtitle: Text(subtitle ?? context.l10n.pendingSubtitleDefault),
-      value: pending,
-      onChanged: onChanged,
+    final sub = subtitle ?? context.l10n.pendingSubtitleDefault;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              context.l10n.pending,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Switch(
+              value: pending,
+              onChanged: onChanged,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            sub,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: context.financeColors.textMuted,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

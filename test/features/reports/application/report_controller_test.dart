@@ -53,4 +53,19 @@ void main() {
     expect(state.period, AnalyticsPeriod.year);
     expect(state.loading, isFalse);
   });
+
+  test("selectCategory updates selectedCategoryId without reload", () async {
+    await container.read(reportControllerProvider.future);
+    final notifier = container.read(reportControllerProvider.notifier);
+    notifier.selectCategory("cat-1");
+    expect(
+      container.read(reportControllerProvider).value!.selectedCategoryId,
+      "cat-1",
+    );
+    notifier.clearSelectedCategory();
+    expect(
+      container.read(reportControllerProvider).value!.selectedCategoryId,
+      isNull,
+    );
+  });
 }

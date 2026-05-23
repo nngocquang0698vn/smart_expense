@@ -3,6 +3,7 @@ import "dart:io";
 import "package:path/path.dart" as p;
 import "package:path_provider/path_provider.dart";
 
+import "package:smart_expense/core/attachments/bundle_attachment_reader.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 
 class ImageStorageService {
@@ -35,6 +36,10 @@ class ImageStorageService {
   }
 
   Future<List<int>> read(ImageAttachmentModel image) async {
+    final bundlePath = image.bundleAssetPath;
+    if (bundlePath != null && bundlePath.isNotEmpty) {
+      return BundleAttachmentReader.read(bundlePath);
+    }
     final path = image.path;
     if (path == null || path.isEmpty) {
       throw StateError("Không tìm thấy đường dẫn ảnh.");

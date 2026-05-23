@@ -36,4 +36,18 @@ void main() {
       expect(viewModel.slices.map((slice) => slice.id), ["coffee", "food"]);
     },
   );
+
+  test("slicePercent is 0 when slice total is 0", () {
+    const empty = ReportViewModel.empty();
+    expect(empty.slicePercent(100), 0);
+  });
+
+  test("slicePercent matches category share", () {
+    final viewModel = builder.build(
+      totals: const {"income": 0, "expense": 100},
+      breakdown: const {"food": 40},
+      categories: [category("food", "Ăn uống")],
+    );
+    expect(viewModel.slicePercent(40), 100);
+  });
 }

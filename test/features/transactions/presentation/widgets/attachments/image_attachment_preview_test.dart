@@ -28,6 +28,16 @@ void main() {
     createdAt: DateTime(2026, 5, 19),
   );
 
+  final image2 = ImageAttachmentModel(
+    id: "img-2",
+    mimeType: "image/png",
+    extension: ".png",
+    fileSize: 4,
+    width: 1,
+    height: 1,
+    createdAt: DateTime(2026, 5, 19),
+  );
+
   /// 1×1 PNG đỏ hợp lệ.
   final pngBytes = base64Decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
@@ -50,7 +60,8 @@ void main() {
             onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => ImageAttachmentPreviewDialog(
-                image: image,
+                images: [image],
+                initialIndex: 0,
                 storage: _FakeImageStorageService(pngBytes),
               ),
             ),
@@ -77,7 +88,8 @@ void main() {
             onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => ImageAttachmentPreviewDialog(
-                image: image,
+                images: [image],
+                initialIndex: 0,
                 storage: _FakeImageStorageService(pngBytes),
               ),
             ),
@@ -94,5 +106,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key("image_attachment_preview")), findsNothing);
+  });
+
+  testWidgets("navigates between images with Sau button", (tester) async {
+    await tester.pumpWidget(
+      host(
+        Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => ImageAttachmentPreviewDialog(
+                images: [image, image2],
+                initialIndex: 0,
+                storage: _FakeImageStorageService(pngBytes),
+              ),
+            ),
+            child: const Text("open"),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text("open"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Ảnh 1/2"), findsOneWidget);
+
+    await tester.tap(find.text("Sau"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Ảnh 2/2"), findsOneWidget);
   });
 }

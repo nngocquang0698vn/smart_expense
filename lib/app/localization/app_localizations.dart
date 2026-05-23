@@ -110,6 +110,9 @@ class AppLocalizations {
   String get imageSaveFailed => text("imageSaveFailed");
   String get imagePreviewLoadFailed => text("imagePreviewLoadFailed");
   String get imagePreviewTapHint => text("imagePreviewTapHint");
+  String imagePreviewCounter(int current, int total) => text(
+    "imagePreviewCounter",
+  ).replaceAll("{current}", "$current").replaceAll("{total}", "$total");
   String get income => text("income");
   String get keepVoiceNote => text("keepVoiceNote");
   String get loading => text("loading");
@@ -165,6 +168,25 @@ class AppLocalizations {
   String get pendingSubtitleDefault => text("pendingSubtitleDefault");
   String get pendingSubtitleWithMedia => text("pendingSubtitleWithMedia");
   String get pickPhoto => text("pickPhoto");
+  String transactionImageCount(int current, int max) => text(
+    "transactionImageCount",
+  ).replaceAll("{current}", "$current").replaceAll("{max}", "$max");
+  String get transactionImageLimitReached =>
+      text("transactionImageLimitReached");
+  String transactionImagePartialPick(int skipped) =>
+      text("transactionImagePartialPick").replaceAll("{count}", "$skipped");
+  String get pendingSelectTransactionHint =>
+      text("pendingSelectTransactionHint");
+  String get pendingReconciliationDone => text("pendingReconciliationDone");
+  String get pendingPrevious => text("pendingPrevious");
+  String get pendingNext => text("pendingNext");
+  String get pendingFilterAll => text("pendingFilterAll");
+  String get pendingFilterWithImages => text("pendingFilterWithImages");
+  String get pendingFilterWithAudio => text("pendingFilterWithAudio");
+  String get pendingFilterWithMedia => text("pendingFilterWithMedia");
+  String get pendingFilterWithoutAttachments =>
+      text("pendingFilterWithoutAttachments");
+  String get pendingFilterEmpty => text("pendingFilterEmpty");
   String get pickYearTitle => text("pickYearTitle");
   String get playBack => text("playBack");
   String get profileTitle => text("profileTitle");
@@ -231,6 +253,10 @@ class AppLocalizations {
   String get recordSuccess => text("recordSuccess");
   String get reportBalance => text("reportBalance");
   String get reportByCategory => text("reportByCategory");
+  String get reportCategoryDetailSubtitle =>
+      text("reportCategoryDetailSubtitle");
+  String get reportCategoryTotalLabel => text("reportCategoryTotalLabel");
+  String get reportSelectCategoryHint => text("reportSelectCategoryHint");
   String get reportPeriodCustom => text("reportPeriodCustom");
   String get reportPeriodMonth => text("reportPeriodMonth");
   String get reportPeriodQuarter => text("reportPeriodQuarter");
@@ -385,6 +411,7 @@ const _vi = {
   "imageSaveFailed": "Không thể lưu ảnh. Vui lòng thử lại.",
   "imagePreviewLoadFailed": "Không tải được ảnh. Vui lòng thử lại.",
   "imagePreviewTapHint": "Nhấn để xem ảnh gốc",
+  "imagePreviewCounter": "Ảnh {current}/{total}",
   "keepVoiceNote": "Giữ lại",
   "newCategory": "Hạng mục mới",
   "noCategories": "Chưa có hạng mục nào.",
@@ -417,6 +444,20 @@ const _vi = {
   "pendingSubtitleWithMedia":
       "Đang bận — Đối soát và hoàn thiện giao dịch sau.",
   "pickPhoto": "Chọn ảnh",
+  "transactionImageCount": "Ảnh đính kèm ({current}/{max})",
+  "transactionImageLimitReached": "Đã đủ 5 ảnh cho giao dịch này.",
+  "transactionImagePartialPick":
+      "Chỉ thêm được một phần ảnh đã chọn (bỏ qua {count} ảnh vì vượt giới hạn 5 ảnh).",
+  "pendingSelectTransactionHint": "Chọn một giao dịch để đối soát",
+  "pendingReconciliationDone": "Đã hết giao dịch trong bộ lọc hiện tại",
+  "pendingPrevious": "Trước",
+  "pendingNext": "Sau",
+  "pendingFilterAll": "Tất cả",
+  "pendingFilterWithImages": "Có ảnh",
+  "pendingFilterWithAudio": "Có ghi âm",
+  "pendingFilterWithMedia": "Có ảnh/ghi âm",
+  "pendingFilterWithoutAttachments": "Không có tệp",
+  "pendingFilterEmpty": "Không có giao dịch phù hợp với bộ lọc.",
   "pickYearTitle": "Chọn năm",
   "playBack": "Nghe lại",
   "pwaInstallAndroidStep1": "Nhấn menu ⋮ ở góc trên bên phải",
@@ -478,6 +519,9 @@ const _vi = {
   "recordSuccess": "Ghi âm thành công",
   "reportBalance": "Còn lại",
   "reportByCategory": "Theo hạng mục",
+  "reportCategoryDetailSubtitle": "Báo cáo chi tiết",
+  "reportCategoryTotalLabel": "Tổng trong kỳ",
+  "reportSelectCategoryHint": "Chọn một hạng mục để xem chi tiết",
   "reportPeriodCustom": "Tuỳ chọn",
   "reportPeriodMonth": "Tháng",
   "reportPeriodQuarter": "Quý",

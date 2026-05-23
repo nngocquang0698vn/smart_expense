@@ -51,5 +51,14 @@ void main() {
         "audio/webm",
       );
     });
+
+    test("isMp3 detects ID3 and MPEG frame sync headers", () {
+      expect(AudioStorageHelper.isMp3([0x49, 0x44, 0x33, 0x00]), isTrue);
+      expect(AudioStorageHelper.isMp3([0xFF, 0xF3, 0x90, 0x54]), isTrue);
+      expect(
+        AudioStorageHelper.contentTypeForBytes([0xFF, 0xF3, 0x90, 0x54]),
+        "audio/mpeg",
+      );
+    });
   });
 }
