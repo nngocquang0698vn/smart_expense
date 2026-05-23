@@ -181,20 +181,19 @@ class _ResponsiveShell extends StatelessWidget {
                 ),
                 SizedBox(width: isMobile ? 0 : 12),
                 Expanded(
-                  child: Container(
-                    margin: isMobile
+                  child: Padding(
+                    padding: isMobile
                         ? EdgeInsets.zero
                         : const EdgeInsets.fromLTRB(0, 10, 10, 10),
-                    decoration: isMobile
-                        ? null
-                        : BoxDecoration(
-                            color: contentColor,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                    child: IndexedStack(
-                      key: pageStackKey,
-                      index: page,
-                      children: pages,
+                    child: Material(
+                      color: isMobile ? Colors.transparent : contentColor,
+                      borderRadius: isMobile ? null : BorderRadius.circular(16),
+                      clipBehavior: isMobile ? Clip.none : Clip.antiAlias,
+                      child: IndexedStack(
+                        key: pageStackKey,
+                        index: page,
+                        children: pages,
+                      ),
                     ),
                   ),
                 ),
