@@ -3,7 +3,6 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/core/utils/formatters/money.dart";
-import "package:smart_expense/features/reports/application/report_category_detail_args.dart";
 import "package:smart_expense/features/reports/application/report_controller.dart";
 import "package:smart_expense/features/reports/application/report_view_model.dart";
 import "package:smart_expense/features/reports/presentation/widgets/category_report_detail_body.dart";
@@ -129,6 +128,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   }
 
   Widget _buildMobileScroll(ReportState state) {
+    final detailArgs = state.detailArgsForSelectedSlice();
+    if (detailArgs != null) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _closeCategoryDetail();
+        },
+        child: CategoryReportDetailBody(
+          args: detailArgs,
+          showPeriodFilters: true,
+          onClose: _closeCategoryDetail,
+        ),
+      );
+    }
+
     return CustomScrollView(
       slivers: [
         PageHeaderSliver(title: context.l10n.reportTitle),
