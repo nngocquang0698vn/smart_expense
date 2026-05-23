@@ -56,10 +56,7 @@ class AppTransactionTile extends StatelessWidget {
                 if (trailing != null) ...[
                   amount,
                   Expanded(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: trailing!,
-                    ),
+                    child: Align(alignment: Alignment.center, child: trailing!),
                   ),
                 ] else
                   Expanded(

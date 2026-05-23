@@ -67,10 +67,9 @@ class _FormAmountFieldState extends ConsumerState<FormAmountField> {
 
   TextStyle _currencyStyle(BuildContext context, AppFinanceColors finance) {
     final color = _amountColor(finance);
-    return Theme.of(context).textTheme.titleLarge!.copyWith(
-      color: color,
-      fontWeight: FontWeight.w700,
-    );
+    return Theme.of(
+      context,
+    ).textTheme.titleLarge!.copyWith(color: color, fontWeight: FontWeight.w700);
   }
 
   Widget _buildProminentAmount(

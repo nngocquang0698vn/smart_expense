@@ -13,8 +13,8 @@ class PwaInstallHint extends ConsumerWidget {
 
   static IconData _hintIcon(PwaPlatformKind platform) {
     return switch (platform) {
-      PwaPlatformKind.iosSafari || PwaPlatformKind.androidChrome =>
-        Icons.install_mobile_rounded,
+      PwaPlatformKind.iosSafari ||
+      PwaPlatformKind.androidChrome => Icons.install_mobile_rounded,
       _ => Icons.install_desktop_rounded,
     };
   }

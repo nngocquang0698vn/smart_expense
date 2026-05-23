@@ -24,8 +24,9 @@ class PwaInstallOnboardingCard extends StatelessWidget {
     final l10n = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final isDesktop = variant == PwaInstallCardVariant.desktop;
-    final installIcon =
-        isDesktop ? Icons.install_desktop_rounded : Icons.install_mobile_rounded;
+    final installIcon = isDesktop
+        ? Icons.install_desktop_rounded
+        : Icons.install_mobile_rounded;
     return Container(
       margin: const EdgeInsets.only(top: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -46,9 +47,9 @@ class PwaInstallOnboardingCard extends StatelessWidget {
           Text(
             l10n.pwaInstallCardTitle,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.md),
           PwaInstallBenefitRow(

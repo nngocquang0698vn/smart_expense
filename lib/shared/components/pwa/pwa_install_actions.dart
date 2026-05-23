@@ -62,9 +62,9 @@ abstract final class PwaInstallActions {
             children: [
               Text(
                 l10n.pwaPostActionTitle,
-                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  ctx,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Text(

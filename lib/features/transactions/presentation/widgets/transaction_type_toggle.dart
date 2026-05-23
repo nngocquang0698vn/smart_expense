@@ -23,8 +23,9 @@ class TransactionTypeToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final track = AppTransactionEntryTokens.toggleTrack(brightness);
-    final selectedFill =
-        AppTransactionEntryTokens.toggleSelectedFill(brightness);
+    final selectedFill = AppTransactionEntryTokens.toggleSelectedFill(
+      brightness,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -100,10 +101,12 @@ class _SegmentLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final selectedColor =
-        AppTransactionEntryTokens.toggleSelectedLabel(brightness);
-    final unselectedColor =
-        AppTransactionEntryTokens.toggleUnselectedLabel(brightness);
+    final selectedColor = AppTransactionEntryTokens.toggleSelectedLabel(
+      brightness,
+    );
+    final unselectedColor = AppTransactionEntryTokens.toggleUnselectedLabel(
+      brightness,
+    );
 
     return Expanded(
       child: Material(

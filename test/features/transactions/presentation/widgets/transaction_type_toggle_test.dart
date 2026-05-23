@@ -40,10 +40,10 @@ void main() {
     expect(isIncome, isTrue);
   });
 
-  testWidgets("selected segment uses green fill on light track", (tester) async {
-    await tester.pumpWidget(
-      buildSubject(isIncome: true, onChanged: (_) {}),
-    );
+  testWidgets("selected segment uses green fill on light track", (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject(isIncome: true, onChanged: (_) {}));
 
     final colors = tester
         .widgetList<DecoratedBox>(
@@ -61,9 +61,7 @@ void main() {
   });
 
   testWidgets("selected label is white and unselected is dark", (tester) async {
-    await tester.pumpWidget(
-      buildSubject(isIncome: true, onChanged: (_) {}),
-    );
+    await tester.pumpWidget(buildSubject(isIncome: true, onChanged: (_) {}));
     await tester.pumpAndSettle();
 
     TextStyle resolvedStyle(Element element) {
