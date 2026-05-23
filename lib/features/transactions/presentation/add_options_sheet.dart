@@ -1,7 +1,7 @@
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
 import "package:smart_expense/core/constants/app_constants.dart";
+import "package:smart_expense/core/utils/attachment_capture_policy.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/features/transactions/presentation/quick_entry_sheet.dart";
@@ -90,15 +90,15 @@ class QuickAddOptionsSheet extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _OptionCard(
-              icon: kIsWeb
-                  ? Icons.photo_library_outlined
-                  : Icons.photo_camera_outlined,
-              title: kIsWeb
-                  ? context.l10n.quickEntryReceiptPickTitle
-                  : context.l10n.quickEntryReceiptCaptureTitle,
-              subtitle: kIsWeb
-                  ? context.l10n.quickEntryReceiptPickSubtitle
-                  : context.l10n.quickEntryReceiptCaptureSubtitle,
+              icon: AttachmentCapturePolicy.showReceiptCameraButton
+                  ? Icons.photo_camera_outlined
+                  : Icons.photo_library_outlined,
+              title: AttachmentCapturePolicy.showReceiptCameraButton
+                  ? context.l10n.quickEntryReceiptCaptureTitle
+                  : context.l10n.quickEntryReceiptPickTitle,
+              subtitle: AttachmentCapturePolicy.showReceiptCameraButton
+                  ? context.l10n.quickEntryReceiptCaptureSubtitle
+                  : context.l10n.quickEntryReceiptPickSubtitle,
               background: cardBg,
               titleColor: titleColor,
               subtitleColor: subtitleColor,
