@@ -75,21 +75,22 @@ void main() {
     expect(find.text("Vui lòng chọn hạng mục"), findsOneWidget);
   });
 
-  testWidgets("includes legacy selected category when editing old transaction", (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      wrap(
-        TransactionCategorySection(
-          categories: [categories.first],
-          includeSelectedFrom: categories,
-          isIncome: false,
-          selectedId: "old",
-          onSelected: (_) {},
+  testWidgets(
+    "includes legacy selected category when editing old transaction",
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          TransactionCategorySection(
+            categories: [categories.first],
+            includeSelectedFrom: categories,
+            isIncome: false,
+            selectedId: "old",
+            onSelected: (_) {},
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text("Danh mục cũ"), findsOneWidget);
-  });
+      expect(find.text("Danh mục cũ"), findsOneWidget);
+    },
+  );
 }

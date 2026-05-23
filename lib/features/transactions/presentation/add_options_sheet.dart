@@ -44,7 +44,9 @@ class QuickAddOptionsSheet extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final cardBg = AppTransactionEntryTokens.quickAddCard(brightness);
     final titleColor = cs.primary;
-    final subtitleColor = AppTransactionEntryTokens.quickAddSubtitle(brightness);
+    final subtitleColor = AppTransactionEntryTokens.quickAddSubtitle(
+      brightness,
+    );
 
     return SafeArea(
       child: Padding(
@@ -62,10 +64,7 @@ class QuickAddOptionsSheet extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  onPressed: onClose,
-                  icon: const Icon(Icons.close),
-                ),
+                IconButton(onPressed: onClose, icon: const Icon(Icons.close)),
               ],
             ),
             const SizedBox(height: 8),

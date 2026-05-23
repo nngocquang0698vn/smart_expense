@@ -11,10 +11,7 @@ void main() {
       child: MaterialApp(
         theme: AppTheme.light(),
         home: Scaffold(
-          body: FormAmountField(
-            initialAmount: 40_000_000,
-            isIncome: isIncome,
-          ),
+          body: FormAmountField(initialAmount: 40_000_000, isIncome: isIncome),
         ),
       ),
     );

@@ -11,10 +11,7 @@ abstract final class OnboardingFlow {
     return showPwaGuidePage ? 4 : 3;
   }
 
-  static bool showPwaUiOnWeb({
-    required bool isWeb,
-    required bool eligible,
-  }) {
+  static bool showPwaUiOnWeb({required bool isWeb, required bool eligible}) {
     return isWeb && eligible;
   }
 }

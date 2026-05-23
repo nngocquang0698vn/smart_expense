@@ -47,7 +47,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets("hides keypad without layout overflow while fading", (tester) async {
+  testWidgets("hides keypad without layout overflow while fading", (
+    tester,
+  ) async {
     var keypadVisible = true;
 
     await tester.pumpWidget(
@@ -98,7 +100,9 @@ void main() {
 
 double _keypadOpacity(WidgetTester tester) {
   return tester
-      .widget<AnimatedOpacity>(find.byKey(const Key("transaction_keypad_overlay")))
+      .widget<AnimatedOpacity>(
+        find.byKey(const Key("transaction_keypad_overlay")),
+      )
       .opacity;
 }
 

@@ -305,8 +305,7 @@ const _vi = {
   "pendingTransactionsSubtitle": "Mở danh sách đối soát",
   "pendingTransactionsTitle": "Giao dịch chờ đối soát",
   "profileTitle": "Cá nhân",
-  "quickConfirmPendingSubtitle":
-      "Ấn Xác nhận là hoàn tất, không hỏi lại",
+  "quickConfirmPendingSubtitle": "Ấn Xác nhận là hoàn tất, không hỏi lại",
   "quickConfirmPendingTitle": "Xác nhận nhanh",
   "quickEntryReceiptCaptureSubtitle": "Lưu ảnh hoá đơn để đối soát sau",
   "quickEntryReceiptCaptureTitle": "Chụp ảnh hoá đơn",

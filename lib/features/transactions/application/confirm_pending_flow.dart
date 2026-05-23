@@ -12,8 +12,9 @@ Future<void> runConfirmPendingFlow({
   required WidgetRef ref,
   required String transactionId,
 }) async {
-  final quickConfirm =
-      ref.read(userPreferencesControllerProvider).quickConfirmPending;
+  final quickConfirm = ref
+      .read(userPreferencesControllerProvider)
+      .quickConfirmPending;
   if (!quickConfirm) {
     final ok = await AppConfirmBottomSheet.show(
       context,

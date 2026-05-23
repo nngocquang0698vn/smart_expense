@@ -58,26 +58,18 @@ class TxRow extends StatelessWidget {
               t.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           if (hasAudio) ...[
             const SizedBox(width: AppSpacing.xxs),
-            Icon(
-              Icons.audiotrack_rounded,
-              size: 15,
-              color: finance.textMuted,
-            ),
+            Icon(Icons.audiotrack_rounded, size: 15, color: finance.textMuted),
           ],
           if (hasImages) ...[
             const SizedBox(width: AppSpacing.xxs),
-            Icon(
-              Icons.image_outlined,
-              size: 15,
-              color: finance.textMuted,
-            ),
+            Icon(Icons.image_outlined, size: 15, color: finance.textMuted),
           ],
         ],
       ),
@@ -138,10 +130,7 @@ class _InlineAudioPlayerBarrier extends StatelessWidget {
     return GestureDetector(
       onTap: () {},
       behavior: HitTestBehavior.opaque,
-      child: VoiceNotePlayer(
-        audio: audio,
-        compact: true,
-      ),
+      child: VoiceNotePlayer(audio: audio, compact: true),
     );
   }
 }

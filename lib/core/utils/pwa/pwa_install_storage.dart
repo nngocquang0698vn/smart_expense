@@ -59,15 +59,9 @@ class PwaInstallStorage {
   Future<void> recordDismiss() async {
     final next = dismissCount + 1;
     await _prefs.setInt(_kDismissCount, next);
-    await _prefs.setInt(
-      _kDismissedAtMs,
-      DateTime.now().millisecondsSinceEpoch,
-    );
+    await _prefs.setInt(_kDismissedAtMs, DateTime.now().millisecondsSinceEpoch);
     await _prefs.setInt(_kSessionsSinceDismiss, 0);
-    await _prefs.setInt(
-      _kLastShownAtMs,
-      DateTime.now().millisecondsSinceEpoch,
-    );
+    await _prefs.setInt(_kLastShownAtMs, DateTime.now().millisecondsSinceEpoch);
   }
 
   Future<void> markInstalled() async {

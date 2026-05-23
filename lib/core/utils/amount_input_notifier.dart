@@ -42,7 +42,5 @@ class AmountInputNotifier extends Notifier<int> {
   static int _clamp(int v) => v.clamp(0, kMaxAmountVnd);
 }
 
-final amountInputProvider =
-    NotifierProvider.autoDispose.family<AmountInputNotifier, int, int>(
-      AmountInputNotifier.new,
-    );
+final amountInputProvider = NotifierProvider.autoDispose
+    .family<AmountInputNotifier, int, int>(AmountInputNotifier.new);

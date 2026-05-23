@@ -134,7 +134,9 @@ void main() {
 
 double _keypadOpacity(WidgetTester tester) {
   return tester
-      .widget<AnimatedOpacity>(find.byKey(const Key("transaction_keypad_overlay")))
+      .widget<AnimatedOpacity>(
+        find.byKey(const Key("transaction_keypad_overlay")),
+      )
       .opacity;
 }
 

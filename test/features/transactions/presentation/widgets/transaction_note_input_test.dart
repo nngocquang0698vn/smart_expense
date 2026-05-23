@@ -104,7 +104,9 @@ void main() {
     expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
   });
 
-  testWidgets("shows recording state when repository is active", (tester) async {
+  testWidgets("shows recording state when repository is active", (
+    tester,
+  ) async {
     final noteCtrl = TextEditingController();
     recorder.elapsed = const Duration(seconds: 18);
     await pumpNoteInput(

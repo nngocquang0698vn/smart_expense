@@ -188,10 +188,7 @@ class PwaInstallBenefitRow extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
+          child: Text(label, style: Theme.of(context).textTheme.labelLarge),
         ),
       ],
     );
