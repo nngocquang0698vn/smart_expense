@@ -7,7 +7,21 @@ import "package:smart_expense/features/transactions/domain/entities/ledger_trans
 
 /// Contract for ledger persistence and queries.
 abstract class LedgerRepository {
+  static const kDefaultExpenseFoodId = "default_expense_food";
+  static const kDefaultExpenseGroceryId = "default_expense_grocery";
+  static const kDefaultExpenseShoppingId = "default_expense_shopping";
+  static const kDefaultExpenseTransportId = "default_expense_transport";
+  static const kDefaultExpenseBillsId = "default_expense_bills";
+  static const kDefaultExpenseEntertainmentId = "default_expense_entertainment";
+  static const kDefaultExpenseHealthId = "default_expense_health";
+  static const kDefaultExpenseGiftId = "default_expense_gift";
+  static const kDefaultExpenseBeautyId = "default_expense_beauty";
+  static const kDefaultExpenseWorkId = "default_expense_work";
+  static const kDefaultExpenseTravelId = "default_expense_travel";
+  static const kDefaultExpenseCoffeeId = "default_expense_coffee";
   static const kOtherExpenseId = "system_khac_expense";
+  static const kDefaultIncomeSalaryId = "default_income_salary";
+  static const kDefaultIncomeOtherId = "default_income_other";
   static const kOtherIncomeId = "system_khac_income";
 
   Stream<void> get changes;

@@ -88,14 +88,14 @@ class SembastLedgerRepository extends LedgerRepository {
   Future<void> _seedCategories() async {
     final defaults = <CategoryModel>[
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseFoodId,
         name: "Ăn uống",
         iconKey: "restaurant",
         colorValue: 0xFF0A6C67,
         isIncome: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseGroceryId,
         name: "Tạp hoá",
         iconKey: "local_grocery_store",
         colorValue: 0xFF2E8B57,
@@ -103,28 +103,28 @@ class SembastLedgerRepository extends LedgerRepository {
         enabled: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseShoppingId,
         name: "Mua sắm",
         iconKey: "shopping_bag",
         colorValue: 0xFF2A86C9,
         isIncome: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseTransportId,
         name: "Di chuyển",
         iconKey: "train",
         colorValue: 0xFFE09C2B,
         isIncome: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseBillsId,
         name: "Hoá đơn",
         iconKey: "receipt_long",
         colorValue: 0xFF3B82F6,
         isIncome: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseEntertainmentId,
         name: "Giải trí",
         iconKey: "movie",
         colorValue: 0xFF7C3AED,
@@ -132,7 +132,7 @@ class SembastLedgerRepository extends LedgerRepository {
         enabled: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseHealthId,
         name: "Sức khoẻ",
         iconKey: "medical_services",
         colorValue: 0xFF0EA5A2,
@@ -140,7 +140,7 @@ class SembastLedgerRepository extends LedgerRepository {
         enabled: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseGiftId,
         name: "Quà tặng",
         iconKey: "card_giftcard",
         colorValue: 0xFFE11D48,
@@ -148,7 +148,7 @@ class SembastLedgerRepository extends LedgerRepository {
         enabled: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseBeautyId,
         name: "Làm đẹp",
         iconKey: "spa",
         colorValue: 0xFF9333EA,
@@ -156,7 +156,7 @@ class SembastLedgerRepository extends LedgerRepository {
         enabled: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseWorkId,
         name: "Công việc",
         iconKey: "work",
         colorValue: 0xFF6B7280,
@@ -164,7 +164,7 @@ class SembastLedgerRepository extends LedgerRepository {
         enabled: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseTravelId,
         name: "Du lịch",
         iconKey: "flight",
         colorValue: 0xFFF97316,
@@ -172,7 +172,7 @@ class SembastLedgerRepository extends LedgerRepository {
         enabled: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultExpenseCoffeeId,
         name: "Cà phê",
         iconKey: "local_cafe",
         colorValue: 0xFF8B5E3C,
@@ -180,14 +180,14 @@ class SembastLedgerRepository extends LedgerRepository {
         enabled: false,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultIncomeSalaryId,
         name: "Lương",
         iconKey: "payments",
         colorValue: 0xFF4CAF50,
         isIncome: true,
       ),
       CategoryModel(
-        id: _uuid.v4(),
+        id: LedgerRepository.kDefaultIncomeOtherId,
         name: "Thu nhập khác",
         iconKey: "savings",
         colorValue: 0xFF26A69A,

@@ -23,6 +23,40 @@ void main() {
         categories.any((c) => c.id == LedgerRepository.kOtherIncomeId),
         isTrue,
       );
+      expect(
+        categories
+            .firstWhere((c) => c.id == LedgerRepository.kDefaultExpenseFoodId)
+            .name,
+        "Ăn uống",
+      );
+      expect(
+        categories
+            .firstWhere(
+              (c) => c.id == LedgerRepository.kDefaultExpenseShoppingId,
+            )
+            .name,
+        "Mua sắm",
+      );
+      expect(
+        categories
+            .firstWhere(
+              (c) => c.id == LedgerRepository.kDefaultExpenseTransportId,
+            )
+            .name,
+        "Di chuyển",
+      );
+      expect(
+        categories
+            .firstWhere((c) => c.id == LedgerRepository.kDefaultExpenseBillsId)
+            .name,
+        "Hoá đơn",
+      );
+      expect(
+        categories
+            .firstWhere((c) => c.id == LedgerRepository.kDefaultIncomeSalaryId)
+            .name,
+        "Lương",
+      );
 
       final enabledExpenseNames = categories
           .where((c) => c.enabled && !c.isIncome)
