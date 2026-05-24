@@ -28,6 +28,44 @@ void main() {
     });
   });
 
+  group("OnboardingFlow.shouldReserveNameFieldSlot", () {
+    test("skips reserve on PWA guide page", () {
+      expect(
+        OnboardingFlow.shouldReserveNameFieldSlot(
+          isLastPage: false,
+          viewportAllowsReserve: true,
+          currentPageIndex: 2,
+          showPwaGuidePage: true,
+        ),
+        isFalse,
+      );
+    });
+
+    test("reserves on intro pages when viewport allows", () {
+      expect(
+        OnboardingFlow.shouldReserveNameFieldSlot(
+          isLastPage: false,
+          viewportAllowsReserve: true,
+          currentPageIndex: 0,
+          showPwaGuidePage: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test("does not reserve on last page", () {
+      expect(
+        OnboardingFlow.shouldReserveNameFieldSlot(
+          isLastPage: true,
+          viewportAllowsReserve: true,
+          currentPageIndex: 4,
+          showPwaGuidePage: true,
+        ),
+        isFalse,
+      );
+    });
+  });
+
   group("OnboardingFlow.showPwaUiOnWeb", () {
     test("hides PWA UI when not web", () {
       expect(

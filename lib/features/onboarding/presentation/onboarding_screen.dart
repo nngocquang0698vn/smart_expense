@@ -125,9 +125,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, viewport) {
-            final reserveNameSlot = _canReserveNameFieldSlot(
-              viewportHeight: viewport.maxHeight,
-              footerHeight: onboardingFooterHeight(context),
+            final reserveNameSlot = OnboardingFlow.shouldReserveNameFieldSlot(
+              isLastPage: isLast,
+              viewportAllowsReserve: _canReserveNameFieldSlot(
+                viewportHeight: viewport.maxHeight,
+                footerHeight: onboardingFooterHeight(context),
+              ),
+              currentPageIndex: _i,
+              showPwaGuidePage: showPwaGuide,
             );
 
             return Center(

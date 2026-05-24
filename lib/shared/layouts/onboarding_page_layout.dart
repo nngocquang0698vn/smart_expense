@@ -6,10 +6,14 @@ class OnboardingPageLayout extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+    this.alignToTop = false,
   });
 
   final Widget child;
   final EdgeInsets padding;
+
+  /// Tall scrollable pages (e.g. PWA guide) start at top instead of centering.
+  final bool alignToTop;
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +25,13 @@ class OnboardingPageLayout extends StatelessWidget {
         return SingleChildScrollView(
           padding: padding,
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: minContentHeight),
+            constraints: BoxConstraints(
+              minHeight: alignToTop ? 0 : minContentHeight,
+            ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: alignToTop
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [child],
             ),
           ),

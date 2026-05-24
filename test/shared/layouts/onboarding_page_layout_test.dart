@@ -39,6 +39,38 @@ void main() {
     expect(column.mainAxisAlignment, MainAxisAlignment.center);
   });
 
+  testWidgets("alignToTop uses start alignment and no min height", (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            height: viewportHeight,
+            child: const OnboardingPageLayout(
+              padding: padding,
+              alignToTop: true,
+              child: Text("top"),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final constrainedFinder = find.descendant(
+      of: find.byType(OnboardingPageLayout),
+      matching: find.byWidgetPredicate(
+        (w) => w is ConstrainedBox && w.constraints.minHeight == 0,
+      ),
+    );
+    expect(constrainedFinder, findsOneWidget);
+
+    final column = tester.widget<Column>(
+      find.descendant(of: constrainedFinder, matching: find.byType(Column)),
+    );
+    expect(column.mainAxisAlignment, MainAxisAlignment.start);
+  });
+
   testWidgets("short content does not create extra vertical scroll extent", (
     tester,
   ) async {

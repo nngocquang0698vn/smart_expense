@@ -20,12 +20,14 @@ class PwaInstallOnboardingPage extends ConsumerWidget {
     if (state.platform == PwaPlatformKind.iosSafari) {
       return const OnboardingPageLayout(
         padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        alignToTop: true,
         child: PwaInstallGuideContent(compact: true),
       );
     }
 
     return OnboardingPageLayout(
       padding: const EdgeInsets.symmetric(vertical: 8),
+      alignToTop: true,
       child: PwaInstallOnboardingCard(
         variant: pwaInstallCardVariantFor(state.platform),
         onInstall: () => PwaInstallActions.requestInstall(context, ref),
