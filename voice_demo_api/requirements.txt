@@ -1,0 +1,8 @@
+fastapi>=0.122,<1
+uvicorn[standard]>=0.33,<1
+python-multipart>=0.0.20,<1
+python-dotenv>=1.2,<2
+openai>=2.8,<3
+pydantic>=2.12,<3
+imageio-ffmpeg>=0.6,<1
+tzdata>=2025.2
