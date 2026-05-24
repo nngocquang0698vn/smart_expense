@@ -18,6 +18,7 @@ class TxRow extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.showInlineAudioPlayer = false,
+    this.showReviewContext = false,
     this.selected = false,
   });
 
@@ -28,6 +29,7 @@ class TxRow extends StatelessWidget {
 
   /// Player ghi âm nhỏ dưới subtitle (danh sách chờ đối soát).
   final bool showInlineAudioPlayer;
+  final bool showReviewContext;
   final bool selected;
 
   @override
@@ -107,9 +109,7 @@ class TxRow extends StatelessWidget {
           ),
         ],
       ),
-      footer: showInlineAudioPlayer && t.audio != null
-          ? _InlineAudioPlayerBarrier(audio: t.audio!)
-          : null,
+      footer: _footer(context, t),
       amount: MoneyText(
         t.amountVnd,
         isIncome: t.isIncome,
@@ -118,6 +118,45 @@ class TxRow extends StatelessWidget {
         ).textTheme.titleSmall?.copyWith(fontWeight: AppTypography.bold),
       ),
       trailing: trailing,
+    );
+  }
+
+  Widget? _footer(BuildContext context, LedgerTransaction transaction) {
+    final children = <Widget>[];
+    if (showReviewContext && transaction.reviewReason != null) {
+      children.add(
+        Text(
+          transaction.reviewReason!,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
+    if (showReviewContext && (transaction.note?.isNotEmpty ?? false)) {
+      children.add(
+        Text(
+          transaction.note!,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
+    }
+    if (showInlineAudioPlayer && transaction.audio != null) {
+      children.add(_InlineAudioPlayerBarrier(audio: transaction.audio!));
+    }
+    if (children.isEmpty) return null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final child in children) ...[
+          child,
+          if (child != children.last) const SizedBox(height: 2),
+        ],
+      ],
     );
   }
 }

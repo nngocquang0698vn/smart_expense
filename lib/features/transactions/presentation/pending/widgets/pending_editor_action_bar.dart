@@ -55,7 +55,11 @@ class PendingEditorActionBar extends StatelessWidget {
           OutlinedButton.icon(
             style: _compactOutlined(context, fg: finance.dangerAction),
             onPressed: onDelete,
-            icon: Icon(Icons.delete_outline, size: 18, color: finance.dangerAction),
+            icon: Icon(
+              Icons.delete_outline,
+              size: 18,
+              color: finance.dangerAction,
+            ),
             label: Text(l10n.delete),
           ),
         ],

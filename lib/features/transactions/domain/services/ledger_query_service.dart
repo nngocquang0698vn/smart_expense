@@ -1,9 +1,12 @@
 import "package:smart_expense/core/utils/date_range.dart";
 import "package:smart_expense/features/transactions/domain/entities/finance_totals.dart";
 import "package:smart_expense/features/transactions/domain/entities/ledger_transaction.dart";
+import "package:smart_expense/features/transactions/domain/services/pending_review_transaction_use_case.dart";
 
 class LedgerQueryService {
   const LedgerQueryService();
+
+  static const _pendingReview = PendingReviewTransactionUseCase();
 
   FinanceTotals confirmedTotals(
     Iterable<LedgerTransaction> transactions,
@@ -31,7 +34,7 @@ class LedgerQueryService {
     final pending = _inRange(
       transactions,
       range,
-    ).where((transaction) => transaction.pending).toList();
+    ).where(_pendingReview.isPendingReviewTransaction).toList();
     _sortNewestFirst(pending);
     return limit == null ? pending : pending.take(limit).toList();
   }

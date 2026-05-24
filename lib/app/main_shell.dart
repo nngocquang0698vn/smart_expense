@@ -12,8 +12,10 @@ import "package:smart_expense/shared/components/pwa/pwa_install_actions.dart";
 import "package:smart_expense/features/dashboard/presentation/dashboard_screen.dart";
 import "package:smart_expense/features/transactions/presentation/pending/pending_screen.dart";
 import "package:smart_expense/features/reports/presentation/analytics_screen.dart";
+import "package:smart_expense/features/settings/application/review_reminder_scheduler.dart";
 import "package:smart_expense/features/settings/presentation/profile_screen.dart";
 import "package:smart_expense/features/transactions/presentation/add_options_sheet.dart";
+import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/shared/design_system/theme/app_chrome_theme.dart";
 import "package:smart_expense/shared/design_system/theme/app_layout_theme.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
@@ -65,6 +67,14 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   void _goPending() => setState(() => _page = 1);
 
+  void _goPendingFromNotification() {
+    _goPending();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showInfo(context, context.l10n.text("notificationOpenedPending"));
+    });
+  }
+
   void _selectPage(int index) => setState(() => _page = index);
 
   void _onPwaEvent() {
@@ -100,6 +110,10 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     _bootstrapPwaIfNeeded();
+    ref.watch(reviewReminderSchedulerProvider);
+    ref.listen(reviewNotificationTapProvider, (_, next) {
+      if (next is AsyncData && mounted) _goPendingFromNotification();
+    });
     final repo = ref.watch(ledgerRepositoryProvider);
     final l10n = context.l10n;
 

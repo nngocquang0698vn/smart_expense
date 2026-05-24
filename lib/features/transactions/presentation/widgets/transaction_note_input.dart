@@ -82,10 +82,15 @@ class _TransactionNoteInputState extends ConsumerState<TransactionNoteInput> {
   @override
   void didUpdateWidget(covariant TransactionNoteInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.audio?.id != widget.audio?.id && widget.audio != null) {
+    if (oldWidget.audio?.id != widget.audio?.id) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        _controller.useExisting(widget.audio!);
+        final audio = widget.audio;
+        if (audio == null) {
+          _controller.remove();
+        } else {
+          _controller.useExisting(audio);
+        }
       });
     }
     if (oldWidget.amountKeypadOpen && !widget.amountKeypadOpen) {

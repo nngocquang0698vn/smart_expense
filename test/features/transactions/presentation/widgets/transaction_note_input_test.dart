@@ -147,6 +147,67 @@ void main() {
     expect(find.byType(VoiceNotePlayer), findsOneWidget);
   });
 
+  testWidgets("clears stale audio preview when next transaction has no audio", (
+    tester,
+  ) async {
+    final noteCtrl = TextEditingController();
+    AudioAttachmentModel? audio = AudioAttachmentModel(
+      id: "a1",
+      durationMs: 18000,
+      createdAt: DateTime(2026, 5, 19),
+      mimeType: "audio/m4a",
+      extension: ".m4a",
+      fileSize: 128,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          voiceRecorderRepositoryProvider.overrideWith(
+            (ref, config) => recorder,
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.build(
+            const ThemeSettings(),
+            brightness: Brightness.light,
+          ),
+          locale: const Locale("vi", "VN"),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              return Scaffold(
+                body: Column(
+                  children: [
+                    TextButton(
+                      onPressed: () => setState(() => audio = null),
+                      child: const Text("clear audio"),
+                    ),
+                    TransactionNoteInput(
+                      noteController: noteCtrl,
+                      audio: audio,
+                      onAudioChanged: (_) {},
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(VoiceNotePlayer), findsOneWidget);
+
+    await tester.tap(find.text("clear audio"));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(VoiceNotePlayer), findsNothing);
+  });
+
   testWidgets("hides voice helper while amount keypad is open", (tester) async {
     final noteCtrl = TextEditingController();
     await pumpNoteInput(

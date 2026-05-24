@@ -53,4 +53,51 @@
   window.pwaCancelInstalled = function (callback) {
     window.removeEventListener("pwa-installed", callback);
   };
+
+  window.reviewNotificationSupported = function () {
+    return "Notification" in window;
+  };
+
+  window.reviewNotificationPermission = function () {
+    if (!window.reviewNotificationSupported()) {
+      return "unsupported";
+    }
+    return window.Notification.permission || "default";
+  };
+
+  window.reviewNotificationRequestPermission = async function () {
+    if (!window.reviewNotificationSupported()) {
+      return "unsupported";
+    }
+    return await window.Notification.requestPermission();
+  };
+
+  window.reviewNotificationSetTapHandler = function (callback) {
+    window.__reviewNotificationTapHandler = callback;
+  };
+
+  window.reviewNotificationConsumeTap = function () {
+    const pending = window.__reviewNotificationPendingTap === true;
+    window.__reviewNotificationPendingTap = false;
+    return pending;
+  };
+
+  window.reviewNotificationShow = function (title, body) {
+    if (
+      !window.reviewNotificationSupported() ||
+      window.Notification.permission !== "granted"
+    ) {
+      return;
+    }
+    const notification = new window.Notification(title, { body: body });
+    notification.onclick = function () {
+      window.__reviewNotificationPendingTap = true;
+      window.focus();
+      if (typeof window.__reviewNotificationTapHandler === "function") {
+        window.__reviewNotificationTapHandler();
+      }
+      window.dispatchEvent(new Event("review-notification-tap"));
+      notification.close();
+    };
+  };
 })();

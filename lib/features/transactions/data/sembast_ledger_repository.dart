@@ -347,7 +347,32 @@ class SembastLedgerRepository extends LedgerRepository {
     final raw = await _transactions.record(id).get(_db);
     if (raw == null) return;
     final t = TransactionModel.fromMap(id, raw);
-    await putTransaction(t.copyWith(pending: false, complete: true).toEntity());
+    await putTransaction(
+      t
+          .copyWith(
+            pending: false,
+            complete: true,
+            reviewedAt: DateTime.now(),
+            dismissedReviewAt: null,
+          )
+          .toEntity(),
+    );
+  }
+
+  @override
+  Future<void> dismissPendingReview(String id) async {
+    final raw = await _transactions.record(id).get(_db);
+    if (raw == null) return;
+    final t = TransactionModel.fromMap(id, raw);
+    await putTransaction(
+      t
+          .copyWith(
+            pending: false,
+            complete: true,
+            dismissedReviewAt: DateTime.now(),
+          )
+          .toEntity(),
+    );
   }
 
   @override
@@ -362,6 +387,7 @@ class SembastLedgerRepository extends LedgerRepository {
     String? note,
     AudioAttachmentModel? audio,
     List<ImageAttachmentModel> images = const [],
+    String? reviewReason,
   }) async {
     final t = TransactionModel(
       id: _uuid.v4(),
@@ -375,6 +401,7 @@ class SembastLedgerRepository extends LedgerRepository {
       note: note,
       audio: audio,
       images: images,
+      reviewReason: reviewReason,
     );
     await putTransaction(t.toEntity());
     return t.toEntity();

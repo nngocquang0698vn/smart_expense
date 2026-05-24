@@ -343,6 +343,7 @@ Widget _transactionSliver(
             category: categoryMap[transaction.categoryId],
             selected: selectedId == transaction.id,
             showInlineAudioPlayer: false,
+            showReviewContext: true,
             trailing: buildPendingConfirmButton(
               context: context,
               transaction: transaction,

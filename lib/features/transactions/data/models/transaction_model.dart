@@ -14,6 +14,9 @@ class TransactionModel {
     this.note,
     this.audio,
     this.images = const [],
+    this.reviewReason,
+    this.reviewedAt,
+    this.dismissedReviewAt,
   });
 
   final String id;
@@ -27,6 +30,9 @@ class TransactionModel {
   final String? note;
   final AudioAttachmentModel? audio;
   final List<ImageAttachmentModel> images;
+  final String? reviewReason;
+  final DateTime? reviewedAt;
+  final DateTime? dismissedReviewAt;
 
   bool get hasAudio => audio != null;
   bool get hasImages => images.isNotEmpty;
@@ -42,6 +48,9 @@ class TransactionModel {
     "note": note,
     "audio": audio?.toMap(),
     "images": images.map((image) => image.toMap()).toList(),
+    "reviewReason": reviewReason,
+    "reviewedAt": reviewedAt?.toIso8601String(),
+    "dismissedReviewAt": dismissedReviewAt?.toIso8601String(),
   };
 
   static TransactionModel fromMap(String id, Map<String, Object?> map) {
@@ -63,6 +72,11 @@ class TransactionModel {
       note: map["note"] as String?,
       audio: AudioAttachmentModel.fromMap(map["audio"]),
       images: _imagesFromMap(map),
+      reviewReason: map["reviewReason"] as String?,
+      reviewedAt: DateTime.tryParse(map["reviewedAt"] as String? ?? ""),
+      dismissedReviewAt: DateTime.tryParse(
+        map["dismissedReviewAt"] as String? ?? "",
+      ),
     );
   }
 
@@ -96,6 +110,9 @@ class TransactionModel {
     Object? note = _unset,
     Object? audio = _unset,
     List<ImageAttachmentModel>? images,
+    Object? reviewReason = _unset,
+    Object? reviewedAt = _unset,
+    Object? dismissedReviewAt = _unset,
   }) {
     return TransactionModel(
       id: id,
@@ -109,6 +126,15 @@ class TransactionModel {
       note: note == _unset ? this.note : note as String?,
       audio: audio == _unset ? this.audio : audio as AudioAttachmentModel?,
       images: images ?? this.images,
+      reviewReason: reviewReason == _unset
+          ? this.reviewReason
+          : reviewReason as String?,
+      reviewedAt: reviewedAt == _unset
+          ? this.reviewedAt
+          : reviewedAt as DateTime?,
+      dismissedReviewAt: dismissedReviewAt == _unset
+          ? this.dismissedReviewAt
+          : dismissedReviewAt as DateTime?,
     );
   }
 }

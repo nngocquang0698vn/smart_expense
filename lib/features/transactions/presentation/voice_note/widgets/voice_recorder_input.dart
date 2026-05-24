@@ -67,8 +67,17 @@ class _VoiceRecorderInputState extends ConsumerState<VoiceRecorderInput> {
   @override
   void didUpdateWidget(covariant VoiceRecorderInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.audio?.id != widget.audio?.id && widget.audio != null) {
-      _syncExistingAudio(widget.audio!);
+    if (oldWidget.audio?.id != widget.audio?.id) {
+      final audio = widget.audio;
+      if (audio == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _controller.remove();
+          _showPreviewActions = false;
+        });
+      } else {
+        _syncExistingAudio(audio);
+      }
     }
   }
 
