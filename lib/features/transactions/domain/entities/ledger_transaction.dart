@@ -14,9 +14,6 @@ class LedgerTransaction {
     this.note,
     this.audio,
     this.images = const [],
-    this.reviewReason,
-    this.reviewedAt,
-    this.dismissedReviewAt,
   });
 
   final String id;
@@ -30,9 +27,6 @@ class LedgerTransaction {
   final String? note;
   final AudioAttachmentModel? audio;
   final List<ImageAttachmentModel> images;
-  final String? reviewReason;
-  final DateTime? reviewedAt;
-  final DateTime? dismissedReviewAt;
 
   bool get hasAudio => audio != null;
   bool get hasImages => images.isNotEmpty;
@@ -50,9 +44,6 @@ class LedgerTransaction {
     Object? note = _unset,
     Object? audio = _unset,
     List<ImageAttachmentModel>? images,
-    Object? reviewReason = _unset,
-    Object? reviewedAt = _unset,
-    Object? dismissedReviewAt = _unset,
   }) {
     return LedgerTransaction(
       id: id,
@@ -66,15 +57,6 @@ class LedgerTransaction {
       note: note == _unset ? this.note : note as String?,
       audio: audio == _unset ? this.audio : audio as AudioAttachmentModel?,
       images: images ?? this.images,
-      reviewReason: reviewReason == _unset
-          ? this.reviewReason
-          : reviewReason as String?,
-      reviewedAt: reviewedAt == _unset
-          ? this.reviewedAt
-          : reviewedAt as DateTime?,
-      dismissedReviewAt: dismissedReviewAt == _unset
-          ? this.dismissedReviewAt
-          : dismissedReviewAt as DateTime?,
     );
   }
 }

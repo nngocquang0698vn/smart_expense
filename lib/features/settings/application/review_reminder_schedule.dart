@@ -3,19 +3,6 @@ import "package:smart_expense/features/settings/domain/review_reminder_settings.
 class ReviewReminderSchedule {
   const ReviewReminderSchedule();
 
-  bool isWithinReminderWindow(DateTime now, ReviewReminderSettings settings) {
-    if (!settings.enabled) return false;
-    if (settings.mode == ReviewReminderMode.endOfDay) {
-      return _sameMinute(now, settings.endOfDayReminderTime);
-    }
-    final minute = now.hour * 60 + now.minute;
-    final start = settings.intervalReminderStartTime.minutesOfDay;
-    final end = settings.intervalReminderEndTime.minutesOfDay;
-    if (minute < start || minute > end) return false;
-    final elapsed = minute - start;
-    return elapsed % (settings.intervalReminderHours * 60) == 0;
-  }
-
   DateTime? nextCheckAfter(DateTime now, ReviewReminderSettings settings) {
     if (!settings.enabled || settings.validate().isNotEmpty) return null;
     return switch (settings.mode) {
@@ -45,9 +32,5 @@ class ReviewReminderSchedule {
     return settings.intervalReminderStartTime.onDate(
       now.add(const Duration(days: 1)),
     );
-  }
-
-  bool _sameMinute(DateTime now, ReviewReminderTime time) {
-    return now.hour == time.hour && now.minute == time.minute;
   }
 }

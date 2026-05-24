@@ -326,13 +326,10 @@ const _vi = {
   "demoPersonName": "Nhân vật Johny Nguyễn",
   "demoPersonSummary": "Software Engineer · TP.HCM · 45tr/tháng",
   "demoSectionTitle": "Nạp bộ dữ liệu Johny",
-  "demoToolsSectionTitle": "Demo & dữ liệu mẫu",
   "reviewDemoSectionTitle": "Demo đối soát",
   "sampleDataSectionTitle": "Dữ liệu mẫu",
   "demoCreatePendingReview": "Tạo giao dịch demo cần đối soát",
   "demoSendNotification20s": "Gửi thông báo sau 20 giây",
-  "demoOpenPendingReview": "Mở màn đối soát",
-  "demoResetReviewData": "Xoá giao dịch demo đối soát",
   "clearAllDataAction": "Xoá tất cả dữ liệu",
   "clearAllDataTitle": "Xoá tất cả dữ liệu?",
   "clearAllDataMessage":
@@ -343,7 +340,6 @@ const _vi = {
   "demoNotificationNoPending":
       "Chưa có giao dịch nào cần đối soát. Hãy tạo giao dịch demo trước.",
   "demoNotificationScheduled": "Thông báo demo sẽ được gửi sau 20 giây.",
-  "demoReviewResetSuccess": "Đã xoá các giao dịch demo đối soát.",
   "defaultGreenPreset": "Ngọc lục bảo (mặc định)",
   "reviewReminderSectionTitle": "Nhắc đối soát giao dịch",
   "reviewReminderEnabledTitle": "Bật nhắc đối soát",
@@ -491,8 +487,6 @@ const _vi = {
   "pendingSelectTransactionHint": "Chọn một giao dịch để đối soát",
   "pendingReconciliationDone":
       "Xong rồi! Các giao dịch cần đối soát đã được xử lý.",
-  "pendingEditAction": "Chỉnh sửa",
-  "pendingDismissAction": "Bỏ qua",
   "pendingPrevious": "Trước",
   "pendingNext": "Sau",
   "pendingFilterAll": "Tất cả",

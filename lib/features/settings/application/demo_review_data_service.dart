@@ -26,8 +26,8 @@ class DemoReviewDataService {
       at: now.subtract(const Duration(minutes: 12)),
       pending: true,
       complete: true,
-      note: "Cần kiểm tra lại với ví điện tử.",
-      reviewReason: "Giao dịch demo đang chờ xác nhận ghi chú.",
+      note:
+          "Cần kiểm tra lại với ví điện tử. Giao dịch demo đang chờ xác nhận ghi chú.",
     );
     await _repo.addQuick(
       title: "$titlePrefix Ảnh hoá đơn",
@@ -38,7 +38,7 @@ class DemoReviewDataService {
       pending: true,
       complete: true,
       images: [media.billImage()],
-      reviewReason: "Có ảnh hoá đơn để người dùng đối chiếu.",
+      note: "Có ảnh hoá đơn để người dùng đối chiếu.",
     );
     await _repo.addQuick(
       title: "$titlePrefix Ghi âm nhanh",
@@ -49,7 +49,7 @@ class DemoReviewDataService {
       pending: true,
       complete: false,
       audio: media.voiceNote(),
-      reviewReason: "Có ghi âm mẫu, cần bổ sung số tiền.",
+      note: "Có ghi âm mẫu, cần bổ sung số tiền.",
     );
     await _repo.addQuick(
       title: "$titlePrefix Không pending có media",
@@ -59,19 +59,10 @@ class DemoReviewDataService {
       at: now.subtract(const Duration(hours: 3)),
       pending: false,
       complete: true,
-      note: "Dòng này có metadata nhưng không được vào màn đối soát.",
+      note:
+          "Dòng này có metadata nhưng không được vào màn đối soát. Dùng để kiểm tra pending=false không lọt vào đối soát.",
       audio: media.voiceNote(),
       images: [media.billImage()],
-      reviewReason: "Dùng để kiểm tra pending=false không lọt vào đối soát.",
     );
-  }
-
-  Future<void> resetDemoReviewTransactions() async {
-    final transactions = await _repo.allTransactions();
-    for (final transaction in transactions) {
-      if (transaction.title.startsWith(titlePrefix)) {
-        await _repo.deleteTransaction(transaction.id);
-      }
-    }
   }
 }

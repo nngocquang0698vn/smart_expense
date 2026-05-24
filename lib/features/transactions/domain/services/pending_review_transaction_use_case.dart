@@ -4,9 +4,7 @@ class PendingReviewTransactionUseCase {
   const PendingReviewTransactionUseCase();
 
   bool isPendingReviewTransaction(LedgerTransaction transaction) {
-    return transaction.pending &&
-        transaction.reviewedAt == null &&
-        transaction.dismissedReviewAt == null;
+    return transaction.pending;
   }
 
   List<LedgerTransaction> filter(Iterable<LedgerTransaction> transactions) {

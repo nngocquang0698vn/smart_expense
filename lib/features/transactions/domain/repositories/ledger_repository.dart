@@ -36,7 +36,6 @@ abstract class LedgerRepository {
   Future<void> deleteTransaction(String id);
   Future<void> clearAllTransactions();
   Future<void> confirmPending(String id);
-  Future<void> dismissPendingReview(String id);
 
   Future<LedgerTransaction> addQuick({
     required String title,
@@ -49,7 +48,6 @@ abstract class LedgerRepository {
     String? note,
     AudioAttachmentModel? audio,
     List<ImageAttachmentModel> images = const [],
-    String? reviewReason,
   });
 
   Future<Map<String, int>> analyticsTotals({

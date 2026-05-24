@@ -25,10 +25,3 @@ Future<void> runConfirmPendingFlow({
   }
   await ref.read(ledgerRepositoryProvider).confirmPending(transactionId);
 }
-
-Future<void> runDismissPendingReviewFlow({
-  required WidgetRef ref,
-  required String transactionId,
-}) {
-  return ref.read(ledgerRepositoryProvider).dismissPendingReview(transactionId);
-}

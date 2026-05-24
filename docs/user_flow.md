@@ -1,95 +1,126 @@
 # User Flow
 
-## Mục lục
-- [Tạo/sửa/xoá transaction](#tạosửaxoá-transaction)
-- [Xem danh sách transaction](#xem-danh-sách-transaction)
-- [Lọc transaction](#lọc-transaction)
-- [Báo cáo](#báo-cáo)
-- [Đối soát](#đối-soát)
-- [Attachment](#attachment)
-- [PWA/mobile](#pwamobile)
+## Onboarding
 
-## Tạo/sửa/xoá transaction
-- Mục tiêu: ghi nhận giao dịch thu/chi.
-- Actor: người dùng cá nhân.
-- Precondition: app đã onboarding, có category mặc định.
-- Main steps:
-  1. Bấm FAB hoặc mục thêm nhanh.
-  2. Chọn nhập nhanh, ghi âm, hoặc hoá đơn.
-  3. Nhập tiêu đề, loại thu/chi, số tiền, category, ngày, note/audio/images.
-  4. Chọn `Chờ đối soát` nếu muốn xử lý sau.
-  5. Lưu.
-- Expected result: transaction được lưu vào Sembast; dashboard/pending/report reload qua `repo.changes`.
-- Edge cases: thiếu amount/category với giao dịch không pending sẽ báo lỗi; nếu đang đóng sheet có dữ liệu dirty thì hiện dialog xác nhận bỏ thay đổi.
+1. User mở app lần đầu.
+2. Xem các trang giới thiệu.
+3. Nhập tên hoặc bỏ qua tới trang nhập tên.
+4. App lưu `userName` và `onboarded`.
+5. Vào `MainShell`.
 
-Xoá transaction có trong editor khi sửa giao dịch non-embedded; embedded pending dùng footer action `PendingEditorActionBar`.
+## Main shell
 
-## Xem danh sách transaction
-- Dashboard hiển thị pending preview và history.
-- Desktop dashboard chia pending/history thành hai cột.
-- Mobile dashboard dùng `CustomScrollView` và sliver.
-- History phân trang với `AppPageSizes.historyPage = 20`.
+App có 4 tab:
 
-## Lọc transaction
-- Dashboard và Pending dùng `DateFilterSelection` qua `showDateFilterSheet`.
-- Pending có thêm filter attachment: tất cả, có ảnh, có ghi âm, có ảnh/ghi âm, không có tệp.
-- Expected result: controller reload hoặc lọc lại danh sách hiện có, selection pending được reconcile về transaction còn hợp lệ.
+- Trang chủ.
+- Đối soát.
+- Báo cáo.
+- Cá nhân.
+
+Tab được giữ state bằng `IndexedStack`.
+
+## Tạo giao dịch
+
+1. User bấm FAB.
+2. Chọn nhập tay, ghi âm hoặc ảnh hoá đơn.
+3. Nhập số tiền, danh mục, ngày, ghi chú, audio hoặc ảnh nếu có.
+4. Chọn trạng thái chờ đối soát khi muốn xử lý sau.
+5. Lưu.
+
+Voice/receipt quick mode có thể khởi tạo transaction ở trạng thái pending để người dùng hoàn thiện sau. Tuy nhiên attachment không tự làm transaction pending; cờ `pending` vẫn là source of truth.
+
+## Sửa và xoá giao dịch
+
+- Từ history/report/pending, user mở editor.
+- Editor dùng form chung với quick entry.
+- Save update transaction qua repository.
+- Delete hỏi xác nhận trước khi xoá.
+- Nếu form dirty khi đóng/chuyển item, app hỏi xác nhận bỏ thay đổi.
+
+## Đối soát giao dịch
+
+Mục tiêu: xử lý transaction đang `pending == true`.
+
+Desktop:
+
+1. Vào tab Đối soát.
+2. Chọn filter thời gian hoặc attachment nếu cần.
+3. Chọn transaction bên trái.
+4. Xem/sửa chi tiết bên phải.
+5. Bấm Lưu giao dịch, Xoá, hoặc Xác nhận nhanh khi đủ thông tin.
+6. Dùng Trước/Sau để chuyển item.
+
+Mobile:
+
+1. Vào list pending.
+2. Tap transaction để mở detail full-width.
+3. Back về list.
+
+Empty state:
+
+```text
+Xong rồi! Các giao dịch cần đối soát đã được xử lý.
+```
+
+## Reminder notification
+
+Trong Profile, user bật **Nhắc đối soát giao dịch**:
+
+- Nếu chưa có quyền notification, app request khi user bật.
+- Nếu mode Cuối ngày, app check theo giờ đã chọn.
+- Nếu mode Theo khoảng thời gian, app check trong khung giờ đã chọn.
+- App chỉ gửi khi còn pending transaction.
+
+Khi tap notification:
+
+- App chuyển sang tab Đối soát nếu platform/browser hỗ trợ.
+- App hiện thông báo nhỏ rằng đã chuyển tới màn hình đối soát.
+
+## Profile
+
+Profile có:
+
+- Tên người dùng.
+- Giao diện.
+- Nhắc đối soát giao dịch.
+- Danh mục.
+- Entry Đối soát.
+- Xác nhận nhanh.
+- Thêm giao dịch nhanh.
+- Cài PWA trên Web.
+- Demo đối soát.
+- Dữ liệu mẫu.
+
+## Demo đối soát
+
+Section **Demo đối soát**:
+
+- Tạo giao dịch demo cần đối soát.
+- Gửi thông báo sau 20 giây.
+- Xoá tất cả dữ liệu.
+
+Nếu chưa có transaction pending, action gửi notification demo sẽ nhắc user tạo dữ liệu demo trước.
+
+## Dữ liệu mẫu
+
+Section **Dữ liệu mẫu** nạp bộ dữ liệu Johny:
+
+- Xoá transaction hiện tại.
+- Set tên người dùng Johny.
+- Tạo nhiều transaction thu/chi để demo dashboard/report/pending.
 
 ## Báo cáo
-- Mục tiêu: xem tổng thu, tổng chi, chênh lệch và breakdown theo category.
-- Actor: người dùng.
-- Precondition: có giao dịch confirmed trong kỳ.
-- Main steps:
-  1. Vào tab Báo cáo.
-  2. Chọn kỳ: tuần/tháng/quý/năm/tuỳ chọn.
-  3. Chọn Chi tiêu hoặc Thu nhập.
-  4. Xem pie chart và danh sách category.
-  5. Chọn category để xem detail.
-- Desktop: master-detail, detail nằm bên phải.
-- Mobile: detail thay nội dung màn hình và back sẽ quay về report master.
-- Expected result: detail list lấy qua `categoryReportDetailProvider`.
-- Edge cases: không có slice thì hiển thị empty state; category không tìm thấy bị bỏ khỏi report slices.
 
-## Đối soát
-- Mục tiêu: xử lý giao dịch `pending == true`.
-- Actor: người dùng.
-- Precondition: có pending transaction.
-- Main steps desktop:
-  1. Vào tab Đối soát.
-  2. Chọn date/filter attachment nếu cần.
-  3. Chọn transaction ở left panel.
-  4. Edit ở right panel.
-  5. Bấm Lưu/Xoá hoặc dùng Xác nhận nhanh nếu transaction đủ thông tin.
-  6. Dùng `Trước`/`Sau` để chuyển transaction.
-- Main steps mobile:
-  1. Vào list pending.
-  2. Tap transaction để mở edit full-width.
-  3. Back để về list.
-- Expected result: save/update phát `repo.changes`; pending controller reload và giữ/reconcile selected transaction.
-- Edge cases: nếu form dirty khi chuyển transaction/back thì hỏi bỏ thay đổi; filter không có kết quả hiển thị empty.
-- Skip: **Chưa xác định từ codebase**. Không thấy action skip riêng; hiện chỉ có `Trước` và `Sau`.
+1. Vào tab Báo cáo.
+2. Chọn kỳ: tuần, tháng, quý, năm, tuỳ chọn.
+3. Chọn Chi tiêu hoặc Thu nhập.
+4. Xem pie chart và breakdown category.
+5. Chọn category để xem detail.
+
+Report chỉ tính transaction `pending == false`.
 
 ## Attachment
-### Ghi chú
-- Note nhập trong `TransactionNoteInput`, controller được truyền từ form parent.
-- Expected result: note lưu vào `LedgerTransaction.note`.
 
-### Ảnh
-- Người dùng chụp/chọn ảnh từ `TransactionImageAttachments`.
-- Gallery hỗ trợ chọn nhiều ảnh, nhưng giới hạn còn lại được enforce trước khi render.
-- Tối đa 5 ảnh/transaction.
-- Thumbnail đọc bytes lazy theo tile; preview full ảnh chỉ mở khi user tap thumbnail.
-- Edge cases: ảnh thiếu/hỏng hiển thị lỗi ảnh.
-
-### Audio
-- Người dùng ghi âm trong `TransactionNoteInput` hoặc quick entry voice.
-- Audio recorder state quản lý bằng `voiceRecorderControllerProvider` theo session id.
-- Audio player lazy-load khi bấm play.
-- Edge cases: thiếu quyền micro, audio missing hoặc không đọc được sẽ báo lỗi.
-
-## PWA/mobile
-- Web có PWA install prompt/guide qua `PwaInstallActions`.
-- Onboarding có thể hiển thị PWA hint/page nếu đủ điều kiện.
-- Profile có entry cài app trên Web.
-- Android dùng quyền camera/micro, keyboard resize theo `windowSoftInputMode="adjustResize"`.
-- Chưa xác định từ codebase: chính sách backup/restore dữ liệu khi người dùng đổi thiết bị.
+- Ảnh: chụp/chọn ảnh, giới hạn tối đa 5 ảnh.
+- Audio: ghi âm và phát lại sau user gesture.
+- Nếu audio/image lỗi hoặc thiếu file, UI fallback thay vì crash.

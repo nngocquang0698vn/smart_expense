@@ -1,102 +1,85 @@
 # Smart Ledger - Tài liệu dự án
 
-## Mục lục
-- [Tổng quan](#tổng-quan)
-- [Nền tảng hỗ trợ](#nền-tảng-hỗ-trợ)
-- [Tính năng chính](#tính-năng-chính)
-- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
-- [Chạy và build local](#chạy-và-build-local)
-- [Deploy Web/PWA](#deploy-webpwa)
-- [Ghi chú onboarding dev mới](#ghi-chú-onboarding-dev-mới)
-
 ## Tổng quan
-`smart_expense` là app Flutter quản lý thu chi cá nhân offline-first. Codebase hiện tại dùng tên hiển thị **Smart Ledger**, dữ liệu lưu cục bộ qua Sembast và các attachment ảnh/audio được lưu riêng theo nền tảng.
 
-App tập trung vào:
-- Ghi giao dịch thu/chi nhanh.
-- Gắn ghi chú, ảnh hoá đơn và ghi âm.
-- Đưa giao dịch chưa đủ thông tin vào luồng đối soát.
-- Xem lịch sử và báo cáo theo hạng mục.
-- Chạy trên Flutter Web/PWA và Android.
+`smart_expense` là app Flutter quản lý thu chi cá nhân offline-first. Tên hiển thị hiện tại là **Smart Ledger**. App hỗ trợ Web/PWA và Android, dùng Sembast cho dữ liệu local và Riverpod cho state.
 
-## Nền tảng hỗ trợ
-- **Flutter Web/PWA**: có `web/manifest.json`, icon trong `web/icons/`, bridge cài PWA tại `web/pwa_install_bridge.js`, fallback SPA tại `web/_redirects`.
-- **Android**: cấu hình trong `android/app`, quyền camera và micro nằm trong `android/app/src/main/AndroidManifest.xml`.
+## Module hiện có
 
-Chưa xác định từ codebase: iOS chưa được cấu hình launcher icon trong `pubspec.yaml` (`ios: false`) và không thấy cấu hình build/release iOS.
+- `lib/app/`: bootstrap, localization, router, main shell, provider toàn app.
+- `lib/core/`: constants, formatter, seed data, attachment reader, PWA utilities, test helpers.
+- `lib/features/dashboard/`: tổng quan thu/chi, pending preview, lịch sử.
+- `lib/features/transactions/`: transaction domain/data/presentation, nhập nhanh, editor, pending reconciliation, attachment.
+- `lib/features/reports/`: báo cáo theo kỳ và danh mục.
+- `lib/features/categories/`: quản lý danh mục.
+- `lib/features/settings/`: Profile, theme preferences, user preferences, review reminder, demo/sample data.
+- `lib/shared/`: design system, reusable component, layout.
+- `web/`: PWA manifest, HTML bootstrap, icon, install/notification bridge.
+- `android/`: cấu hình Android Flutter.
+- `test/`: unit/widget tests theo feature.
 
-## Tính năng chính
-- Onboarding nhập tên người dùng: `lib/features/onboarding/presentation/onboarding_screen.dart`.
-- Main shell 4 tab: Trang chủ, Đối soát, Báo cáo, Cá nhân trong `lib/app/main_shell.dart`.
-- Dashboard tổng quan thu/chi, pending preview, lịch sử phân trang: `lib/features/dashboard`.
-- Thêm nhanh giao dịch dạng bottom sheet: `lib/features/transactions/presentation/quick_entry_sheet.dart`.
-- Sửa giao dịch: `lib/features/transactions/presentation/transaction_editor_body.dart`.
-- Đối soát giao dịch chờ xử lý: `lib/features/transactions/presentation/pending`.
-- Báo cáo theo kỳ và hạng mục, có pie chart: `lib/features/reports`.
-- Quản lý hạng mục: `lib/features/categories`.
-- Cài đặt cá nhân, theme, demo seed, PWA install entry: `lib/features/settings/presentation/profile_screen.dart`.
+## Flow chính
 
-## Cấu trúc thư mục
-- `lib/app/`: bootstrap, `MaterialApp.router`, GoRouter, main shell, providers toàn app, localization.
-- `lib/core/`: constants, seed data, storage helper, formatter, PWA utilities.
-- `lib/features/`: feature-first theo `domain`, `application`, `data`, `presentation`.
-- `lib/shared/`: design system, component reusable, layout reusable.
-- `assets/seed/`: audio/image seed dùng trong dữ liệu demo.
-- `web/`: manifest, icon, HTML bootstrap, PWA install bridge.
-- `android/`: project Android Flutter.
-- `test/`: unit/widget tests theo app, core, features, shared.
+- Onboarding nhập tên người dùng.
+- Main shell có 4 tab: Trang chủ, Đối soát, Báo cáo, Cá nhân.
+- FAB mở nhập nhanh: nhập tay, ghi âm, hoặc ảnh hoá đơn.
+- Giao dịch pending được xử lý ở tab Đối soát.
+- Báo cáo chỉ tính giao dịch đã xác nhận.
+- Profile chứa cài đặt, nhắc đối soát, demo đối soát và dữ liệu mẫu Johny.
 
-## Chạy và build local
-Yêu cầu: Flutter SDK tương thích `environment.sdk: ^3.11.5`.
+## Rule nghiệp vụ nổi bật
+
+`pending == true` là điều kiện duy nhất để một transaction cần đối soát. Audio, ảnh và ghi chú chỉ là thông tin hiển thị, không tự quyết định eligibility.
+
+Use case trung tâm: `PendingReviewTransactionUseCase`.
+
+## Notification nhắc đối soát
+
+Settings trong Profile có section **Nhắc đối soát giao dịch**:
+
+- Bật/tắt nhắc đối soát.
+- Mode **Cuối ngày**, mặc định `20:30`.
+- Mode **Theo khoảng thời gian**, mặc định `06:00` đến `21:00`, mỗi `4` tiếng.
+- Validation khoảng lặp từ `1` đến `12` tiếng.
+- Chỉ gửi notification khi có pending transaction và permission đã được cấp.
+
+Notification tap sẽ đưa người dùng về tab **Đối soát** nếu platform/browser hỗ trợ.
+
+## Demo và dữ liệu mẫu
+
+Profile có hai mục riêng:
+
+- **Demo đối soát**: tạo giao dịch demo cần đối soát, gửi notification sau 20 giây, xoá tất cả dữ liệu giao dịch.
+- **Dữ liệu mẫu**: nạp bộ dữ liệu Johny.
+
+Demo notification không thay đổi production reminder settings.
+
+## Chạy và kiểm tra
 
 ```bash
 flutter pub get
-flutter run -d chrome
-flutter run
-```
-
-Build Web:
-
-```bash
-flutter build web --release --pwa-strategy=none
-```
-
-Build Android:
-
-```bash
-flutter build apk --debug
-flutter build apk --release
-```
-
-Các lệnh thường dùng:
-
-```bash
+dart format .
 flutter analyze
 flutter test
 flutter build web --release --pwa-strategy=none
+flutter build apk --debug
 ```
 
-## Deploy Web/PWA
-Repo có workflow Cloudflare Pages tại `.github/workflows/deploy-cloudflare-pages.yml`.
+## Tài liệu chi tiết
 
-Workflow hiện tại:
-- chạy `flutter pub get`
-- chạy `flutter analyze`
-- chạy `flutter test`
-- build `flutter build web --release --pwa-strategy=none`
-- deploy `build/web` bằng Wrangler Pages
+- `architecture.md`: kiến trúc, state, routing, storage.
+- `business_logic.md`: nghiệp vụ chính và rule đối soát.
+- `data_model.md`: entity/model/storage quan trọng.
+- `design_system.md`: token, component, responsive guideline.
+- `user_flow.md`: luồng người dùng.
+- `development_guide.md`: setup, convention, checklist.
+- `stitch_pwa_reference.md`: mapping reference từ Stitch sang Flutter component.
 
-Cấu hình cần có:
-- Secret `CLOUDFLARE_API_TOKEN`
-- Secret `CLOUDFLARE_ACCOUNT_ID`
-- Variable hoặc Secret `CLOUDFLARE_PROJECT_NAME`
+## Cleanup gần nhất
 
-Lưu ý: `--pwa-strategy=none` tắt Flutter service worker mặc định. Manifest/icons vẫn có, nhưng offline cache app shell cần xác minh thêm bằng Chrome DevTools nếu muốn cam kết PWA offline đầy đủ.
-
-## Ghi chú onboarding dev mới
-- State management chính là Riverpod 3 (`flutter_riverpod`).
-- Data source chính là Sembast, không thấy backend/cloud sync trong codebase.
-- Repository contract nằm tại `lib/features/transactions/domain/repositories/ledger_repository.dart`.
-- Dữ liệu demo tạo bằng `populateJohnyData` trong `lib/core/config/demo_seed.dart`.
-- UI text tập trung ở `lib/app/localization/app_localizations.dart`, hiện chỉ thấy tiếng Việt.
-- Trước khi commit nên chạy `flutter analyze` và `flutter test`.
+- Xoá flow skip/dismiss đối soát không còn được gọi từ UI.
+- Xoá field `dismissedReviewAt` và `lastDismissedReminderDate` vì chưa có business flow sử dụng.
+- Xoá parsing schema cũ `amountCents`, `image`, `receiptImage`, `iconCodePoint` vì project chưa release production.
+- Xoá localization key cũ của demo/open pending/dismiss action.
+- Xoá file/layout/barrel không còn được import và helper model không còn usage.
+- Gỡ direct dependency `timezone`; package vẫn có thể xuất hiện transitive qua notification plugin.

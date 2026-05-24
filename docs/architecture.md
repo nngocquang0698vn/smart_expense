@@ -1,87 +1,104 @@
 # Architecture
 
-## Mục lục
-- [Kiến trúc tổng quan](#kiến-trúc-tổng-quan)
-- [Layer hiện tại](#layer-hiện-tại)
-- [State management](#state-management)
-- [Routing/navigation](#routingnavigation)
-- [Data flow](#data-flow)
-- [Assets và attachment](#assets-và-attachment)
-- [Web/PWA và Android](#webpwa-và-android)
-- [Performance considerations](#performance-considerations)
-- [Testing strategy](#testing-strategy)
-- [Technical debt/rủi ro](#technical-debtrủi-ro)
+## Tổng quan
 
-## Kiến trúc tổng quan
-Repo đang đi theo feature-first clean architecture, được mô tả ngắn tại `lib/features/_architecture.md`. Nguồn dữ liệu chính là local repository `SembastLedgerRepository`, được inject qua Riverpod provider override trong `bootstrap()`.
+Codebase đi theo feature-first clean architecture nhẹ:
 
-## Layer hiện tại
-- `presentation`: screen/widget, ví dụ `pending_screen.dart`, `analytics_screen.dart`, `transaction_editor_body.dart`.
-- `application`: Riverpod controller/view model/use case, ví dụ `pending_controller.dart`, `report_controller.dart`, `dashboard_controller.dart`.
-- `domain`: entity, repository contract, pure service, ví dụ `LedgerTransaction`, `LedgerRepository`, `LedgerQueryService`.
-- `data`: Sembast models/mappers/repository/storage service.
-- `core/shared`: constants, seed, formatter, PWA utility, design system, reusable components.
+```text
+presentation -> application -> domain
+                         data -> domain
+```
+
+UI không đọc/ghi Sembast trực tiếp. Dữ liệu đi qua `LedgerRepository`, được inject bằng Riverpod trong `bootstrap()`.
+
+## Layer
+
+- `presentation`: screen/widget, ví dụ `pending_screen.dart`, `profile_screen.dart`, `analytics_screen.dart`.
+- `application`: controller, view model, use case, service orchestration.
+- `domain`: entity, repository contract, pure business service.
+- `data`: Sembast repository, model, mapper, attachment storage.
+- `shared`: design system và component reusable.
+- `core`: helper dùng chung, seed, PWA utilities.
 
 ## State management
-Hiện tại codebase dùng `flutter_riverpod`:
-- `AsyncNotifierProvider.autoDispose` cho dashboard, report, pending, categories.
-- `NotifierProvider` cho theme, user preferences, amount input, PWA install state.
-- Repository và SharedPreferences được override tại `ProviderScope` trong `lib/app/bootstrap.dart`.
 
-Các controller nghe `repo.changes` để reload sau khi data thay đổi.
+App dùng Riverpod:
 
-## Routing/navigation
-- GoRouter chỉ định tuyến root `/` và `/home` tại `lib/app/router/app_router.dart`.
-- `OnboardingGate` quyết định show onboarding hay `MainShell`.
-- `MainShell` tự quản lý tab bằng state `_page` và `IndexedStack`.
-- Các luồng phụ chủ yếu dùng `Navigator.push`, `showModalBottomSheet`, `showDialog`.
+- `AsyncNotifierProvider.autoDispose` cho dashboard, pending, report, categories.
+- `NotifierProvider` cho theme, user preferences, PWA install state, voice recorder.
+- Repository provider được override trong `ProviderScope`.
 
-## Data flow
-Ví dụ save transaction:
-1. User nhập form trong `TransactionEditorBody`.
-2. UI validate qua `TransactionDraftResolver`/`TransactionDraftValidator`.
-3. Gọi `LedgerRepository.addQuick` hoặc `putTransaction`.
-4. `SembastLedgerRepository` ghi Sembast, xử lý xoá attachment cũ nếu cần.
-5. Repository phát event qua `changes`.
-6. Controller đang listen reload state.
+Các controller lắng nghe `repo.changes` để reload sau khi data thay đổi.
+
+## Navigation
+
+- GoRouter hiện có root route mỏng tại `app_router.dart`.
+- `MainShell` quản lý 4 tab bằng state nội bộ và `IndexedStack`.
+- Notification tap stream được lắng nghe trong `MainShell`; khi tap review notification, app chuyển sang tab Đối soát và hiện snackbar nhỏ.
+- Modal flow dùng `Navigator`, bottom sheet và dialog theo nhu cầu từng feature.
+
+## Data flow mẫu
+
+Save transaction:
+
+1. User nhập form.
+2. UI resolve draft và validate.
+3. Repository `addQuick()` hoặc `putTransaction()`.
+4. `SembastLedgerRepository` ghi model, xử lý attachment cũ nếu cần.
+5. Repository phát `changes`.
+6. Controller reload state.
 7. UI rebuild từ `AsyncValue`.
 
-## Assets và attachment
-- App icon: `assets/app_icon`, cấu hình bằng `flutter_launcher_icons`.
-- Seed media: `assets/seed/audio/voice_note.mp3`, `assets/seed/images/bill.jpg`.
-- Seed attachment dùng `bundleAssetPath`, đọc bytes khi cần qua `BundleAttachmentReader`.
-- Ảnh user:
-  - Android/IO: file trong app documents folder `smart_expense_images`.
-  - Web: IndexedDB database `smart_expense_images`, store `image_blobs`.
-- Audio user:
-  - Android/IO: file trong app documents folder `smart_expense_audio`.
-  - Web: IndexedDB database `smart_expense_audio`, store `audio_blobs`.
-- Transaction chỉ lưu metadata/reference attachment.
+Confirm pending:
+
+1. UI gọi `runConfirmPendingFlow()`.
+2. Nếu tắt quick confirm, hiện confirm bottom sheet.
+3. Repository `confirmPending(id)`.
+4. Transaction chuyển `pending=false`, `complete=true`.
+
+## Notification architecture
+
+- Settings model: `ReviewReminderSettings`.
+- Schedule logic: `ReviewReminderSchedule`.
+- Runtime orchestration: `ReviewReminderSchedulerController`.
+- Platform bridge: `ReviewNotificationPlatform` với implementation Web/IO/Stub.
+- Copy notification: `ReviewReminderCopy`.
+
+Scheduler dùng timer trong runtime app; demo notification sau 20 giây không ghi đè production settings.
+
+## Attachment architecture
+
+- Transaction chỉ lưu metadata/reference.
+- Web dùng IndexedDB binary store cho audio/image.
+- Android/IO dùng file trong app documents directory.
+- Audio player lazy-load khi user bấm play.
+- Image thumbnail đọc bytes theo tile.
 
 ## Web/PWA và Android
-- Web manifest: `web/manifest.json`, standalone display, portrait-primary.
-- PWA install bridge: `web/pwa_install_bridge.js`.
-- Cloudflare Pages workflow: `.github/workflows/deploy-cloudflare-pages.yml`.
-- Android permissions: camera và record audio trong manifest.
-- Android release workflow: `.github/workflows/build-apk-release.yml`.
-- Android application id hiện là `com.example.smart_expense`.
 
-## Performance considerations
-- MainShell giữ tab bằng `IndexedStack`, giảm remount tab khi đổi navigation.
-- Dashboard history dùng page size 20 và lazy load theo scroll threshold.
-- Pending list dùng `SliverList` với key ổn định và `findChildIndexCallback`.
-- Report pie chart có `RepaintBoundary`; touched slice dùng `ValueNotifier`.
-- Image thumbnail lazy load bytes theo tile, dùng `cacheWidth/cacheHeight`.
-- VoiceNotePlayer lazy load audio khi người dùng bấm play, không load ngay trong row.
-- Các controller/focus node chính trong form được tạo ở `State.initState` và dispose đúng.
+- Web: `manifest.json`, `pwa_install_bridge.js`, `_redirects`.
+- Android: manifest có camera, record audio và notification permission.
+- `flutter_local_notifications` dùng cho Android/local notification support.
 
-## Testing strategy
+## Performance
+
+- `MainShell` giữ tab bằng `IndexedStack`.
+- Dashboard history phân trang.
+- Pending list dùng stable key và sliver/list layout.
+- Report chart có `RepaintBoundary`.
+- Attachment preview/player lazy-load.
+
+## Testing
+
 Test hiện có bao phủ:
-- App shell/theme/PWA/onboarding.
-- Controller/view model dashboard, pending, report, categories.
-- Repository Sembast.
-- Query/calculation pure domain.
-- Widget transaction form, note/audio, image preview, category row.
+
+- domain/use case pending rule;
+- repository Sembast;
+- settings/review reminder schedule;
+- dashboard/report/category controller;
+- transaction form, note/audio/image widget;
+- PWA install utilities;
+- architecture feature-first convention.
 
 Lệnh chuẩn:
 
@@ -91,9 +108,9 @@ flutter test
 ```
 
 ## Technical debt/rủi ro
-- `applicationId` Android còn là `com.example.smart_expense`; cần đổi trước release thật.
-- Android release đang ký bằng debug key trong `android/app/build.gradle.kts`; cần signing config thật.
-- GoRouter hiện khá mỏng, nhiều route phụ dùng `Navigator` trực tiếp; nếu app scale lớn hơn nên chuẩn hoá navigation contract.
-- Một số chuỗi hard-code trong voice/audio widgets không đi qua localization đầy đủ; cần rà soát nếu yêu cầu i18n.
-- `flutter build web --pwa-strategy=none` không tạo Flutter service worker mặc định; cần xác minh yêu cầu offline shell PWA.
-- Chưa thấy migration/versioning rõ ràng cho Sembast schema ngoài backward-compatible parsing trong model.
+
+- Android `applicationId` còn là `com.example.smart_expense`.
+- Android release signing cần cấu hình trước production.
+- GoRouter còn mỏng; nếu cần deep link phức tạp nên chuẩn hoá route contract.
+- App chưa có backend/cloud sync.
+- Sembast schema chưa có migration versioning riêng; project chưa release nên cleanup model vẫn ưu tiên đơn giản.

@@ -15,9 +15,6 @@ extension TransactionModelMapper on TransactionModel {
       note: note,
       audio: audio,
       images: images,
-      reviewReason: reviewReason,
-      reviewedAt: reviewedAt,
-      dismissedReviewAt: dismissedReviewAt,
     );
   }
 }
@@ -36,9 +33,6 @@ extension LedgerTransactionModelMapper on LedgerTransaction {
       note: note,
       audio: audio,
       images: images,
-      reviewReason: reviewReason,
-      reviewedAt: reviewedAt,
-      dismissedReviewAt: dismissedReviewAt,
     );
   }
 }

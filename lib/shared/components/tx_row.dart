@@ -123,18 +123,6 @@ class TxRow extends StatelessWidget {
 
   Widget? _footer(BuildContext context, LedgerTransaction transaction) {
     final children = <Widget>[];
-    if (showReviewContext && transaction.reviewReason != null) {
-      children.add(
-        Text(
-          transaction.reviewReason!,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
     if (showReviewContext && (transaction.note?.isNotEmpty ?? false)) {
       children.add(
         Text(

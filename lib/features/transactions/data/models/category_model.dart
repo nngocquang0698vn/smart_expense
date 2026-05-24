@@ -69,14 +69,6 @@ class CategoryIcons {
   };
 
   static IconData get(String key) => byName[key] ?? Icons.category;
-
-  static String keyFromCodePoint(int? code) {
-    if (code == null) return "category";
-    for (final e in byName.entries) {
-      if (e.value.codePoint == code) return e.key;
-    }
-    return "category";
-  }
 }
 
 /// Preset colors for category selection.
@@ -115,25 +107,6 @@ class CategoryModel {
   final bool isIncome;
   final bool enabled;
 
-  IconData get icon => CategoryIcons.get(iconKey);
-
-  Color get color => Color(colorValue);
-
-  CategoryModel copyWith({
-    String? name,
-    String? iconKey,
-    int? colorValue,
-    bool? isIncome,
-    bool? enabled,
-  }) => CategoryModel(
-    id: id,
-    name: name ?? this.name,
-    iconKey: iconKey ?? this.iconKey,
-    colorValue: colorValue ?? this.colorValue,
-    isIncome: isIncome ?? this.isIncome,
-    enabled: enabled ?? this.enabled,
-  );
-
   Map<String, Object?> toMap() => {
     "name": name,
     "iconKey": iconKey,
@@ -143,12 +116,10 @@ class CategoryModel {
   };
 
   static CategoryModel fromMap(String id, Map<String, Object?> map) {
-    final ik = map["iconKey"] as String?;
-    final legacyCp = map["iconCodePoint"] as int?;
     return CategoryModel(
       id: id,
       name: map["name"]! as String,
-      iconKey: ik ?? CategoryIcons.keyFromCodePoint(legacyCp),
+      iconKey: map["iconKey"]! as String,
       colorValue: map["colorValue"]! as int,
       isIncome: (map["isIncome"] as bool?) ?? false,
       enabled: (map["enabled"] as bool?) ?? true,

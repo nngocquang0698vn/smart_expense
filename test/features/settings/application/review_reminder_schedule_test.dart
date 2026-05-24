@@ -62,8 +62,8 @@ void main() {
       DateTime(2026, 5, 24, 12),
     );
     expect(
-      schedule.isWithinReminderWindow(DateTime(2026, 5, 24, 22), settings),
-      isFalse,
+      schedule.nextCheckAfter(DateTime(2026, 5, 24, 22), settings),
+      DateTime(2026, 5, 25, 6),
     );
   });
 }

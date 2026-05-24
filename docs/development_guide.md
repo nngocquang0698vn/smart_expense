@@ -1,122 +1,96 @@
 # Development Guide
 
-## Mục lục
-- [Setup môi trường](#setup-môi-trường)
-- [Chạy app](#chạy-app)
-- [Thêm screen/component/route](#thêm-screencomponentroute)
-- [Thêm category/seed/asset](#thêm-categoryseedasset)
-- [Coding conventions](#coding-conventions)
-- [Checklist trước commit](#checklist-trước-commit)
-
-## Setup môi trường
-1. Cài Flutter SDK phù hợp `sdk: ^3.11.5`.
-2. Cài Android SDK/emulator nếu build Android.
-3. Chạy:
+## Setup
 
 ```bash
 flutter pub get
 flutter devices
 ```
 
-## Chạy app
-Web:
+Chạy Web:
 
 ```bash
 flutter run -d chrome
 ```
 
-Android:
+Chạy Android:
 
 ```bash
 flutter run
 ```
 
-Analyze/test:
-
-```bash
-flutter analyze
-flutter test
-```
-
-## Thêm screen/component/route
-### Thêm screen mới
-- Tạo trong feature tương ứng dưới `lib/features/<feature>/presentation`.
-- Nếu có state/data, thêm controller/view model trong `application`.
-- Business rule/pure logic đặt ở `domain` hoặc `application`, không đặt trực tiếp trong widget build.
-
-### Thêm component mới
-- Component reusable toàn app đặt trong `lib/shared/components`.
-- Component chỉ dùng trong feature đặt dưới `presentation/widgets`.
-- Dùng tokens từ `lib/shared/design_system`.
-- Dùng localization từ `context.l10n`, tránh hard-code text mới.
-
-### Thêm route mới
-- Route root hiện nằm tại `lib/app/router/app_router.dart`.
-- Tab chính hiện nằm trong `MainShell` bằng `_navItems` và `_pages`.
-- Các flow modal hiện dùng bottom sheet/dialog. Nếu thêm deep link hoặc route độc lập, nên mở rộng GoRouter thay vì chỉ dùng `Navigator.push`.
-
-## Thêm category/seed/asset
-### Category
-- Icon key khai báo trong `CategoryIcons.byName`.
-- Color preset trong `kCategoryColors`.
-- Default/system category được seed/ensure trong `SembastLedgerRepository`.
-
-### Seed data
-- Demo data nằm trong `lib/core/config/demo_seed.dart`.
-- Seed media path nằm trong `lib/core/seed/seed_assets.dart`.
-- Nếu thêm asset seed mới, cập nhật `pubspec.yaml` assets.
-
-### Asset audio/image
-- Seed assets hiện ở `assets/seed/audio/` và `assets/seed/images/`.
-- App icon ở `assets/app_icon/`.
-- Web icons generated ở `web/icons/`.
-- Cập nhật app icon qua cấu hình `flutter_launcher_icons` trong `pubspec.yaml`.
-
-## Coding conventions
-- Import dùng double quotes theo codebase hiện tại.
-- Feature-first: `domain -> application -> data -> presentation`.
-- Riverpod controller nên listen `repo.changes` nếu cần phản ứng với data update.
-- Controller, `TextEditingController`, `FocusNode`, `ScrollController`, `PageController`, subscription, timer phải dispose đúng.
-- Future dùng trong `FutureBuilder` nên cache trong state nếu dữ liệu không cần tạo lại mỗi build.
-- List item nên có stable key theo id.
-- Transaction form nên reuse `TransactionEntryForm`.
-- Attachment logic nên đi qua service/action hiện có, không đọc/ghi file trực tiếp trong widget mới.
-
 ## Checklist trước commit
-- Format:
 
 ```bash
 dart format .
-```
-
-- Analyze:
-
-```bash
 flutter analyze
-```
-
-- Test:
-
-```bash
 flutter test
 ```
 
-- Responsive check:
-  - Mobile width dưới `1000`.
-  - Desktop width từ `1000`.
-  - Pending master-detail và report master-detail.
-  - Web resize không làm mất text/note/audio đang nhập.
-
-- Web build check:
+Build check khi cần:
 
 ```bash
 flutter build web --release --pwa-strategy=none
-```
-
-- Android check:
-
-```bash
 flutter build apk --debug
 ```
 
-Chưa xác định từ codebase: quy định branch/PR/release versioning của team ngoài workflow GitHub hiện có.
+## Convention
+
+- Import dùng double quotes.
+- Feature-first theo `domain`, `application`, `data`, `presentation`.
+- Pure business rule đặt trong domain/application service.
+- Widget không chứa filter/business logic phức tạp trong `build`.
+- Text UI mới thêm vào `AppLocalizations`.
+- Attachment logic đi qua service/action hiện có.
+- Controller, focus node, scroll controller, subscription và timer phải dispose.
+
+## Làm việc với transaction
+
+- `LedgerTransaction` là entity domain.
+- `TransactionModel` là model lưu Sembast.
+- Mapper nằm ở `transaction_model_mapper.dart`.
+- Khi thêm/xoá field transaction, cập nhật đồng bộ constructor, mapper, `toMap/fromMap`, `copyWith`, tests và docs.
+- Không thêm property "để dành" nếu chưa có flow đọc/ghi rõ ràng.
+
+## Làm việc với pending review
+
+- Source of truth: `PendingReviewTransactionUseCase`.
+- Chỉ `pending == true` mới cần đối soát.
+- Audio/image/note không được dùng làm điều kiện eligibility.
+- Xác nhận pending đi qua `confirmPending(id)`.
+
+## Làm việc với reminder notification
+
+- Settings model: `ReviewReminderSettings`.
+- Defaults: `ReviewReminderDefaults`.
+- Schedule pure logic: `ReviewReminderSchedule`.
+- Runtime service: `ReviewReminderSchedulerController`.
+- Platform implementation nằm trong `features/settings/application/notifications`.
+- Demo notification không được sửa production settings.
+
+## Seed/demo data
+
+- Johny sample data: `populateJohnyData()`.
+- Demo đối soát: `DemoReviewDataService`.
+- Seed media: `SeedAttachments`, `SeedAssets`.
+- Action xoá tất cả dữ liệu chỉ xoá transaction, không xoá category/settings.
+
+## Dependency hygiene
+
+- Không thêm dependency lớn nếu chưa cần.
+- Nếu gỡ package, dùng:
+
+```bash
+flutter pub remove <package>
+```
+
+- `pubspec.lock` có thể vẫn chứa package transitive; chỉ xem là dependency trực tiếp nếu còn trong `pubspec.yaml`.
+
+## Responsive check thủ công
+
+- Mobile dưới `1000px`.
+- Desktop từ `1000px`.
+- Pending master-detail.
+- Report master-detail.
+- Profile sections.
+- Notification tap trên Web/PWA và Android nếu platform cho phép.

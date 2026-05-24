@@ -74,7 +74,6 @@ class ReviewReminderSettings {
     this.intervalReminderEndTime =
         ReviewReminderDefaults.intervalReminderEndTime,
     this.intervalReminderHours = ReviewReminderDefaults.intervalReminderHours,
-    this.lastDismissedReminderDate,
   });
 
   final bool enabled;
@@ -83,7 +82,6 @@ class ReviewReminderSettings {
   final ReviewReminderTime intervalReminderStartTime;
   final ReviewReminderTime intervalReminderEndTime;
   final int intervalReminderHours;
-  final DateTime? lastDismissedReminderDate;
 
   ReviewReminderSettings copyWith({
     bool? enabled,
@@ -92,7 +90,6 @@ class ReviewReminderSettings {
     ReviewReminderTime? intervalReminderStartTime,
     ReviewReminderTime? intervalReminderEndTime,
     int? intervalReminderHours,
-    Object? lastDismissedReminderDate = _unset,
   }) {
     return ReviewReminderSettings(
       enabled: enabled ?? this.enabled,
@@ -104,9 +101,6 @@ class ReviewReminderSettings {
           intervalReminderEndTime ?? this.intervalReminderEndTime,
       intervalReminderHours:
           intervalReminderHours ?? this.intervalReminderHours,
-      lastDismissedReminderDate: lastDismissedReminderDate == _unset
-          ? this.lastDismissedReminderDate
-          : lastDismissedReminderDate as DateTime?,
     );
   }
 
@@ -139,7 +133,6 @@ class ReviewReminderSettings {
     "intervalReminderStartTime": intervalReminderStartTime.toJson(),
     "intervalReminderEndTime": intervalReminderEndTime.toJson(),
     "intervalReminderHours": intervalReminderHours,
-    "lastDismissedReminderDate": lastDismissedReminderDate?.toIso8601String(),
   };
 
   factory ReviewReminderSettings.fromJson(Object? raw) {
@@ -167,13 +160,8 @@ class ReviewReminderSettings {
       intervalReminderHours:
           (raw["intervalReminderHours"] as num?)?.toInt() ??
           ReviewReminderDefaults.intervalReminderHours,
-      lastDismissedReminderDate: DateTime.tryParse(
-        raw["lastDismissedReminderDate"] as String? ?? "",
-      ),
     );
   }
-
-  static const _unset = Object();
 
   @override
   bool operator ==(Object other) =>
@@ -183,8 +171,7 @@ class ReviewReminderSettings {
       other.endOfDayReminderTime == endOfDayReminderTime &&
       other.intervalReminderStartTime == intervalReminderStartTime &&
       other.intervalReminderEndTime == intervalReminderEndTime &&
-      other.intervalReminderHours == intervalReminderHours &&
-      other.lastDismissedReminderDate == lastDismissedReminderDate;
+      other.intervalReminderHours == intervalReminderHours;
 
   @override
   int get hashCode => Object.hash(
@@ -194,6 +181,5 @@ class ReviewReminderSettings {
     intervalReminderStartTime,
     intervalReminderEndTime,
     intervalReminderHours,
-    lastDismissedReminderDate,
   );
 }

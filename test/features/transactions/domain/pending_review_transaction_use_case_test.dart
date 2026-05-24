@@ -13,8 +13,6 @@ void main() {
     String? note,
     AudioAttachmentModel? audio,
     List<ImageAttachmentModel> images = const [],
-    DateTime? reviewedAt,
-    DateTime? dismissedReviewAt,
   }) {
     return LedgerTransaction(
       id: id,
@@ -28,8 +26,6 @@ void main() {
       note: note,
       audio: audio,
       images: images,
-      reviewedAt: reviewedAt,
-      dismissedReviewAt: dismissedReviewAt,
     );
   }
 
@@ -76,22 +72,10 @@ void main() {
     );
   });
 
-  test("reviewed or dismissed transactions are no longer eligible", () {
+  test("pending=true remains eligible even without media or notes", () {
     expect(
-      useCase.isPendingReviewTransaction(
-        tx(id: "reviewed", pending: true, reviewedAt: DateTime(2026, 5, 24)),
-      ),
-      false,
-    );
-    expect(
-      useCase.isPendingReviewTransaction(
-        tx(
-          id: "dismissed",
-          pending: true,
-          dismissedReviewAt: DateTime(2026, 5, 24),
-        ),
-      ),
-      false,
+      useCase.isPendingReviewTransaction(tx(id: "plain", pending: true)),
+      true,
     );
   });
 }
