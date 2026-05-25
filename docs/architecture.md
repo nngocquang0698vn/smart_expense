@@ -65,6 +65,7 @@ Confirm pending:
 - Copy notification: `ReviewReminderCopy`.
 
 Scheduler dùng timer trong runtime app; demo notification sau 20 giây không ghi đè production settings.
+Controller reschedule khi settings hoặc repository phát `changes`, và kiểm tra lại permission/pending count ngay trước lúc gọi platform notification để tránh nhắc khi danh sách đối soát đã trống.
 
 ## Attachment architecture
 

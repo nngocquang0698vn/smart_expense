@@ -74,7 +74,11 @@ Mode:
 - `endOfDay`: mặc định `20:30`.
 - `interval`: mặc định `06:00` đến `21:00`, mỗi `4` tiếng.
 
-Demo notification sau 20 giây dùng cùng notification content nhưng không thay đổi production settings.
+Schedule luôn chọn mốc kế tiếp strictly sau thời điểm hiện tại. Nếu đang đúng mốc nhắc, lần kiểm tra kế tiếp sẽ là mốc sau đó hoặc ngày hôm sau. Với mode `interval`, các mốc được tạo từ giờ bắt đầu, cộng theo khoảng lặp và chỉ nằm trong khung giờ đã chọn.
+
+Khi timer tới hạn, app kiểm tra lại permission, settings và số lượng pending trước khi gửi. Nếu không còn pending transaction, không gửi notification.
+
+Demo notification sau 20 giây dùng cùng notification content, kiểm tra lại pending trước khi gửi, nhưng không thay đổi production settings.
 
 ## Demo và dữ liệu mẫu
 

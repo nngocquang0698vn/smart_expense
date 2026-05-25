@@ -1,8 +1,10 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:sembast/sembast_memory.dart";
 import "package:smart_expense/features/transactions/domain/entities/date_filter.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 
 import "package:smart_expense/core/testing/fake_ledger_repository.dart";
+import "package:smart_expense/features/transactions/data/sembast_ledger_repository.dart";
 
 void main() {
   late LedgerRepository repo;
@@ -92,6 +94,55 @@ void main() {
 
       final meta = await repo.getMeta();
       expect(meta.containsKey("onboarded"), isTrue);
+    },
+  );
+
+  test(
+    "ensureDefaults syncs legacy default category enabled state once",
+    () async {
+      final db = await databaseFactoryMemory.openDatabase(
+        "legacy_default_categories_${DateTime.now().microsecondsSinceEpoch}.db",
+      );
+      final concreteRepo = SembastLedgerRepository(db);
+      addTearDown(() async {
+        await concreteRepo.dispose();
+        await db.close();
+      });
+
+      await concreteRepo.ensureDefaults();
+      final seeded = await concreteRepo.categories();
+      for (final category in seeded.where((c) => !c.enabled)) {
+        await concreteRepo.upsertCategory(category.copyWith(enabled: true));
+      }
+
+      final metaStore = stringMapStoreFactory.store("meta");
+      final meta = Map<String, Object?>.from(
+        await metaStore.record("app").get(db) ?? const {},
+      );
+      meta["defaultCategoryEnabledStateSyncV1"] = false;
+      await metaStore.record("app").put(db, meta);
+
+      await concreteRepo.ensureDefaults();
+
+      final categories = await concreteRepo.categories();
+      final enabledExpenseNames = categories
+          .where((c) => c.enabled && !c.isIncome)
+          .map((c) => c.name)
+          .toSet();
+      expect(
+        enabledExpenseNames,
+        equals({"Ăn uống", "Di chuyển", "Mua sắm", "Hoá đơn", "Khác"}),
+      );
+
+      final enabledIncomeNames = categories
+          .where((c) => c.enabled && c.isIncome)
+          .map((c) => c.name)
+          .toSet();
+      expect(enabledIncomeNames, equals({"Lương", "Khác"}));
+      expect(
+        categories.where((c) => !c.enabled).map((c) => c.name).toSet(),
+        containsAll({"Cà phê", "Tạp hoá", "Thu nhập khác"}),
+      );
     },
   );
 

@@ -12,7 +12,10 @@ typedef CategoryReportDetailData = ({
 });
 
 final categoryReportDetailProvider = FutureProvider.autoDispose
-    .family<CategoryReportDetailData, ReportCategoryDetailArgs>((ref, args) async {
+    .family<CategoryReportDetailData, ReportCategoryDetailArgs>((
+      ref,
+      args,
+    ) async {
       final repo = ref.read(ledgerRepositoryProvider);
       final results = await Future.wait([
         repo.transactionsForCategory(
@@ -20,7 +23,7 @@ final categoryReportDetailProvider = FutureProvider.autoDispose
           period: args.period,
           custom: args.customRange == null
               ? null
-              : AppDateRange(
+              : AppDateRange.daysInclusive(
                   start: args.customRange!.start,
                   end: args.customRange!.end,
                 ),

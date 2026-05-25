@@ -67,6 +67,7 @@ flutter build apk --debug
 - Runtime service: `ReviewReminderSchedulerController`.
 - Platform implementation nằm trong `features/settings/application/notifications`.
 - Demo notification không được sửa production settings.
+- Khi đổi rule nhắc đối soát, cập nhật test cho cả pure schedule và runtime pending/notification guard.
 
 ## Seed/demo data
 

@@ -68,8 +68,8 @@ Trong Profile, user bật **Nhắc đối soát giao dịch**:
 
 - Nếu chưa có quyền notification, app request khi user bật.
 - Nếu mode Cuối ngày, app check theo giờ đã chọn.
-- Nếu mode Theo khoảng thời gian, app check trong khung giờ đã chọn.
-- App chỉ gửi khi còn pending transaction.
+- Nếu mode Theo khoảng thời gian, app check ở các mốc trong khung giờ đã chọn.
+- App chỉ gửi khi còn pending transaction tại thời điểm notification sắp gửi.
 
 Khi tap notification:
 
@@ -113,7 +113,7 @@ Section **Demo đối soát**:
 - Gửi thông báo sau 20 giây.
 - Xoá tất cả dữ liệu.
 
-Nếu chưa có transaction pending, action gửi notification demo sẽ nhắc user tạo dữ liệu demo trước.
+Nếu chưa có transaction pending, action gửi notification demo sẽ nhắc user tạo dữ liệu demo trước. Nếu pending được xử lý hết trước khi hết 20 giây, demo notification sẽ không gửi nữa.
 
 ## Dữ liệu mẫu
 

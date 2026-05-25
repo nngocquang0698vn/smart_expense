@@ -52,12 +52,12 @@ class ReportPeriodChips extends StatelessWidget {
                 ),
                 selected: state.period == p,
                 onSelected: (v) async {
-                  if (!v) return;
                   if (p == AnalyticsPeriod.custom) {
                     await onCustomRangePick();
-                  } else {
-                    await onPeriodSelected(p);
+                    return;
                   }
+                  if (!v) return;
+                  await onPeriodSelected(p);
                 },
               ),
             ),

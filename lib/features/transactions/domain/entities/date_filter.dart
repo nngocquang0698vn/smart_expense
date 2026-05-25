@@ -60,23 +60,20 @@ class DateFilterSelection {
       case DateFilterPreset.pickMonth:
         final m = month ?? now;
         final start = DateTime(m.year, m.month, 1);
-        final end = DateTime(m.year, m.month + 1, 0, 23, 59, 59);
+        final end = AppDateRange.endOfDay(DateTime(m.year, m.month + 1, 0));
         return AppDateRange(start: start, end: end);
       case DateFilterPreset.pickYear:
         final y = year ?? now.year;
         return AppDateRange(
           start: DateTime(y, 1, 1),
-          end: DateTime(y, 12, 31, 23, 59, 59),
+          end: AppDateRange.endOfDay(DateTime(y, 12, 31)),
         );
       case DateFilterPreset.custom:
         final c = custom;
         if (c == null) {
           return AppDateRange(start: startOfDay, end: now);
         }
-        return AppDateRange(
-          start: DateTime(c.start.year, c.start.month, c.start.day),
-          end: DateTime(c.end.year, c.end.month, c.end.day, 23, 59, 59),
-        );
+        return AppDateRange.daysInclusive(start: c.start, end: c.end);
     }
   }
 }
@@ -106,7 +103,7 @@ extension AnalyticsPeriodX on AnalyticsPeriod {
             end: now,
           );
         }
-        return c;
+        return AppDateRange.daysInclusive(start: c.start, end: c.end);
     }
   }
 }
