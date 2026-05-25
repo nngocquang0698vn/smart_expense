@@ -376,13 +376,13 @@ Do not include a trailing slash in origins.
 8. Open the Render URL and test:
 
 ```powershell
-curl.exe https://your-service.onrender.com/health
+curl.exe https://smart-expense-m8nm.onrender.com/health
 ```
 
 9. Test upload after setting `OPENAI_API_KEY`:
 
 ```powershell
-curl.exe -X POST "https://your-service.onrender.com/voice-transaction-demo" `
+curl.exe -X POST "https://smart-expense-m8nm.onrender.com/voice-transaction-demo" `
   -F "audio=@samples/01.m4a;type=audio/m4a" `
   -F "locale=vi-VN" `
   -F "timezone=Asia/Ho_Chi_Minh"
@@ -391,12 +391,14 @@ curl.exe -X POST "https://your-service.onrender.com/voice-transaction-demo" `
 If `DEMO_TOKEN` is set:
 
 ```powershell
-curl.exe -X POST "https://your-service.onrender.com/voice-transaction-demo" `
+curl.exe -X POST "https://smart-expense-m8nm.onrender.com/voice-transaction-demo" `
   -H "X-Demo-Token: your-demo-token" `
   -F "audio=@samples/01.m4a;type=audio/m4a" `
   -F "locale=vi-VN" `
   -F "timezone=Asia/Ho_Chi_Minh"
 ```
+
+Replace `your-demo-token` with the exact `DEMO_TOKEN` value configured in Render Environment Variables.
 
 Do not commit `.env` or real secrets.
 
