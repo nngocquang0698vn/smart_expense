@@ -82,6 +82,18 @@ Demo notification sau 20 giây dùng cùng notification content nhưng không th
 - Profile action **Xoá tất cả dữ liệu** gọi `LedgerRepository.clearAllTransactions()`; danh mục và settings vẫn giữ nguyên.
 - Bộ dữ liệu Johny nằm ở `populateJohnyData()` và là mục riêng trong Profile.
 
+## AI Voice Transaction Demo
+
+- Đây là tính năng thử nghiệm, bật trong Profile > Tính năng thử nghiệm.
+- Flutter chỉ lưu endpoint Render và demo token trong `UserPreferences`; không lưu `OPENAI_API_KEY`.
+- Quick voice entry upload audio sau khi dừng ghi âm nếu feature đang bật.
+- Mọi transaction form có audio và AI đã bật đều có nút `AI đọc ghi âm` cạnh hàng `Chờ đối soát`.
+- Draft từ AI luôn bị force `pending=true` ở Flutter, không trust backend.
+- Nếu `transactionDate` null hoặc không parse được, app giữ ngày đang có trong form.
+- Nếu API lỗi, app không xoá audio, note, amount, title hoặc category hiện tại.
+- User luôn review trước khi save/confirm; app không auto-save và không auto-confirm pending transaction.
+- API client timeout sau 10 giây và chỉ log debug metadata an toàn, không log demo token hoặc audio bytes.
+
 ## Edge cases
 
 - Không có transaction: dashboard/report/pending hiển thị empty state.

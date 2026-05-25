@@ -10,14 +10,19 @@ import "package:smart_expense/shared/components/app_text_field.dart";
 import "package:smart_expense/features/transactions/domain/entities/category.dart";
 import "package:smart_expense/shared/components/app_discard_dialog.dart";
 import "package:smart_expense/shared/components/app_primary_button.dart";
+import "package:smart_expense/features/settings/application/user_preferences_controller.dart";
 import "package:smart_expense/features/transactions/application/transaction_image_actions.dart";
+import "package:smart_expense/features/transactions/application/voice_transaction_demo_mapper.dart";
+import "package:smart_expense/features/transactions/data/attachments/audio_storage_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_picker_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
+import "package:smart_expense/features/transactions/data/voice_transaction_demo_api_client.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/application/transaction_draft_validator.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 import "package:smart_expense/shared/components/amount_keypad.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/ai_voice_parse_button.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_section.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
@@ -72,9 +77,12 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
   final _images = <ImageAttachmentModel>[];
   final _imagePicker = ImagePickerService();
   final _imageStorage = ImageStorageService();
+  final _audioStorage = AudioStorageService();
   final _draftResolver = const TransactionDraftResolver();
+  final _aiMapper = const VoiceTransactionDemoMapper();
 
   bool get _hasMedia => _audio != null || _images.isNotEmpty;
+  bool _aiParsing = false;
 
   bool get _isDirty =>
       _titleCtrl.text != _initTitle ||
@@ -163,6 +171,99 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
   }
 
   // ── Save logic ────────────────────────────────────────────────────────────
+
+  Future<void> _handleAudioChanged(
+    AudioAttachmentModel? audio,
+    List<LedgerCategory> cats,
+  ) async {
+    setState(() => _audio = audio);
+    if (audio == null) return;
+    await _maybeParseAiVoice(audio, cats);
+  }
+
+  Future<void> _maybeParseAiVoice(
+    AudioAttachmentModel audio,
+    List<LedgerCategory> cats,
+  ) async {
+    final prefs = ref.read(userPreferencesControllerProvider);
+    if (!prefs.aiVoiceRecognitionEnabled) {
+      debugPrint("[AI Voice Demo] quick parse skipped: feature off");
+      return;
+    }
+    final endpoint = prefs.aiVoiceApiEndpoint;
+    if (endpoint == null || endpoint.trim().isEmpty) {
+      debugPrint("[AI Voice Demo] quick parse skipped: missing endpoint");
+      showWarning(context, "Bạn cần cấu hình endpoint AI trong Profile trước.");
+      return;
+    }
+    if (_aiParsing) {
+      debugPrint("[AI Voice Demo] quick parse skipped: already parsing");
+      return;
+    }
+
+    setState(() => _aiParsing = true);
+    final client = VoiceTransactionDemoApiClient();
+    try {
+      final bytes = await _audioStorage.read(audio);
+      debugPrint(
+        "[AI Voice Demo] quick parse start "
+        "audioId=${audio.id} mime=${audio.mimeType} "
+        "extension=${audio.extension} bytes=${bytes.length}",
+      );
+      final response = await client.parseAudio(
+        endpoint: endpoint,
+        demoToken: prefs.aiVoiceDemoToken,
+        audio: audio,
+        audioBytes: bytes,
+      );
+      if (!mounted) return;
+      final patch = _aiMapper.map(
+        response: response,
+        categories: cats,
+        currentCategoryId: _categoryId,
+      );
+      debugPrint(
+        "[AI Voice Demo] quick parse success "
+        "title=${patch.title != null} amount=${patch.amountVnd != null} "
+        "categoryId=${patch.categoryId ?? "unchanged"} "
+        "date=${patch.occurredAt?.toIso8601String() ?? "unchanged"} "
+        "warnings=${response.warnings.length}",
+      );
+      _applyAiPatch(patch);
+      showSuccess(
+        context,
+        "AI đã điền thông tin. Bạn hãy kiểm tra lại trước khi lưu.",
+      );
+    } catch (error) {
+      debugPrint("[AI Voice Demo] quick parse failed: $error");
+      if (mounted) {
+        showError(
+          context,
+          "Đã có lỗi khi AI nhận diện ghi âm. Bạn hãy tiếp tục lưu giao dịch và đối soát lại sau khi rảnh.",
+        );
+      }
+    } finally {
+      client.close();
+      if (mounted) setState(() => _aiParsing = false);
+    }
+  }
+
+  void _applyAiPatch(VoiceTransactionFormPatch patch) {
+    setState(() {
+      if (patch.title != null) _titleCtrl.text = patch.title!;
+      if (patch.note != null) _noteCtrl.text = patch.note!;
+      if (patch.amountVnd != null) {
+        ref
+            .read(amountInputProvider(_amountKey).notifier)
+            .setValue(patch.amountVnd!);
+      }
+      _income = patch.isIncome;
+      _categoryId = patch.categoryId ?? _categoryId;
+      _date = patch.occurredAt ?? _date;
+      _pending = true;
+      _validationError = null;
+    });
+  }
 
   Future<void> _save(List<LedgerCategory> cats) async {
     final amount = ref.read(amountInputProvider(_amountKey));
@@ -284,6 +385,9 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
           QuickEntryMode.receipt => context.l10n.quickEntryReceipt,
           QuickEntryMode.tap => context.l10n.quickEntryTap,
         };
+        final prefs = ref.watch(userPreferencesControllerProvider);
+        final showAiParseButton =
+            _audio != null && prefs.aiVoiceRecognitionEnabled;
 
         return TransactionKeypadScaffold(
           keypadVisible: _amountKeypadOpen,
@@ -292,7 +396,7 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
             compact: true,
             children: [
               TransactionSheetHeader(title: sheetTitle, onClose: _handleClose),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.sm),
               TransactionEntryForm(
                 density: TransactionFormDensity.compact,
                 initialAmount: _amountKey,
@@ -312,7 +416,7 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                 onPickImage: _pickImage,
                 onDeleteImage: _removeImage,
                 audio: _audio,
-                onAudioChanged: (audio) => setState(() => _audio = audio),
+                onAudioChanged: (audio) => _handleAudioChanged(audio, cats),
                 voiceRecorderSessionId: _voiceRecorderSessionId,
                 autoStartVoiceRecording: widget.mode == QuickEntryMode.voice,
                 amountAlwaysShowKeypad: widget.mode == QuickEntryMode.tap,
@@ -367,18 +471,28 @@ class _QuickEntryBodyState extends ConsumerState<_QuickEntryBody> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              TransactionPendingSwitch(
-                pending: _pending,
-                onChanged: (v) => setState(() => _pending = v),
-                subtitle: _hasMedia
-                    ? context.l10n.pendingSubtitleWithMedia
-                    : context.l10n.pendingSubtitleDefault,
+              TransactionPendingActionRow(
+                pendingSwitch: TransactionPendingSwitch(
+                  pending: _pending,
+                  onChanged: (v) => setState(() => _pending = v),
+                  subtitle: _hasMedia
+                      ? context.l10n.pendingSubtitleWithMedia
+                      : context.l10n.pendingSubtitleDefault,
+                ),
+                trailing: showAiParseButton
+                    ? AiVoiceParseButton(
+                        isLoading: _aiParsing,
+                        onPressed: _audio == null
+                            ? null
+                            : () => _maybeParseAiVoice(_audio!, cats),
+                      )
+                    : null,
               ),
               const SizedBox(height: AppSpacing.xs),
               AppPrimaryButton(
                 label: context.l10n.saveTransaction,
                 icon: Icons.save_rounded,
-                onPressed: () => _save(cats),
+                onPressed: _aiParsing ? null : () => _save(cats),
               ),
             ],
           ),

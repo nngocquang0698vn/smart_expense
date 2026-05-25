@@ -90,6 +90,20 @@ Profile có:
 - Cài PWA trên Web.
 - Demo đối soát.
 - Dữ liệu mẫu.
+- Tính năng thử nghiệm: AI nhận diện giọng nói, cấu hình endpoint/token, đánh thức API demo.
+
+## AI Voice Transaction Demo
+
+1. User vào Profile > Tính năng thử nghiệm.
+2. Bật `AI nhận diện giọng nói`.
+3. Nhập endpoint Render và demo token nếu backend yêu cầu.
+4. Trước khi demo, bấm `Đánh thức API demo` để gọi `/health`.
+5. Khi quick voice entry dừng ghi âm, app tự upload audio và autofill form.
+6. Khi form đang có audio, nút `AI đọc ghi âm` nằm bên phải hàng `Chờ đối soát` để user gọi lại AI thủ công.
+7. Trong pending review, editor dùng cùng vị trí nút AI cạnh `Chờ đối soát`; Save/Delete vẫn nằm ở action bar dưới form.
+8. User luôn review trước khi lưu hoặc confirm; app không auto-save/auto-confirm.
+
+Nếu API lỗi, app hiển thị thông báo thân thiện và giữ nguyên audio, note, dữ liệu user đã nhập.
 
 ## Demo đối soát
 

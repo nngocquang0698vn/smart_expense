@@ -73,6 +73,7 @@ flutter build apk --debug
 - `design_system.md`: token, component, responsive guideline.
 - `user_flow.md`: luồng người dùng.
 - `development_guide.md`: setup, convention, checklist.
+- `voice_transaction_demo.md`: setup và luồng demo AI nhận diện ghi âm.
 - `stitch_pwa_reference.md`: mapping reference từ Stitch sang Flutter component.
 
 ## Cleanup gần nhất

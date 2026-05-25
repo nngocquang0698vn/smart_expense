@@ -13,13 +13,18 @@ import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/shared/components/amount_keypad.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
 import "package:smart_expense/features/categories/application/category_selection_resolver.dart";
+import "package:smart_expense/features/settings/application/user_preferences_controller.dart";
 import "package:smart_expense/features/transactions/application/transaction_image_actions.dart";
+import "package:smart_expense/features/transactions/application/voice_transaction_demo_mapper.dart";
+import "package:smart_expense/features/transactions/data/attachments/audio_storage_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_picker_service.dart";
 import "package:smart_expense/features/transactions/data/attachments/image_storage_service.dart";
+import "package:smart_expense/features/transactions/data/voice_transaction_demo_api_client.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/image_attachment_model.dart";
 import "package:smart_expense/features/transactions/domain/entities/attachments/audio_attachment_model.dart";
 import "package:smart_expense/features/transactions/application/transaction_draft_validator.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
+import "package:smart_expense/features/transactions/presentation/widgets/ai_voice_parse_button.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_category_section.dart";
 import "package:smart_expense/features/transactions/presentation/widgets/transaction_entry_form.dart";
 import "package:smart_expense/core/utils/pwa/pwa_install_controller.dart";
@@ -64,10 +69,13 @@ class TransactionEditorBodyState extends ConsumerState<TransactionEditorBody> {
   final _images = <ImageAttachmentModel>[];
   final _imagePicker = ImagePickerService();
   final _imageStorage = ImageStorageService();
+  final _audioStorage = AudioStorageService();
   final _draftResolver = const TransactionDraftResolver();
   final _categorySelection = const CategorySelectionResolver();
+  final _aiMapper = const VoiceTransactionDemoMapper();
   TransactionDraftValidationError? _validationError;
   bool _amountKeypadOpen = false;
+  bool _aiParsing = false;
 
   bool get _hasMedia => _audio != null || _images.isNotEmpty;
   bool get isEmbedded =>
@@ -200,6 +208,92 @@ class TransactionEditorBodyState extends ConsumerState<TransactionEditorBody> {
   }
 
   Future<void> deleteTransaction() => _delete();
+
+  Future<void> parseAiVoiceFromAudio() async {
+    final audio = _audio;
+    if (audio == null) {
+      debugPrint("[AI Voice Demo] editor parse skipped: no audio");
+      return;
+    }
+    final prefs = ref.read(userPreferencesControllerProvider);
+    final endpoint = prefs.aiVoiceApiEndpoint;
+    if (!prefs.aiVoiceRecognitionEnabled ||
+        endpoint == null ||
+        endpoint.trim().isEmpty) {
+      debugPrint("[AI Voice Demo] editor parse skipped: missing config");
+      showWarning(context, "Bạn cần cấu hình endpoint AI trong Profile trước.");
+      return;
+    }
+    if (_aiParsing) {
+      debugPrint("[AI Voice Demo] editor parse skipped: already parsing");
+      return;
+    }
+
+    setState(() => _aiParsing = true);
+    final client = VoiceTransactionDemoApiClient();
+    try {
+      final cats = await _categoriesFuture;
+      final bytes = await _audioStorage.read(audio);
+      debugPrint(
+        "[AI Voice Demo] editor parse start "
+        "transactionId=${widget.existing?.id ?? "new"} "
+        "audioId=${audio.id} mime=${audio.mimeType} "
+        "extension=${audio.extension} bytes=${bytes.length}",
+      );
+      final response = await client.parseAudio(
+        endpoint: endpoint,
+        demoToken: prefs.aiVoiceDemoToken,
+        audio: audio,
+        audioBytes: bytes,
+      );
+      if (!mounted) return;
+      final patch = _aiMapper.map(
+        response: response,
+        categories: cats,
+        currentCategoryId: _categoryId,
+      );
+      debugPrint(
+        "[AI Voice Demo] editor parse success "
+        "title=${patch.title != null} amount=${patch.amountVnd != null} "
+        "categoryId=${patch.categoryId ?? "unchanged"} "
+        "date=${patch.occurredAt?.toIso8601String() ?? "unchanged"} "
+        "warnings=${response.warnings.length}",
+      );
+      _applyAiPatch(patch);
+      showSuccess(
+        context,
+        "AI đã điền thông tin. Bạn hãy kiểm tra lại trước khi lưu.",
+      );
+    } catch (error) {
+      debugPrint("[AI Voice Demo] editor parse failed: $error");
+      if (mounted) {
+        showError(
+          context,
+          "Đã có lỗi khi AI nhận diện ghi âm. Bạn hãy tiếp tục lưu giao dịch và đối soát lại sau khi rảnh.",
+        );
+      }
+    } finally {
+      client.close();
+      if (mounted) setState(() => _aiParsing = false);
+    }
+  }
+
+  void _applyAiPatch(VoiceTransactionFormPatch patch) {
+    setState(() {
+      if (patch.title != null) _titleCtrl.text = patch.title!;
+      if (patch.note != null) _noteCtrl.text = patch.note!;
+      if (patch.amountVnd != null) {
+        ref
+            .read(amountInputProvider(_amountKey).notifier)
+            .setValue(patch.amountVnd!);
+      }
+      _income = patch.isIncome;
+      _categoryId = patch.categoryId ?? _categoryId;
+      _date = patch.occurredAt ?? _date;
+      _pending = true;
+      _validationError = null;
+    });
+  }
 
   Future<void> _saveTransaction(List<LedgerCategory> cats) async {
     final amount = ref.read(amountInputProvider(_amountKey));
@@ -381,6 +475,9 @@ class TransactionEditorBodyState extends ConsumerState<TransactionEditorBody> {
         );
 
         final finance = context.financeColors;
+        final prefs = ref.watch(userPreferencesControllerProvider);
+        final showAiParseButton =
+            _audio != null && prefs.aiVoiceRecognitionEnabled;
 
         final form = TransactionEntryForm(
           density: TransactionFormDensity.compact,
@@ -445,7 +542,9 @@ class TransactionEditorBodyState extends ConsumerState<TransactionEditorBody> {
             selectedId: _categoryId,
             onSelected: (id) {
               setState(() => _categoryId = id);
-              _clearValidation(TransactionDraftValidationError.categoryRequired);
+              _clearValidation(
+                TransactionDraftValidationError.categoryRequired,
+              );
             },
             errorText: _validationMessageFor(
               TransactionDraftValidationError.categoryRequired,
@@ -520,8 +619,16 @@ class TransactionEditorBodyState extends ConsumerState<TransactionEditorBody> {
             const SizedBox(height: AppSpacing.xs),
           ],
           form,
-          const SizedBox(height: AppSpacing.xs),
-          pendingSwitch,
+          const SizedBox(height: AppSpacing.sm),
+          TransactionPendingActionRow(
+            pendingSwitch: pendingSwitch,
+            trailing: showAiParseButton
+                ? AiVoiceParseButton(
+                    isLoading: _aiParsing,
+                    onPressed: parseAiVoiceFromAudio,
+                  )
+                : null,
+          ),
           const SizedBox(height: AppSpacing.xs),
           if (widget.footerActions != null) ...[
             widget.footerActions!,

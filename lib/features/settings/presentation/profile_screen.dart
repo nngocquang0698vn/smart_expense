@@ -17,6 +17,8 @@ import "package:smart_expense/features/settings/application/notifications/review
 import "package:smart_expense/features/settings/application/review_reminder_scheduler.dart";
 import "package:smart_expense/features/settings/application/user_preferences_controller.dart";
 import "package:smart_expense/features/settings/domain/review_reminder_settings.dart";
+import "package:smart_expense/features/settings/presentation/ai_voice_config_dialog.dart";
+import "package:smart_expense/features/transactions/data/voice_transaction_demo_api_client.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
 import "package:smart_expense/shared/components/app_notification.dart";
 import "package:smart_expense/core/config/demo_seed.dart";
@@ -41,6 +43,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late final StreamSubscription<void> _repoSubscription;
   String _loadedName = "";
   bool _loading = true;
+  bool _aiWakeupLoading = false;
 
   @override
   void initState() {
@@ -220,6 +223,83 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
     showSuccess(context, context.l10n.text("demoNotificationScheduled"));
+  }
+
+  Future<void> _setAiVoiceRecognitionEnabled(bool enabled) async {
+    final prefs = ref.read(userPreferencesControllerProvider);
+    final notifier = ref.read(userPreferencesControllerProvider.notifier);
+    if (!enabled) {
+      await notifier.update(prefs.copyWith(aiVoiceRecognitionEnabled: false));
+      return;
+    }
+
+    final config = await showAiVoiceConfigDialog(
+      context,
+      initialEndpoint: prefs.aiVoiceApiEndpoint,
+      initialDemoToken: prefs.aiVoiceDemoToken,
+    );
+    if (!mounted || config == null) return;
+    await notifier.update(
+      prefs.copyWith(
+        aiVoiceRecognitionEnabled: true,
+        aiVoiceApiEndpoint: config.endpoint,
+        aiVoiceDemoToken: config.demoToken,
+      ),
+    );
+    if (mounted) showSuccess(context, "Đã bật AI nhận diện giọng nói.");
+  }
+
+  Future<void> _editAiVoiceConfig() async {
+    final prefs = ref.read(userPreferencesControllerProvider);
+    final config = await showAiVoiceConfigDialog(
+      context,
+      initialEndpoint: prefs.aiVoiceApiEndpoint,
+      initialDemoToken: prefs.aiVoiceDemoToken,
+    );
+    if (!mounted || config == null) return;
+    await ref
+        .read(userPreferencesControllerProvider.notifier)
+        .update(
+          prefs.copyWith(
+            aiVoiceRecognitionEnabled: true,
+            aiVoiceApiEndpoint: config.endpoint,
+            aiVoiceDemoToken: config.demoToken,
+          ),
+        );
+    if (mounted) showSuccess(context, "Đã lưu cấu hình AI.");
+  }
+
+  Future<void> _wakeAiVoiceApi() async {
+    final endpoint = ref
+        .read(userPreferencesControllerProvider)
+        .aiVoiceApiEndpoint;
+    if (endpoint == null || endpoint.trim().isEmpty) {
+      debugPrint("[AI Voice Demo] wake skipped: missing endpoint");
+      showWarning(context, "Bạn cần cấu hình endpoint AI trong Profile trước.");
+      return;
+    }
+    setState(() => _aiWakeupLoading = true);
+    debugPrint(
+      "[AI Voice Demo] wake start endpoint=${VoiceTransactionDemoEndpoint.normalize(endpoint)}",
+    );
+    showInfo(context, "Đang đánh thức API demo...");
+    final client = VoiceTransactionDemoApiClient();
+    try {
+      await client.health(endpoint: endpoint);
+      debugPrint("[AI Voice Demo] wake success");
+      if (mounted) showSuccess(context, "Service AI demo đang hoạt động.");
+    } catch (error) {
+      debugPrint("[AI Voice Demo] wake failed: $error");
+      if (mounted) {
+        showError(
+          context,
+          "Chưa đánh thức được API demo. Bạn có thể thử lại sau.",
+        );
+      }
+    } finally {
+      client.close();
+      if (mounted) setState(() => _aiWakeupLoading = false);
+    }
   }
 
   Future<void> _clearAllTransactionData() async {
@@ -575,6 +655,59 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  Widget _buildExperimentalSection(BuildContext context) {
+    final prefs = ref.watch(userPreferencesControllerProvider);
+    final configured = prefs.aiVoiceApiEndpoint?.trim().isNotEmpty ?? false;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: Text(
+              "Tính năng thử nghiệm",
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            secondary: const Icon(Icons.auto_awesome_outlined),
+            title: const Text("AI nhận diện giọng nói"),
+            subtitle: Text(
+              prefs.aiVoiceRecognitionEnabled
+                  ? "Đang bật. Ghi âm sẽ được gửi đến API demo để tự điền giao dịch."
+                  : "Tự chuyển ghi âm thành ghi chú và gợi ý giao dịch để bạn đối soát.",
+            ),
+            value: prefs.aiVoiceRecognitionEnabled,
+            onChanged: _setAiVoiceRecognitionEnabled,
+          ),
+          if (prefs.aiVoiceRecognitionEnabled)
+            ListTile(
+              leading: const Icon(Icons.tune_rounded),
+              title: const Text("Sửa cấu hình"),
+              subtitle: configured ? Text(prefs.aiVoiceApiEndpoint!) : null,
+              onTap: _editAiVoiceConfig,
+            ),
+          ListTile(
+            leading: _aiWakeupLoading
+                ? const SizedBox.square(
+                    dimension: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.cloud_sync_outlined),
+            title: const Text("Đánh thức API demo"),
+            subtitle: const Text(
+              "Gọi /health trước khi demo để Render sẵn sàng.",
+            ),
+            onTap: _aiWakeupLoading ? null : _wakeAiVoiceApi,
+          ),
+        ],
+      ),
+    );
+  }
+
   bool _showPwaInstallEntry() {
     if (!kIsWeb) return false;
     return true;
@@ -646,6 +779,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _buildReviewReminderSection(context),
                 const Divider(height: 24, indent: 16, endIndent: 16),
                 _buildLeftPanel(context),
+                const Divider(height: 24, indent: 16, endIndent: 16),
+                _buildExperimentalSection(context),
               ],
             ),
           ),

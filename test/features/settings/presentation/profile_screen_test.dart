@@ -44,6 +44,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
   }
 
+  Future<void> tapAiVoiceTile(WidgetTester tester) async {
+    final tileText = find.text("AI nhận diện giọng nói");
+    for (var i = 0; i < 3; i++) {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(tileText);
+    await tester.pumpAndSettle();
+  }
+
   testWidgets(
     "does not overwrite an in-progress name edit after repo changes",
     (tester) async {
@@ -61,6 +71,47 @@ void main() {
       expect(find.text("Server name"), findsNothing);
     },
   );
+
+  testWidgets("AI voice toggle requires config dialog and cancel keeps off", (
+    tester,
+  ) async {
+    await pumpProfile(tester);
+
+    expect(find.text("Tính năng thử nghiệm"), findsOneWidget);
+    await tapAiVoiceTile(tester);
+
+    expect(find.text("Cấu hình AI nhận diện giọng nói"), findsOneWidget);
+    await tester.tap(find.text("Huỷ"));
+    await tester.pumpAndSettle();
+
+    expect(prefs.getString("userPreferences"), isNull);
+  });
+
+  testWidgets("AI voice config save persists endpoint and token", (
+    tester,
+  ) async {
+    await pumpProfile(tester);
+
+    await tapAiVoiceTile(tester);
+    await tester.enterText(
+      find.byType(TextFormField).at(0),
+      "https://smart-expense-m8nm.onrender.com/voice-transaction-demo/",
+    );
+    await tester.enterText(find.byType(TextFormField).at(1), "demo-token");
+    await tester.tap(find.text("Lưu và bật"));
+    await tester.pumpAndSettle();
+
+    final raw = prefs.getString("userPreferences");
+    expect(raw, isNotNull);
+    expect(raw, contains('"aiVoiceRecognitionEnabled":true'));
+    expect(
+      raw,
+      contains(
+        '"aiVoiceApiEndpoint":"https://smart-expense-m8nm.onrender.com"',
+      ),
+    );
+    expect(raw, contains('"aiVoiceDemoToken":"demo-token"'));
+  });
 }
 
 class _ProfileLedgerRepository extends LedgerRepository {

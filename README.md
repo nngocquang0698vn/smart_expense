@@ -92,6 +92,18 @@ Android release APK cần cấu hình signing riêng trước khi phân phối t
 - Android/IO dùng file trong application documents directory.
 - Attachment ảnh/audio lưu riêng theo nền tảng; transaction chỉ giữ metadata/reference.
 
+## AI Voice Transaction Demo
+
+- Bật trong Profile > Tính năng thử nghiệm.
+- User nhập endpoint Render và demo token. Flutter không chứa `OPENAI_API_KEY`.
+- OpenAI API key nằm trên Render backend.
+- Nút `Đánh thức API demo` gọi `/health` trước khi thuyết trình vì Render free có thể sleep; khi OK app báo service đang hoạt động.
+- Quick voice entry tự gọi API sau khi dừng ghi âm và autofill form, nhưng không auto-save.
+- Khi transaction/form có audio và AI đã bật, nút `AI đọc ghi âm` nằm bên phải hàng `Chờ đối soát`.
+- Draft từ AI luôn `pending=true`; user phải review trước khi lưu/xác nhận.
+- Nếu API lỗi, app vẫn giữ audio/note/dữ liệu đang nhập để user lưu và đối soát sau.
+- API demo có timeout 10 giây và log debug trong console với prefix `[AI Voice Demo]`; không log token hoặc raw audio bytes.
+
 ## Tài liệu
 
 Tài liệu chi tiết nằm trong thư mục `docs/`:
@@ -102,3 +114,4 @@ Tài liệu chi tiết nằm trong thư mục `docs/`:
 - `docs/design_system.md`
 - `docs/user_flow.md`
 - `docs/development_guide.md`
+- `docs/voice_transaction_demo.md`

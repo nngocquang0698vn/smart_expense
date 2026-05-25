@@ -74,6 +74,18 @@ Scheduler dùng timer trong runtime app; demo notification sau 20 giây không g
 - Audio player lazy-load khi user bấm play.
 - Image thumbnail đọc bytes theo tile.
 
+## AI Voice Demo Architecture
+
+- Config nằm trong `UserPreferences`: bật/tắt, endpoint Render, demo token.
+- Profile section `Tính năng thử nghiệm` quản lý config và gọi `/health` để wake Render.
+- `VoiceTransactionDemoApiClient` gọi multipart `POST /voice-transaction-demo`.
+- API client gọi `/health` và `/voice-transaction-demo` với timeout 10 giây, log debug bằng prefix `[AI Voice Demo]`.
+- Audio upload đọc bytes qua `AudioStorageService`, nên dùng được cả IO path, Web IndexedDB và bundled seed asset.
+- `VoiceTransactionDemoMapper` map response vào form patch, resolve category theo local default IDs/key/name.
+- UI quick entry, transaction editor và pending editor đặt nút `AI đọc ghi âm` cạnh hàng `Chờ đối soát` khi form có audio.
+- UI chỉ apply patch sau success; fail không xoá dữ liệu user.
+- OpenAI API key không đi vào Flutter, chỉ nằm ở Render backend.
+
 ## Web/PWA và Android
 
 - Web: `manifest.json`, `pwa_install_bridge.js`, `_redirects`.

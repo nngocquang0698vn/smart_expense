@@ -176,9 +176,9 @@ class TransactionPendingSwitch extends StatelessWidget {
           children: [
             Text(
               context.l10n.pending,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(width: AppSpacing.xs),
             Switch(
@@ -196,6 +196,35 @@ class TransactionPendingSwitch extends StatelessWidget {
               color: context.financeColors.textMuted,
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class TransactionPendingActionRow extends StatelessWidget {
+  const TransactionPendingActionRow({
+    required this.pendingSwitch,
+    this.trailing,
+    super.key,
+  });
+
+  final Widget pendingSwitch;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final action = trailing;
+    if (action == null) return pendingSwitch;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: pendingSwitch),
+        const SizedBox(width: AppSpacing.md),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xxs),
+          child: action,
         ),
       ],
     );
