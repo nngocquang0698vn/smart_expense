@@ -11,9 +11,9 @@ void main() {
     test("voiceNote uses stable bundled asset path and mime", () {
       final audio = SeedAttachments.voiceNote(fileSize: 1234);
       expect(audio.id, "seed_audio_voice_note");
-      expect(audio.bundleAssetPath, SeedAssets.voiceNoteMp3);
-      expect(audio.mimeType, "audio/mpeg");
-      expect(audio.extension, ".mp3");
+      expect(audio.bundleAssetPath, SeedAssets.voiceNoteM4a);
+      expect(audio.mimeType, "audio/m4a");
+      expect(audio.extension, ".m4a");
       expect(audio.fileSize, 1234);
       expect(audio.path, isNull);
     });
@@ -32,13 +32,9 @@ void main() {
     test("models round-trip through map serialization", () {
       final audio = SeedAttachments.voiceNote(fileSize: 1);
       final restoredAudio = AudioAttachmentModel.fromMap(audio.toMap());
-      expect(restoredAudio?.bundleAssetPath, SeedAssets.voiceNoteMp3);
+      expect(restoredAudio?.bundleAssetPath, SeedAssets.voiceNoteM4a);
 
-      final image = SeedAttachments.billImage(
-        width: 1,
-        height: 1,
-        fileSize: 1,
-      );
+      final image = SeedAttachments.billImage(width: 1, height: 1, fileSize: 1);
       final restoredImage = ImageAttachmentModel.fromMap(image.toMap());
       expect(restoredImage?.bundleAssetPath, SeedAssets.billJpg);
     });

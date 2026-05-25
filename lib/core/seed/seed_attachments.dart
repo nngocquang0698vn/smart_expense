@@ -13,17 +13,16 @@ import "package:smart_expense/features/transactions/domain/entities/attachments/
 abstract final class SeedAttachments {
   static const _seedCreatedAt = "2026-01-01T00:00:00.000";
 
-  static final DateTime _createdAt =
-      DateTime.parse(_seedCreatedAt);
+  static final DateTime _createdAt = DateTime.parse(_seedCreatedAt);
 
   static const _voiceNoteDurationMs = 8000;
-  static const _voiceNoteMime = "audio/mpeg";
-  static const _voiceNoteExtension = ".mp3";
+  static const _voiceNoteMime = "audio/m4a";
+  static const _voiceNoteExtension = ".m4a";
 
   static AudioAttachmentModel voiceNote({int? fileSize}) {
     return AudioAttachmentModel(
       id: "seed_audio_voice_note",
-      bundleAssetPath: SeedAssets.voiceNoteMp3,
+      bundleAssetPath: SeedAssets.voiceNoteM4a,
       durationMs: _voiceNoteDurationMs,
       createdAt: _createdAt,
       mimeType: _voiceNoteMime,
@@ -51,7 +50,7 @@ abstract final class SeedAttachments {
 
   /// Loads bundle metadata once for seeding (file sizes + image dimensions).
   static Future<SeedAttachmentMeta> loadMeta() async {
-    final audioBytes = await rootBundle.load(SeedAssets.voiceNoteMp3);
+    final audioBytes = await rootBundle.load(SeedAssets.voiceNoteM4a);
     final imageBytes = await rootBundle.load(SeedAssets.billJpg);
     final imageData = imageBytes.buffer.asUint8List();
     final size = await _decodeImageSize(imageData);
@@ -91,9 +90,7 @@ class SeedAttachmentMeta {
 }
 
 Future<({int width, int height})> _decodeImageSize(List<int> bytes) async {
-  final codec = await ui.instantiateImageCodec(
-    Uint8List.fromList(bytes),
-  );
+  final codec = await ui.instantiateImageCodec(Uint8List.fromList(bytes));
   final frame = await codec.getNextFrame();
   final image = frame.image;
   final size = (width: image.width, height: image.height);
