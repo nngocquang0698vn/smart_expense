@@ -31,6 +31,26 @@ class SembastLedgerRepository extends LedgerRepository {
   static final _meta = stringMapStoreFactory.store("meta");
   static final _categories = stringMapStoreFactory.store("categories");
   static final _transactions = stringMapStoreFactory.store("transactions");
+  static const _defaultCategoryEnabledStateSyncKey =
+      "defaultCategoryEnabledStateSyncV1";
+  static const _defaultCategoryEnabledState = <String, bool>{
+    LedgerRepository.kDefaultExpenseFoodId: true,
+    LedgerRepository.kDefaultExpenseGroceryId: false,
+    LedgerRepository.kDefaultExpenseShoppingId: true,
+    LedgerRepository.kDefaultExpenseTransportId: true,
+    LedgerRepository.kDefaultExpenseBillsId: true,
+    LedgerRepository.kDefaultExpenseEntertainmentId: false,
+    LedgerRepository.kDefaultExpenseHealthId: false,
+    LedgerRepository.kDefaultExpenseGiftId: false,
+    LedgerRepository.kDefaultExpenseBeautyId: false,
+    LedgerRepository.kDefaultExpenseWorkId: false,
+    LedgerRepository.kDefaultExpenseTravelId: false,
+    LedgerRepository.kDefaultExpenseCoffeeId: false,
+    LedgerRepository.kOtherExpenseId: true,
+    LedgerRepository.kDefaultIncomeSalaryId: true,
+    LedgerRepository.kDefaultIncomeOtherId: false,
+    LedgerRepository.kOtherIncomeId: true,
+  };
 
   @override
   Stream<void> get changes => _changes.stream;
@@ -42,10 +62,48 @@ class SembastLedgerRepository extends LedgerRepository {
       await _seedCategories();
     }
     await _ensureKhac();
-    final meta = await _meta.record("app").get(_db);
-    if (meta == null) {
-      await _meta.record("app").put(_db, {"userName": "", "onboarded": false});
+    await _ensureMetaDefaults();
+    await _syncDefaultCategoryEnabledState();
+  }
+
+  Future<void> _ensureMetaDefaults() async {
+    final current = Map<String, Object?>.from(
+      await _meta.record("app").get(_db) ?? const {},
+    );
+    var changed = false;
+    if (!current.containsKey("userName")) {
+      current["userName"] = "";
+      changed = true;
     }
+    if (!current.containsKey("onboarded")) {
+      current["onboarded"] = false;
+      changed = true;
+    }
+    if (changed) {
+      await _meta.record("app").put(_db, current);
+    }
+  }
+
+  Future<void> _syncDefaultCategoryEnabledState() async {
+    final meta = Map<String, Object?>.from(
+      await _meta.record("app").get(_db) ?? const {},
+    );
+    if (meta[_defaultCategoryEnabledStateSyncKey] == true) return;
+
+    await _db.transaction((txn) async {
+      for (final entry in _defaultCategoryEnabledState.entries) {
+        final raw = await _categories.record(entry.key).get(txn);
+        if (raw == null) continue;
+        final model = CategoryModel.fromMap(entry.key, raw);
+        if (model.enabled != entry.value) {
+          await _categories
+              .record(entry.key)
+              .put(txn, model.copyWith(enabled: entry.value).toMap());
+        }
+      }
+      meta[_defaultCategoryEnabledStateSyncKey] = true;
+      await _meta.record("app").put(txn, meta);
+    });
   }
 
   Future<void> _ensureKhac() async {

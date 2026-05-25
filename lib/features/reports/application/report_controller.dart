@@ -187,5 +187,6 @@ class ReportController extends AsyncNotifier<ReportState> {
 }
 
 extension on DateTimeRange {
-  AppDateRange toAppDateRange() => AppDateRange(start: start, end: end);
+  AppDateRange toAppDateRange() =>
+      AppDateRange.daysInclusive(start: start, end: end);
 }

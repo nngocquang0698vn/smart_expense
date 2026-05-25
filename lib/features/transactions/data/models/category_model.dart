@@ -107,6 +107,23 @@ class CategoryModel {
   final bool isIncome;
   final bool enabled;
 
+  CategoryModel copyWith({
+    String? name,
+    String? iconKey,
+    int? colorValue,
+    bool? isIncome,
+    bool? enabled,
+  }) {
+    return CategoryModel(
+      id: id,
+      name: name ?? this.name,
+      iconKey: iconKey ?? this.iconKey,
+      colorValue: colorValue ?? this.colorValue,
+      isIncome: isIncome ?? this.isIncome,
+      enabled: enabled ?? this.enabled,
+    );
+  }
+
   Map<String, Object?> toMap() => {
     "name": name,
     "iconKey": iconKey,
