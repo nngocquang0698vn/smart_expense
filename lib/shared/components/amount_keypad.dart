@@ -74,15 +74,13 @@ class AmountKeypad extends StatelessWidget {
                     Expanded(
                       child: Row(
                         children: [
-                          Expanded(
+                          _NumKey(
+                            label: "000",
                             flex: 2,
-                            child: _NumKey(
-                              label: "000",
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                onTripleZero();
-                              },
-                            ),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              onTripleZero();
+                            },
                           ),
                           _NumKey(label: "0", onTap: () => _tap(context, 0)),
                         ],
@@ -118,14 +116,16 @@ class AmountKeypad extends StatelessWidget {
 }
 
 class _NumKey extends StatelessWidget {
-  const _NumKey({required this.label, required this.onTap});
+  const _NumKey({required this.label, required this.onTap, this.flex = 1});
 
   final String label;
   final VoidCallback onTap;
+  final int flex;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
+      flex: flex,
       child: Padding(
         padding: const EdgeInsets.all(3),
         child: Material(

@@ -5,6 +5,7 @@ import "package:shared_preferences/shared_preferences.dart";
 import "package:smart_expense/app/localization/app_localizations.dart";
 import "package:smart_expense/app/main_shell.dart";
 import "package:smart_expense/app/providers.dart";
+import "package:smart_expense/core/utils/date_format.dart";
 import "package:smart_expense/core/testing/fake_ledger_repository.dart";
 import "package:smart_expense/features/transactions/domain/repositories/ledger_repository.dart";
 
@@ -65,4 +66,25 @@ void main() {
       expect(find.text("Draft name"), findsOneWidget);
     },
   );
+
+  testWidgets("desktop sidebar clock updates at the next minute", (
+    tester,
+  ) async {
+    await pumpShell(tester, const Size(1200, 800));
+
+    final before = DateTime.now();
+    expect(find.text(formatShellTime(before)), findsOneWidget);
+
+    final nextMinute = DateTime(
+      before.year,
+      before.month,
+      before.day,
+      before.hour,
+      before.minute + 1,
+    );
+    await tester.pump(nextMinute.difference(before));
+    await tester.pump();
+
+    expect(find.text(formatShellTime(DateTime.now())), findsOneWidget);
+  });
 }

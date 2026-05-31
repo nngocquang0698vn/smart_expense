@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "package:smart_expense/core/utils/amount_input.dart";
@@ -42,8 +43,114 @@ class FormAmountField extends ConsumerStatefulWidget {
 }
 
 class _FormAmountFieldState extends ConsumerState<FormAmountField> {
+  late final FocusNode _amountFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountFocusNode = FocusNode(debugLabel: "amount_input");
+    if (widget.autofocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _requestAmountFocus();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant FormAmountField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((!oldWidget.keypadOpen && widget.keypadOpen) ||
+        (!oldWidget.autofocus && widget.autofocus)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _requestAmountFocus();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _amountFocusNode.dispose();
+    super.dispose();
+  }
+
   void _openKeypad() {
     widget.onTap?.call();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _requestAmountFocus();
+    });
+  }
+
+  void _requestAmountFocus() {
+    if (!_amountFocusNode.hasFocus) {
+      _amountFocusNode.requestFocus();
+    }
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    final digit = _digitForKey(event.logicalKey);
+    if (digit != null) {
+      _handleDigitInput(digit);
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.backspace) {
+      _handleBackspace();
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.delete) {
+      _handleClear();
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.enter ||
+        event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+      _handleConfirm();
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      _handleConfirm();
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
+  int? _digitForKey(LogicalKeyboardKey key) {
+    return switch (key) {
+      LogicalKeyboardKey.digit0 || LogicalKeyboardKey.numpad0 => 0,
+      LogicalKeyboardKey.digit1 || LogicalKeyboardKey.numpad1 => 1,
+      LogicalKeyboardKey.digit2 || LogicalKeyboardKey.numpad2 => 2,
+      LogicalKeyboardKey.digit3 || LogicalKeyboardKey.numpad3 => 3,
+      LogicalKeyboardKey.digit4 || LogicalKeyboardKey.numpad4 => 4,
+      LogicalKeyboardKey.digit5 || LogicalKeyboardKey.numpad5 => 5,
+      LogicalKeyboardKey.digit6 || LogicalKeyboardKey.numpad6 => 6,
+      LogicalKeyboardKey.digit7 || LogicalKeyboardKey.numpad7 => 7,
+      LogicalKeyboardKey.digit8 || LogicalKeyboardKey.numpad8 => 8,
+      LogicalKeyboardKey.digit9 || LogicalKeyboardKey.numpad9 => 9,
+      _ => null,
+    };
+  }
+
+  void _handleDigitInput(int digit) {
+    ref
+        .read(amountInputProvider(widget.initialAmount).notifier)
+        .appendDigit(digit);
+  }
+
+  void _handleBackspace() {
+    ref.read(amountInputProvider(widget.initialAmount).notifier).backspace();
+  }
+
+  void _handleClear() {
+    ref.read(amountInputProvider(widget.initialAmount).notifier).clear();
+  }
+
+  void _handleConfirm() {
+    widget.onDone?.call();
   }
 
   Color _amountColor(AppFinanceColors finance) {
@@ -167,25 +274,30 @@ class _FormAmountFieldState extends ConsumerState<FormAmountField> {
         ? _buildProminentAmount(context, amount, finance)
         : _buildBoxedAmount(context, amount, finance, cs);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        amountWidget,
-        if (widget.errorText != null) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: Text(
-              widget.errorText!,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: cs.error,
-                fontWeight: FontWeight.w600,
+    return Focus(
+      focusNode: _amountFocusNode,
+      autofocus: widget.autofocus,
+      onKeyEvent: _handleKeyEvent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          amountWidget,
+          if (widget.errorText != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              child: Text(
+                widget.errorText!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.error,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
