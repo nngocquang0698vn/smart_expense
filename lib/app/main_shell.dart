@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -165,7 +167,6 @@ class _ResponsiveShell extends StatelessWidget {
     final sysBtm = MediaQuery.of(context).viewPadding.bottom.clamp(0.0, 60.0);
     // PillNavBar intrinsic height: 8(top) + 56(row) + 8(bottom) = 72 px.
     final navBarHeight = 72.0 + 12.0 + sysBtm;
-    final now = DateTime.now();
     final cs = Theme.of(context).colorScheme;
     final contentColor =
         Theme.of(context).extension<AppLayoutTheme>()?.desktopContentColor ??
@@ -187,7 +188,6 @@ class _ResponsiveShell extends StatelessWidget {
                   child: isMobile
                       ? const SizedBox.shrink()
                       : _Sidebar(
-                          now: now,
                           items: navItems,
                           selectedIndex: page,
                           onSelect: onSelect,
@@ -247,13 +247,11 @@ class _ResponsiveShell extends StatelessWidget {
 
 class _Sidebar extends StatelessWidget {
   const _Sidebar({
-    required this.now,
     required this.items,
     required this.selectedIndex,
     required this.onSelect,
   });
 
-  final DateTime now;
   final List<PillNavItem> items;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
@@ -264,8 +262,6 @@ class _Sidebar extends StatelessWidget {
     final chrome =
         Theme.of(context).extension<AppChromeTheme>() ??
         AppChromeTheme.fromSeed(cs.primary, Theme.of(context).brightness);
-    final timeText = formatShellTime(now);
-    final dateText = formatShellDate(now);
 
     return Container(
       width: 288,
@@ -294,22 +290,7 @@ class _Sidebar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            timeText,
-            style: TextStyle(
-              color: cs.primary,
-              fontSize: 34,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            dateText,
-            style: TextStyle(
-              color: chrome.sidebarNavInactive,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          const _SidebarClock(),
           const SizedBox(height: 20),
           ...items.asMap().entries.map(
             (e) => _SidebarNavItem(
@@ -321,6 +302,84 @@ class _Sidebar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SidebarClock extends StatefulWidget {
+  const _SidebarClock();
+
+  @override
+  State<_SidebarClock> createState() => _SidebarClockState();
+}
+
+class _SidebarClockState extends State<_SidebarClock> {
+  late DateTime _now;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _scheduleNextMinute();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleNextMinute() {
+    _timer?.cancel();
+    _timer = Timer(_timeUntilNextMinute(_now), _tick);
+  }
+
+  void _tick() {
+    if (!mounted) return;
+    setState(() => _now = DateTime.now());
+    _scheduleNextMinute();
+  }
+
+  Duration _timeUntilNextMinute(DateTime now) {
+    final nextMinute = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute + 1,
+    );
+    final delay = nextMinute.difference(now);
+    return delay > Duration.zero ? delay : const Duration(minutes: 1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final chrome =
+        Theme.of(context).extension<AppChromeTheme>() ??
+        AppChromeTheme.fromSeed(cs.primary, Theme.of(context).brightness);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          formatShellTime(_now),
+          style: TextStyle(
+            color: cs.primary,
+            fontSize: 34,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          formatShellDate(_now),
+          style: TextStyle(
+            color: chrome.sidebarNavInactive,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
