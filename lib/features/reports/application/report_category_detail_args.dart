@@ -50,11 +50,6 @@ class ReportCategoryDetailArgs {
       other.totalAmountVnd == totalAmountVnd;
 
   @override
-  int get hashCode => Object.hash(
-    category,
-    isIncomeSide,
-    period,
-    customRange,
-    totalAmountVnd,
-  );
+  int get hashCode =>
+      Object.hash(category, isIncomeSide, period, customRange, totalAmountVnd);
 }

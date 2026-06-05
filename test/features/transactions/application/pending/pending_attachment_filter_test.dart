@@ -18,7 +18,9 @@ LedgerTransaction _pending({
     pending: true,
     complete: true,
     audio: audio ? SeedAttachments.voiceNote(fileSize: 1) : null,
-    images: image ? [SeedAttachments.billImage(width: 1, height: 1, fileSize: 1)] : const [],
+    images: image
+        ? [SeedAttachments.billImage(width: 1, height: 1, fileSize: 1)]
+        : const [],
   );
 }
 

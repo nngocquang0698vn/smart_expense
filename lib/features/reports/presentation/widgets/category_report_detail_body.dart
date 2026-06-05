@@ -82,9 +82,8 @@ class CategoryReportDetailBody extends ConsumerWidget {
         Expanded(
           child: detail.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => Center(
-              child: AppEmptyState(message: l10n.genericError),
-            ),
+            error: (_, _) =>
+                Center(child: AppEmptyState(message: l10n.genericError)),
             data: (data) {
               final buckets = groupByDay(data.transactions);
 
@@ -193,7 +192,9 @@ class _DetailHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(embeddedInPanel ? Icons.close_rounded : Icons.arrow_back_rounded),
+            icon: Icon(
+              embeddedInPanel ? Icons.close_rounded : Icons.arrow_back_rounded,
+            ),
             tooltip: embeddedInPanel ? context.l10n.close : context.l10n.back,
             onPressed: onClose,
           ),
@@ -203,17 +204,17 @@ class _DetailHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),

@@ -27,9 +27,7 @@ class AppFinanceCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
     final color =
-        backgroundColor ??
-        Theme.of(context).cardTheme.color ??
-        cs.surface;
+        backgroundColor ?? Theme.of(context).cardTheme.color ?? cs.surface;
     final borderColor = highlighted
         ? cs.primary
         : (isDark ? AppColors.darkSurfaceAlt : AppColors.border);

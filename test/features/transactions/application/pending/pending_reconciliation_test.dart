@@ -109,10 +109,7 @@ void main() {
     final filtered = [_tx(id: "a"), _tx(id: "b"), _tx(id: "c")];
 
     test("nextPendingTransactionId advances", () {
-      expect(
-        nextPendingTransactionId(filtered: filtered, currentId: "a"),
-        "b",
-      );
+      expect(nextPendingTransactionId(filtered: filtered, currentId: "a"), "b");
       expect(
         nextPendingTransactionId(filtered: filtered, currentId: "c"),
         isNull,

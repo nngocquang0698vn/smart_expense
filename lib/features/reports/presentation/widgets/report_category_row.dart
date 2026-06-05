@@ -51,10 +51,7 @@ class ReportCategoryRow extends StatelessWidget {
                   color: cat.color.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                   border: active
-                      ? Border.all(
-                          color: cat.color,
-                          width: selected ? 2.5 : 2,
-                        )
+                      ? Border.all(color: cat.color, width: selected ? 2.5 : 2)
                       : null,
                 ),
                 child: Icon(cat.icon, color: cat.color, size: 20),
@@ -63,9 +60,9 @@ class ReportCategoryRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   cat.name,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -74,9 +71,9 @@ class ReportCategoryRow extends StatelessWidget {
               MoneyText(
                 slice.amount,
                 isIncome: isIncome,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: AppSpacing.xxs),
               Icon(

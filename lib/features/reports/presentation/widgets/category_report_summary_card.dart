@@ -48,9 +48,9 @@ class CategoryReportSummaryCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   context.l10n.reportCategoryTotalLabel,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -62,9 +62,9 @@ class CategoryReportSummaryCard extends StatelessWidget {
             child: MoneyText(
               totalAmountVnd,
               isIncome: isIncome,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         ],

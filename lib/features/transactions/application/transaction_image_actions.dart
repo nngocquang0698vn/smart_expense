@@ -87,7 +87,10 @@ class TransactionImageActions {
     }
   }
 
-  static void notifyOutcome(BuildContext context, TransactionImagePickOutcome outcome) {
+  static void notifyOutcome(
+    BuildContext context,
+    TransactionImagePickOutcome outcome,
+  ) {
     switch (outcome.status) {
       case TransactionImagePickStatus.limitReached:
         showError(context, context.l10n.transactionImageLimitReached);

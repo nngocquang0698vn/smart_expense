@@ -49,7 +49,9 @@ class ImagePickerService {
   }
 
   /// Chọn nhiều ảnh từ thư viện (Web/Android). [limit] = số ảnh tối đa nhận.
-  Future<MultiPickImageResult> pickMultipleFromGallery({required int limit}) async {
+  Future<MultiPickImageResult> pickMultipleFromGallery({
+    required int limit,
+  }) async {
     if (limit <= 0) {
       return const MultiPickImageResult(picked: [], userSelectedCount: 0);
     }
