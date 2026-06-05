@@ -14,6 +14,7 @@ import "package:smart_expense/shared/components/app_empty_state.dart";
 import "package:smart_expense/shared/components/page_header_sliver.dart";
 import "package:smart_expense/shared/components/summary_card.dart";
 import "package:smart_expense/shared/design_system/design_system.dart";
+
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
 
@@ -71,9 +72,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ? _buildMasterDetail(state)
           : _buildMobileScroll(state),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => Center(
-        child: AppEmptyState(message: context.l10n.genericError),
-      ),
+      error: (_, _) =>
+          Center(child: AppEmptyState(message: context.l10n.genericError)),
     );
   }
 
@@ -92,9 +92,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ),
           child: Text(
             context.l10n.reportTitle,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         Expanded(
@@ -303,11 +303,7 @@ class _SummaryRow extends StatelessWidget {
         Expanded(
           child: SummaryCard(
             label: context.l10n.reportBalance,
-            child: MoneyText(
-              net.abs(),
-              isIncome: net >= 0,
-              style: textStyle,
-            ),
+            child: MoneyText(net.abs(), isIncome: net >= 0, style: textStyle),
           ),
         ),
       ],

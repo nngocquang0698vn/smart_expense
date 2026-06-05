@@ -21,7 +21,10 @@ void main() {
       const total = 1999999999998;
       final share = ReportCalculations.categoryShare(amount, total);
       expect(share, closeTo(0.5, 0.0001));
-      expect(ReportCalculations.categoryPercent(amount, total), closeTo(50, 0.01));
+      expect(
+        ReportCalculations.categoryPercent(amount, total),
+        closeTo(50, 0.01),
+      );
     });
   });
 

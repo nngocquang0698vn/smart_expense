@@ -84,8 +84,12 @@ class _NavButton extends StatelessWidget {
         fill = enabled ? Colors.white.withValues(alpha: 0.1) : null;
       case InlineNavVariant.surface:
         fg = enabled ? finance.fieldText : finance.textMuted;
-        border = enabled ? finance.fieldBorder : finance.fieldBorder.withValues(alpha: 0.5);
-        fill = enabled ? finance.fieldFill : finance.fieldFill.withValues(alpha: 0.5);
+        border = enabled
+            ? finance.fieldBorder
+            : finance.fieldBorder.withValues(alpha: 0.5);
+        fill = enabled
+            ? finance.fieldFill
+            : finance.fieldFill.withValues(alpha: 0.5);
     }
 
     final iconWidget = Icon(icon, size: 18, color: fg);
@@ -108,15 +112,23 @@ class _NavButton extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
-        textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-          fontWeight: AppTypography.semibold,
-        ),
+        textStyle: Theme.of(
+          context,
+        ).textTheme.labelLarge?.copyWith(fontWeight: AppTypography.semibold),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!iconAfterLabel) ...[iconWidget, const SizedBox(width: 2), labelWidget],
-          if (iconAfterLabel) ...[labelWidget, const SizedBox(width: 2), iconWidget],
+          if (!iconAfterLabel) ...[
+            iconWidget,
+            const SizedBox(width: 2),
+            labelWidget,
+          ],
+          if (iconAfterLabel) ...[
+            labelWidget,
+            const SizedBox(width: 2),
+            iconWidget,
+          ],
         ],
       ),
     );

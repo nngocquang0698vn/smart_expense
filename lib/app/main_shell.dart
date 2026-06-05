@@ -173,7 +173,7 @@ class _ResponsiveShell extends StatelessWidget {
         cs.surface;
 
     return Scaffold(
-      extendBody: isMobile,
+      extendBody: false,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         top: !isMobile,

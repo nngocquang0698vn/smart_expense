@@ -61,6 +61,7 @@ class _PendingContent extends ConsumerStatefulWidget {
 
 class _PendingContentState extends ConsumerState<_PendingContent> {
   final _detailEditorKey = GlobalKey<TransactionEditorBodyState>();
+  bool _mobileDetailVisible = false;
 
   bool _useMasterDetail(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= AppBreakpoints.desktop;
@@ -102,13 +103,25 @@ class _PendingContentState extends ConsumerState<_PendingContent> {
   }
 
   Future<void> _selectTransaction(String id) async {
-    if (state.selectedTransactionId == id) return;
+    final isMasterDetail = _useMasterDetail(context);
+    if (state.selectedTransactionId == id) {
+      if (!isMasterDetail && !_mobileDetailVisible) {
+        setState(() => _mobileDetailVisible = true);
+      }
+      return;
+    }
     if (!await _confirmDiscardIfDirty()) return;
     ref.read(pendingControllerProvider.notifier).selectTransaction(id);
+    if (!isMasterDetail && mounted) {
+      setState(() => _mobileDetailVisible = true);
+    }
   }
 
   Future<void> _clearMobileDetail() async {
     if (!await _confirmDiscardIfDirty()) return;
+    if (mounted) {
+      setState(() => _mobileDetailVisible = false);
+    }
     ref.read(pendingControllerProvider.notifier).clearSelection();
   }
 
@@ -131,7 +144,7 @@ class _PendingContentState extends ConsumerState<_PendingContent> {
     }
 
     final selected = state.selectedTransaction;
-    if (selected != null) {
+    if (selected != null && _mobileDetailVisible) {
       return PendingReconciliationDetailPanel(
         transaction: selected,
         filteredTransactions: state.filteredTransactions,
